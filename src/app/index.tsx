@@ -1,5 +1,5 @@
+import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -18,27 +18,14 @@ type SampleQuestion = {
 export default function HomeScreen() {
   const router = useRouter();
   const { user, profile, isAnonymous } = useAuth();
-  const [samples, setSamples] = useState<SampleQuestion[]>([]);
-  const [loadFailed, setLoadFailed] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    void (async () => {
-      const { data, error } = await supabase
-        .from('questions')
-        .select('id, text, kind')
-        .limit(3);
-      if (!active) return;
-      if (error) {
-        setLoadFailed(true);
-        return;
-      }
-      setSamples((data ?? []) as SampleQuestion[]);
-    })();
-    return () => {
-      active = false;
-    };
-  }, []);
+  const { data: samples = [], isError: loadFailed } = useQuery({
+    queryKey: ['questions', 'samples'],
+    queryFn: async (): Promise<SampleQuestion[]> => {
+      const { data, error } = await supabase.from('questions').select('id, text, kind').limit(3);
+      if (error) throw error;
+      return (data ?? []) as SampleQuestion[];
+    },
+  });
 
   const accent = RelationshipThemes.partner;
 
@@ -106,6 +93,12 @@ export default function HomeScreen() {
               Start with your person
             </ThemedText>
           </Pressable>
+
+          <Pressable onPress={() => router.push('/design')} style={styles.designLink}>
+            <ThemedText type="small" themeColor="textSecondary" style={styles.designLinkText}>
+              View design system →
+            </ThemedText>
+          </Pressable>
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -168,5 +161,12 @@ const styles = StyleSheet.create({
   ctaText: {
     fontSize: 16,
     fontWeight: 700,
+  },
+  designLink: {
+    alignItems: 'center',
+    paddingVertical: Spacing.two,
+  },
+  designLinkText: {
+    textAlign: 'center',
   },
 });

@@ -3,9 +3,7 @@
 
 ## Status
 
-The **foundational visual identity** (base palette, type pairing) is still being decided — three contrasting directions were explored (Warm Terracotta, Playful Street Energy, Quiet Dusk) and are being refined/blended. This section of the doc will be locked once that's settled.
-
-The **contextual theming architecture** below is settled independently of that choice — it's a structural decision, not a mood decision, and applies no matter which foundational palette wins.
+**Locked — Playful Street Energy (2026-09-15).** Foundational palette, type pairing, and token shape are settled. The contextual theming architecture in §2 was already settled and is unchanged — accent shifts per `connections.relationship_type` are applied on top of this foundation.
 
 ---
 
@@ -13,11 +11,54 @@ The **contextual theming architecture** below is settled independently of that c
 
 These never change, regardless of relationship type or question pack — they're what makes the app recognizably "Chale" no matter what theme is active:
 
-- **Wordmark:** "chale," lowercase.
+- **Wordmark:** "chale," lowercase, set in the display face.
 - **Layout & spacing:** card shapes, corner radius, spacing rhythm.
-- **Iconography style:** consistent icon set/weight across all themes.
+- **Iconography style:** consistent icon set/weight across all themes (lucide, 2px stroke, rounded caps).
 - **Interaction patterns:** the question card layout, the text/voice answer toggle, the reveal screen structure — same bones everywhere.
-- **Type pairing:** *(pending — depends on final foundational direction)*
+
+### 1a. Color — Playful Street Energy
+
+Grounded in Accra street culture (trotro yellow, hand-painted sign warmth). The foundation stays warm and quiet so the relationship accent layer can tell the story. Street yellow is a signal, not a wash.
+
+**Light theme (default)**
+
+| Token | Hex | Role |
+|---|---|---|
+| `paper` | `#FBF3DF` | Page background — warm chamois-yellow |
+| `ink` | `#2B1A0F` | Primary text on paper |
+| `surface` | `#FFF9E8` | Card / elevated surface on paper |
+| `border` | `#EDE0BE` | Hairline / card border |
+| `muted` | `#8A7562` | Secondary text, captions |
+| `street` | `#F5B400` | Signature pop — CTA, active, emphasis only |
+
+**Dark theme**
+
+| Token | Hex | Role |
+|---|---|---|
+| `paper` | `#231408` | Page background — deep warm espresso-charcoal |
+| `ink` | `#FBF3DF` | Primary text on dark (paper inverted) |
+| `surface` | `#2E1E10` | Card / elevated surface on dark |
+| `border` | `#3D2A18` | Hairline / card border on dark |
+| `muted` | `#C4A991` | Secondary text on dark |
+| `street` | `#F5B400` | Same pop — passes on both themes |
+
+Derived tokens: `shadow` is a warm shadow (`rgba(43,26,15,0.12)` light / `rgba(0,0,0,0.45)` dark), `overlay` for modals. Radii are varied by hierarchy (hero 24, card 20, chip 999), not uniform.
+
+### 1b. Type pairing
+
+Two voices, clearly distinct:
+
+- **Display — Archivo Black (900):** heavy geometric, street-poster energy. Wordmark `chale,`, hero question text, section titles. Lowercase-friendly.
+- **Body — Spline Sans (300–700, variable):** friendly humanist-geometric. All body, captions, labels, inputs. Loaded via `@expo-google-fonts/spline-sans` + `@expo-google-fonts/archivo-black`, held behind `SplashScreen.preventAutoHideAsync`.
+
+Type scale (mobile): display 32/700, title 22/700 (display face for titles), body 16/400, bodyStrong 16/600, label 13/600, caption 12/400. Line length ≤ 80ch, left-aligned, generous vertical rhythm. Sentence case throughout; Pidgin microcopy in body voice.
+
+### 1c. Tokens (shape)
+
+```ts
+// constants/theme.ts — foundational tokens (new)
+// light/dark objects each carry { paper, ink, surface, border, muted, street, shadow }
+```
 
 ## 2. Contextual theming layer
 
@@ -29,7 +70,7 @@ The app's accent color and background tone shift based on the **relationship typ
 | Family | Soft green | Nurturing, safe |
 | Friend | Playful pink | Fun, energetic |
 
-These are directional placeholders — exact hex values get finalized once the foundational palette is locked, so the contextual accents are chosen as variations *of* that foundation rather than independently.
+These hex values are now finalized against the Playful Street Energy foundation — chosen as variations *of* that foundation rather than independently.
 
 **Implementation shape:**
 
@@ -54,6 +95,6 @@ Since MVP ships with only the "partner" relationship type (see `01-prd.md` §5�
 
 Individual question packs *within* a relationship type could eventually carry their own micro-accent (e.g. a "Deep Talk" pack feeling slightly more subdued than a "Fun & Games" pack, even within the Partner theme) — flagged as a possible v2+ nuance, not something to design now.
 
-## 5. Open decision
+## 5. Decision log
 
-Foundational palette/type still pending — see the three live previews already shared (Warm Terracotta / Playful Street Energy / Quiet Dusk) and the contextual-theming demo built on a neutral placeholder base. Once a foundational direction (or blend) is chosen, this doc gets a full section 1 with locked hex values and type specimens.
+- **2026-09-15 — Playful Street Energy locked.** Foundation (§1a–1c) settled: paper `#FBF3DF` / `#231408`, ink `#2B1A0F`, street `#F5B400`, type Archivo Black + Spline Sans. Prior candidates (Warm Terracotta, Quiet Dusk) archived.
