@@ -9,19 +9,22 @@ This document maps the key journeys through the app at a behavioral level — sc
 
 ```mermaid
 flowchart TD
-    A[Open app - first launch] --> B[Sign up: name, phone/email]
-    B --> C{Already have an invite code?}
-    C -->|Yes| D[Enter invite code]
-    C -->|No| E[Generate my own invite code/link]
-    D --> F[Connection linked - status: linked]
-    E --> G[Share link with the other person]
-    G --> H[Waiting screen: connection pending]
-    H --> F
-    F --> I[Choose relationship type: Partner]
-    I --> J[Land on home screen - first question waiting]
+    A[Open app - first launch] --> B[Browse sample questions - no account needed]
+    B --> C[Start with your person]
+    C --> D[Account request: name, phone/email - asked here, not at launch]
+    D --> E{Already have an invite code?}
+    E -->|Yes| F[Enter invite code]
+    E -->|No| G[Generate my own invite code/link]
+    F --> H[Connection linked - status: linked]
+    G --> I[Share link with the other person]
+    I --> J[Waiting screen: connection pending]
+    J --> H
+    H --> K[Choose relationship type: Partner]
+    K --> L[Land on home screen - first question waiting]
 ```
 
 Notes:
+- Auth is deferred, not eliminated: browsing is anonymous (Supabase anonymous sign-in), and the account is created exactly when the user initiates creating or joining a connection. State gathered anonymously (e.g. which previews were shown) can carry over when the identity is upgraded.
 - Relationship type is asked once, at connection setup, not per-question.
 - MVP only exposes "Partner" as a selectable type (see PRD §5) — the picker UI should still exist so adding types later doesn't require a new screen.
 - "Waiting screen" should clearly communicate what's blocking (the other person hasn't joined yet) rather than reading as a stalled/broken state.

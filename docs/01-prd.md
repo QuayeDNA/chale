@@ -9,6 +9,8 @@ A mobile app for any two people who want to stay close — partners, friends, si
 
 The relationship context (romantic partner, friend, family) changes the question content and tone, but the core mechanic — async reveal + optional ephemeral voice — stays the same across every connection type. This is a relationship-agnostic mechanic, not a couples-only feature.
 
+*Auth note: because the mechanic is two-person by definition, "no auth by default" means anonymous **browsing only** — the ask to create an account comes at the pairing/answering boundary, not at first launch (see MVP scope §5).*
+
 ## 1a. Naming
 
 App name: **Chale** — Ghanaian Pidgin English for "friend/buddy," widely recognized across Ghana and West Africa. Chosen because it's an English word carrying Ghanaian tonality (fits the Ghana/West Africa launch focus while staying globally pronounceable), and because it works naturally across every relationship type in scope — a partner, sibling, or best friend is all equally your "chale."
@@ -39,7 +41,7 @@ In-app microcopy should carry the same voice where it fits naturally: e.g. "Say 
 
 ## 5. MVP scope
 
-1. Account creation + 1-on-1 connection via invite link/code, tagged with a relationship type (MVP ships with "partner" as the only selectable type — data model supports more from day one).
+1. Anonymous-first onboarding: the app is browsable with no account (question previews on first launch, via Supabase anonymous sign-in). An account is created exactly when the user initiates creating or joining a connection — 1-on-1 connection via invite link/code, tagged with a relationship type (MVP ships with "partner" as the only selectable type — data model supports more from day one).
 2. One question per day, pushed to both people via notification.
 3. Text answers, locked until both people submit.
 4. Reveal screen once both answers are in.

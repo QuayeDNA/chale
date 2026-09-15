@@ -6,6 +6,9 @@
 --  * The reveal rule is enforced in the database (submit_answer RPC), never on the client.
 --  * RLS only lets a member read the partner's answer once the prompt is 'revealed'.
 --  * MVP exposes only the 'partner' relationship type; the schema supports more from day one.
+--  * Anonymous-first: question content is readable by anon (browse/preview), everything in the
+--    core loop is authenticated-only. An anonymous browser still becomes a `users` row when they
+--    sign up (Supabase anonymous sign-ins link to a real identity later).
 
 -- ============ Enums ============
 
@@ -216,6 +219,13 @@ end;
 $$;
 
 grant execute on function submit_answer(uuid, answer_kind, text) to authenticated;
+
+-- ============ Table grants ============
+-- Anonymous vs authenticated split (see header note):
+--   anon          -> question content only (browse/preview)
+--   authenticated -> everything in the core loop
+grant select on table question_packs, questions to anon, authenticated;
+grant select on table users, connections, prompts, answers to authenticated;
 
 -- ============ Notes on what is intentionally NOT here yet ============
 -- Pairing (invite code -> link), the daily-question scheduler, voice clip

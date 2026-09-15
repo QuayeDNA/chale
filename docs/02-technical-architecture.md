@@ -41,6 +41,8 @@ This is not a static-content app — pairing, reveal state, and push notificatio
 - Supabase phone auth requires a third-party SMS provider (Twilio/Vonage). MVP starts with email magic-link/OTP; add a phone provider only if pairing by phone number proves necessary (Ghana focus — verify provider SMS coverage then).
 - Supabase's free tier comfortably covers the Android beta; the switch to Node/Postgres is triggered by cost/usage becoming significant, which is exactly when the migration becomes worthwhile.
 
+**Auth timing (anonymous-first):** the app is browsable with no account by default — first launch shows question previews using **Supabase anonymous sign-ins** (a low-trust identity that can later be linked to a real account, so early state can carry over). Users are only asked to create an account (name, phone/email) at an auth-boundary feature: creating or joining a connection, answering, voice, or reveal. The data model and reveal RPC above are unchanged — anonymous identities still get a `users` row — and the mechanical gate is app-level, not database-level (the reveal rule stays server-enforced either way). RLS keeps question content readable by `anon`, everything in the core loop readable by `authenticated` only.
+
 ## 3. Data model
 
 Rendered as SQL in `supabase/migrations/0001_initial_schema.sql` — keep this doc and the SQL in sync (same commit rule as `/types` in `06-development-workflow.md`).
