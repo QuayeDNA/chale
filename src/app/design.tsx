@@ -3,8 +3,6 @@ import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-import { Heart, MessageCircle, Mic, Sparkles } from 'lucide-react-native';
-
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -118,10 +116,10 @@ export default function DesignScreen() {
                 Big radius (24), generous padding. This is where the daily question lives — the most characteristic moment.
               </Text>
               <View style={styles.inlineIcons}>
-                <Icon as={MessageCircle} size={18} />
-                <Icon as={Mic} size={18} />
-                <Icon as={Heart} size={18} />
-                <Icon as={Sparkles} size={18} />
+                <Icon name="message" size={18} />
+                <Icon name="mic" size={18} />
+                <Icon name="heart" size={18} />
+                <Icon name="sparkles" size={18} />
               </View>
             </Card>
             <Card>
@@ -146,7 +144,7 @@ export default function DesignScreen() {
 
           <View style={styles.footer}>
             <Text variant="caption">
-              One bold move at a time. Foundation stays quiet; accent tells the relationship story. Icons are lucide at 2px, rounded caps.
+              One bold move at a time. Foundation stays quiet; accent tells the relationship story. Icons are Expo Symbols — SF Symbols on iOS, Material Symbols on Android/web.
             </Text>
           </View>
         </ScrollView>

@@ -1,22 +1,31 @@
-import type { ComponentType } from 'react';
-import type { LucideProps } from 'lucide-react-native';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { useUnistyles } from 'react-native-unistyles';
 
-type LucideIcon = ComponentType<LucideProps>;
+type ChaleIconName = 'heart' | 'message' | 'mic' | 'sparkles';
 
-type IconProps = LucideProps & {
-  as: LucideIcon;
+const ICON_MAP: Record<ChaleIconName, SymbolViewProps['name']> = {
+  heart: { ios: 'heart.fill', android: 'favorite', web: 'favorite' },
+  message: { ios: 'message.fill', android: 'chat_bubble', web: 'chat_bubble' },
+  mic: { ios: 'mic.fill', android: 'mic', web: 'mic' },
+  sparkles: { ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' },
+};
+
+type IconProps = {
+  name: ChaleIconName;
+  size?: number;
+  color?: string;
+  weight?: SymbolViewProps['weight'];
 };
 
 /**
- * Thin wrapper that supplies theme-aware defaults for lucide icons.
- * Prefer per-icon imports to avoid bundling the whole set on native:
- *   import { Heart } from 'lucide-react-native/icons/heart';
- *   <Icon as={Heart} size={20} />
- * Web tree-shakes the root import; native Metro does not — deep import is required.
+ * Expo-owned icon wrapper — uses SF Symbols on iOS and Material Symbols
+ * on Android/web via expo-symbols. Keeps the icon set consistent and
+ * avoids bundling 9k+ lucide icons on native.
  */
-export function Icon({ as: LucideIcon, color, size = 20, strokeWidth = 2, ...rest }: IconProps) {
+export function Icon({ name, size = 20, color, weight = 'regular' }: IconProps) {
   const { theme } = useUnistyles();
-  const resolvedColor = color ?? theme.colors.ink;
-  return <LucideIcon color={resolvedColor} size={size} strokeWidth={strokeWidth} {...rest} />;
+  const tintColor = color ?? theme.colors.ink;
+  return <SymbolView name={ICON_MAP[name]} size={size} tintColor={tintColor} weight={weight} fallback={null} />;
 }
+
+export type { ChaleIconName };
