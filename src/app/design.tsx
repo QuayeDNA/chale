@@ -3,10 +3,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-import Heart from 'lucide-react-native/icons/heart';
-import MessageCircle from 'lucide-react-native/icons/message-circle';
-import Mic from 'lucide-react-native/icons/mic';
-import Sparkles from 'lucide-react-native/icons/sparkles';
+import { Heart, MessageCircle, Mic, Sparkles } from 'lucide-react-native';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -149,7 +146,7 @@ export default function DesignScreen() {
 
           <View style={styles.footer}>
             <Text variant="caption">
-              One bold move at a time. Foundation stays quiet; accent tells the relationship story. Icons are lucide at 2px, rounded caps, per-icon imports.
+              One bold move at a time. Foundation stays quiet; accent tells the relationship story. Icons are lucide at 2px, rounded caps.
             </Text>
           </View>
         </ScrollView>
