@@ -63,3 +63,20 @@ export const Spacing = {
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;
+
+export type RelationshipType = 'partner' | 'family' | 'friend';
+
+/**
+ * Contextual theming layer — the accent shifts with the active connection's
+ * relationship type (docs/05-design-system.md §2). Exact hex values are
+ * directional placeholders pending the foundational palette decision; the
+ * structure ships from day one so partner/family/friend are lookups, not a redesign.
+ */
+export const RelationshipThemes: Record<
+  RelationshipType,
+  { accent: string; accentSoft: string; accentText: string }
+> = {
+  partner: { accent: '#D85A30', accentSoft: '#F5C4B3', accentText: '#4A1B0C' },
+  family: { accent: '#639922', accentSoft: '#C0DD97', accentText: '#173404' },
+  friend: { accent: '#D4537E', accentSoft: '#F4C0D1', accentText: '#4B1528' },
+};

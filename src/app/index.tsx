@@ -1,61 +1,112 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { MaxContentWidth, RelationshipThemes, Spacing } from '@/constants/theme';
+import { useAuth } from '@/hooks/use-auth';
+import { supabase } from '@/lib/supabase';
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+type SampleQuestion = {
+  id: string;
+  text: string;
+  kind: 'text' | 'voice' | 'either';
+};
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const { user, profile, isAnonymous } = useAuth();
+  const [samples, setSamples] = useState<SampleQuestion[]>([]);
+  const [loadFailed, setLoadFailed] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      const { data, error } = await supabase
+        .from('questions')
+        .select('id, text, kind')
+        .limit(3);
+      if (!active) return;
+      if (error) {
+        setLoadFailed(true);
+        return;
+      }
+      setSamples((data ?? []) as SampleQuestion[]);
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const accent = RelationshipThemes.partner;
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}>
+          <ThemedView style={styles.hero}>
+            <ThemedText type="code" style={styles.wordmark}>
+              chale,
+            </ThemedText>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+            {user ? (
+              <ThemedText type="subtitle" style={styles.title}>
+                Hey{profile?.display_name ? `, ${profile.display_name}` : ''}
+              </ThemedText>
+            ) : (
+              <ThemedText type="subtitle" style={styles.title}>
+                A question a day{'\n'}with your person
+              </ThemedText>
+            )}
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+            <ThemedText themeColor="textSecondary" style={styles.tagline}>
+              {isAnonymous
+                ? 'Browse free for a while. When you start with your person, that’s when the account moment comes.'
+                : 'Your connection is set up. Today’s question arrives soon.'}
+            </ThemedText>
+          </ThemedView>
 
-        {Platform.OS === 'web' && <WebBadge />}
+          <ThemedView type="backgroundElement" style={styles.sampleCard}>
+            <ThemedText type="smallBold" style={{ color: accent.accent }}>
+              Sample questions
+            </ThemedText>
+            {loadFailed ? (
+              <ThemedText type="small" themeColor="textSecondary">
+                Couldn’t reach the question library — check your connection and reload.
+              </ThemedText>
+            ) : samples.length === 0 ? (
+              <ThemedText type="small" themeColor="textSecondary">
+                Loading…
+              </ThemedText>
+            ) : (
+              samples.map((q) => (
+                <ThemedView key={q.id} style={styles.sampleRow}>
+                  <ThemedText type="code" style={styles.kindTag}>
+                    {q.kind}
+                  </ThemedText>
+                  <ThemedText type="small" style={styles.sampleText}>
+                    {q.text}
+                  </ThemedText>
+                </ThemedView>
+              ))
+            )}
+          </ThemedView>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.cta,
+              { backgroundColor: accent.accent, opacity: pressed ? 0.85 : 1 },
+            ]}
+            onPress={() => router.push('/start')}>
+            <ThemedText style={[styles.ctaText, { color: accent.accentText }]}>
+              Start with your person
+            </ThemedText>
+          </Pressable>
+        </ScrollView>
       </SafeAreaView>
     </ThemedView>
   );
@@ -64,35 +115,58 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     flexDirection: 'row',
+    justifyContent: 'center',
   },
   safeArea: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
     maxWidth: MaxContentWidth,
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
+  scrollContent: {
     paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.five,
+    paddingBottom: Spacing.six,
     gap: Spacing.four,
   },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
+  hero: {
     gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
+  },
+  wordmark: {
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+  },
+  title: {
+    marginTop: Spacing.one,
+  },
+  tagline: {
+    lineHeight: 22,
+  },
+  sampleCard: {
     borderRadius: Spacing.four,
+    padding: Spacing.four,
+    gap: Spacing.three,
+  },
+  sampleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.two,
+  },
+  kindTag: {
+    fontSize: 10,
+    textTransform: 'uppercase',
+    paddingTop: 3,
+  },
+  sampleText: {
+    flex: 1,
+  },
+  cta: {
+    borderRadius: Spacing.five,
+    paddingVertical: Spacing.three,
+    paddingHorizontal: Spacing.four,
+    alignItems: 'center',
+  },
+  ctaText: {
+    fontSize: 16,
+    fontWeight: 700,
   },
 });
