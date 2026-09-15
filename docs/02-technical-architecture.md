@@ -43,6 +43,8 @@ This is not a static-content app — pairing, reveal state, and push notificatio
 
 ## 3. Data model
 
+Rendered as SQL in `supabase/migrations/0001_initial_schema.sql` — keep this doc and the SQL in sync (same commit rule as `/types` in `06-development-workflow.md`).
+
 ### `users`
 | field | type | notes |
 |---|---|---|
