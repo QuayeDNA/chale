@@ -18,4 +18,4 @@ This is the doc set for the Chale app. Suggested order to work through them, esp
 
 ## Naming note
 
-App name: **Chale**. The project repo is currently scaffolded under the working name "Twogether" — a rename is planned but not urgent (see PRD §1a).
+App name: **Chale**. Codebase identifiers (`app.json` name/slug/scheme, Android package) are updated to `chale`; only the local folder name still reads `twogether` — cosmetic, nothing depends on it (see PRD §1a).

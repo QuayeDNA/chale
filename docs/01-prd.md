@@ -15,7 +15,7 @@ App name: **Chale** — Ghanaian Pidgin English for "friend/buddy," widely recog
 
 In-app microcopy should carry the same voice where it fits naturally: e.g. "Say Am" on the voice-record button, "Kai this one?" on the save-voice prompt. Not a rebrand of every screen — just a few key moments where the Ghanaian-English tone reinforces the brand.
 
-*Note: the project repo/codebase was already scaffolded under the working name "Twogether" — renaming the codebase/package identifiers to Chale is a housekeeping task for later, not urgent before further feature work.*
+*Note: codebase identifiers (`app.json` name/slug/scheme, Android package) are now updated to "Chale". The local folder/directory name still reads "twogether" — purely cosmetic, no code depends on it.*
 
 ## 2. Problem
 

@@ -25,12 +25,21 @@ This is not a static-content app — pairing, reveal state, and push notificatio
 - Object storage for voice clips with TTL/expiry support
 - A scheduled job runner (for expiring unsaved voice clips, sending the daily question)
 
-**Options to weigh:**
-- **Supabase** — Postgres + realtime + auth + storage in one, fast to stand up for an MVP, and pairs naturally with Expo.
-- **Firebase** — similarly fast, strong push notification tooling (FCM), realtime database built in.
-- **Custom Node + Postgres** — more control, more setup time; worth it later if the managed options become limiting, not needed for MVP.
+**Decision (locked): Supabase**, with a future migration to custom Node + Postgres planned for when managed-platform cost or limits bite — not for MVP.
 
-Recommendation: start with a managed option (Supabase or Firebase) to avoid building auth/realtime/storage from scratch before the core loop is even validated.
+**Why Supabase over the alternatives:**
+- The data model in §3 is relational (uuid FKs, enums) — Supabase is Postgres, so the schema in this doc maps 1:1 and becomes the durable asset. When the move to Node + Postgres happens, the schema, the reveal RPC below, and the SQL carry over nearly unchanged; only the surrounding platform gets replaced (storage → S3, realtime → WebSockets, scheduled jobs → cron/BullMQ).
+- The reveal rule (§4) is a transactional invariant — "insert answer, count both, flip reveal_state" is one atomic Postgres transaction/RPC. This directly satisfies the race-condition testing requirement in `06-development-workflow.md`.
+- Realtime (partner answered / reveal) ships with the DB, auth is built in, and push goes through Expo's push service regardless of backend.
+
+**Rejected options:**
+- **Firebase** — Firestore's NoSQL model fights the relational design, and its main advantage (native FCM) is neutralized by using Expo push.
+- **Convex** — attractive on paper (TypeScript server functions, live queries by default, strong local dev), but it's a proprietary managed platform: the reveal logic and data model would have to be rewritten from scratch for the planned Node/Postgres migration, and auth isn't built in (adding Clerk/Auth0 dependency + cost). Choosing it means writing the core mechanic twice.
+- **Custom Node + Postgres now** — the eventual destination, but building auth/realtime/storage/scheduled-jobs from scratch before the core loop is validated violates the sequencing principle in `03-roadmap.md`. Postponed, not avoided.
+
+**Known trade-offs to note:**
+- Supabase phone auth requires a third-party SMS provider (Twilio/Vonage). MVP starts with email magic-link/OTP; add a phone provider only if pairing by phone number proves necessary (Ghana focus — verify provider SMS coverage then).
+- Supabase's free tier comfortably covers the Android beta; the switch to Node/Postgres is triggered by cost/usage becoming significant, which is exactly when the migration becomes worthwhile.
 
 ## 3. Data model
 
