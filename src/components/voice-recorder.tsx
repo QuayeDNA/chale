@@ -12,18 +12,22 @@ export function VoiceRecorder({ onSend }: { onSend: (localUri: string) => Promis
 
   const start = async () => {
     setError(null);
-    const perm = await requestRecordingPermissionsAsync();
-    if (!perm.granted) {
-      setError('Microphone access is needed to record a voice answer.');
-      return;
+    try {
+      const perm = await requestRecordingPermissionsAsync();
+      if (!perm.granted) {
+        setError('Microphone access is needed to record a voice answer.');
+        return;
+      }
+      await rec.prepareToRecordAsync();
+      rec.record();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Microphone access is needed to record a voice answer.');
     }
-    await rec.prepareToRecordAsync();
-    rec.record();
   };
 
   return (<>
     {!rec.isRecording && !uri ? <Button label="Say am — record" onPress={start} /> : null}
-    {rec.isRecording ? (<><Text variant="label">Recording…</Text><Button label="Stop" onPress={async () => { await rec.stop(); setUri(rec.uri ?? null); }} /></>) : null}
+    {rec.isRecording ? (<><Text variant="label">Recording…</Text><Button label="Stop" onPress={async () => { try { await rec.stop(); setUri(rec.uri ?? null); } catch (e) { setError(e instanceof Error ? e.message : 'Could not send voice answer.'); } }} /></>) : null}
     {uri && !rec.isRecording ? (<>
       <Text variant="caption">{uri}</Text>
       <Button label="Re-record" variant="outline" onPress={() => setUri(null)} />

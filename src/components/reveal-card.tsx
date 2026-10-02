@@ -9,7 +9,7 @@ export type RevealAnswerView = {
 };
 
 function isVoice(a: RevealAnswerView): boolean {
-  return a.kind === 'voice' || /^https?:\/\//.test(a.content);
+  return a.kind === 'voice';
 }
 
 export function RevealCard({ question, mine, theirs }: { question: string; mine: RevealAnswerView; theirs: RevealAnswerView }) {
