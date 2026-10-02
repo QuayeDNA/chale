@@ -24,6 +24,9 @@ type AuthContextValue = {
   profile: Tables<'users'> | null;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
+  signInWithOtpEmail: (email: string) => Promise<void>;
+  verifyOtp: (email: string, token: string) => Promise<void>;
+  updateDisplayName: (name: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -106,6 +109,27 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setProfile(null);
   }, []);
 
+  const signInWithOtpEmail = useCallback(async (email: string) => {
+    const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true } });
+    if (error) throw error;
+  }, []);
+
+  const verifyOtp = useCallback(async (email: string, token: string) => {
+    const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: token.trim(), type: 'email' });
+    if (error) throw error;
+    await refreshProfile();
+  }, [refreshProfile]);
+
+  const updateDisplayName = useCallback(async (name: string) => {
+    const clean = name.trim();
+    if (!clean) throw new Error('Name cannot be empty');
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not signed in');
+    const { error } = await supabase.from('users').update({ display_name: clean }).eq('id', user.id);
+    if (error) throw error;
+    await refreshProfile();
+  }, [refreshProfile]);
+
   const user = session?.user ?? null;
 
   const value = useMemo<AuthContextValue>(
@@ -117,8 +141,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
       profile,
       refreshProfile,
       signOut,
+      signInWithOtpEmail,
+      verifyOtp,
+      updateDisplayName,
     }),
-    [status, session, user, profile, refreshProfile, signOut],
+    [status, session, user, profile, refreshProfile, signOut, signInWithOtpEmail, verifyOtp, updateDisplayName],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
