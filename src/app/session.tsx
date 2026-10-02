@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -7,9 +7,11 @@ import { Text } from '@/components/ui/text';
 import { Screen } from '@/components/screen';
 import { QuestionCard } from '@/components/question-card';
 import { supabase } from '@/lib/supabase';
+import { isFavourite, toggleFavourite } from '@/lib/favourites';
 
 export default function SessionScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { pack } = useLocalSearchParams<{ pack: string }>();
   const [index, setIndex] = useState(0);
   const questions = useQuery({
@@ -29,6 +31,11 @@ export default function SessionScreen() {
   const list = questions.data ?? [];
   const current = list[index];
   const last = index >= list.length - 1;
+  const fav = useQuery({
+    queryKey: ['favourites', 'is', current?.id],
+    queryFn: () => isFavourite(current!.id),
+    enabled: !!current,
+  });
 
   return (
     <Screen>
@@ -46,6 +53,21 @@ export default function SessionScreen() {
             {index + 1} / {list.length}
           </Text>
           <QuestionCard text={current.text} kind={current.kind} />
+          <Button
+            label={fav.data ? 'Favourited ♥' : 'Favourite ♡'}
+            variant="outline"
+            onPress={async () => {
+              try {
+                await toggleFavourite(current.id);
+                await queryClient.invalidateQueries({
+                  queryKey: ['favourites'],
+                });
+                await fav.refetch();
+              } catch {
+                await router.push('/auth');
+              }
+            }}
+          />
           <Button
             label="Previous"
             variant="outline"

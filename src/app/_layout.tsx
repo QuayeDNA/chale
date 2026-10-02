@@ -34,6 +34,7 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
       <Stack.Screen name="home" />
       <Stack.Screen name="deck/[id]" />
       <Stack.Screen name="session" />
+      <Stack.Screen name="favourites" />
       <Stack.Screen name="index" />
       <Stack.Screen name="start" />
       <Stack.Screen name="prompt/[id]" />
