@@ -25,7 +25,7 @@ export default function AuthScreen() {
         <>
           <TextInput placeholder="Your name" autoCapitalize="words" value={name} onChangeText={setName} />
           <TextInput placeholder="6-digit code" keyboardType="number-pad" value={code} onChangeText={setCode} />
-          <Button label="Verify" onPress={async () => { try { setErr(null); await verifyOtp(email, code); if (name.trim()) { await updateDisplayName(name); } router.back(); } catch (e) { setErr((e as Error).message); } }} />
+          <Button label="Verify" onPress={async () => { try { setErr(null); await verifyOtp(email, code); if (name.trim()) { await updateDisplayName(name.trim()); } router.back(); } catch (e) { setErr((e as Error).message); } }} />
         </>
       )}
       {err ? <Text variant="caption">{err}</Text> : null}
