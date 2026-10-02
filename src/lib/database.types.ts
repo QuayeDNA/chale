@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       answers: {
@@ -247,6 +272,39 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_listens: {
+        Row: {
+          answer_id: string
+          listened_at: string
+          listener_id: string
+        }
+        Insert: {
+          answer_id: string
+          listened_at?: string
+          listener_id: string
+        }
+        Update: {
+          answer_id?: string
+          listened_at?: string
+          listener_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_listens_answer_id_fkey"
+            columns: ["answer_id"]
+            isOneToOne: false
+            referencedRelation: "answers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_listens_listener_id_fkey"
+            columns: ["listener_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -256,6 +314,33 @@ export type Database = {
         Args: { p_connection: string }
         Returns: string[]
       }
+      create_connection: {
+        Args: never
+        Returns: {
+          out_id: string
+          out_invite_code: string
+        }[]
+      }
+      get_or_create_today_prompt: {
+        Args: { p_connection: string }
+        Returns: {
+          out_kind: Database["public"]["Enums"]["question_kind"]
+          out_prompt: string
+          out_question: string
+          out_reveal_state: Database["public"]["Enums"]["reveal_state"]
+          out_text: string
+        }[]
+      }
+      join_connection: {
+        Args: { p_code: string }
+        Returns: {
+          out_id: string
+          out_status: Database["public"]["Enums"]["connection_status"]
+        }[]
+      }
+      make_invite_code: { Args: never; Returns: string }
+      record_listen: { Args: { p_answer: string }; Returns: undefined }
+      save_own_clip: { Args: { p_answer: string }; Returns: undefined }
       submit_answer: {
         Args: {
           p_content: string
@@ -400,6 +485,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       answer_kind: ["text", "voice"],
