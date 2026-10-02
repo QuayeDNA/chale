@@ -31,6 +31,7 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="start" />
+      <Stack.Screen name="prompt/[id]" />
       <Stack.Screen name="auth" />
       <Stack.Screen name="design" />
     </Stack>

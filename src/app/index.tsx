@@ -32,7 +32,7 @@ export default function HomeScreen() {
   if (prompt.isLoading) return <Card><Text variant="body">Loading today&apos;s question…</Text></Card>;
   if (prompt.error) return <Card><Text variant="body">Couldn&apos;t load today&apos;s question.</Text></Card>;
   if (!prompt.data) return <Card><Text variant="body">Loading today&apos;s question…</Text></Card>;
-  if (myAnswer.data) return (<><QuestionCard text={prompt.data.text} kind={prompt.data.kind} /><WaitingState /><Button label="Open reveal" variant="outline" onPress={() => router.push(`/prompt/${prompt.data.promptId}` as any)} /></>);
+  if (myAnswer.data) return (<><QuestionCard text={prompt.data.text} kind={prompt.data.kind} /><WaitingState /><Button label="Open reveal" variant="outline" onPress={() => router.push({ pathname: '/prompt/[id]', params: { id: prompt.data.promptId } })} /></>);
   return (<><QuestionCard text={prompt.data.text} kind={prompt.data.kind} /><AnswerWithMode promptId={prompt.data.promptId} kind={prompt.data.kind} /></>);
 }
 
