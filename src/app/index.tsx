@@ -1,172 +1,48 @@
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, RelationshipThemes, Spacing } from '@/constants/theme';
-import { useAuth } from '@/hooks/use-auth';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Text } from '@/components/ui/text';
+import { QuestionCard } from '@/components/question-card';
+import { AnswerComposer } from '@/components/answer-composer';
+import { AnswerModeToggle } from '@/components/answer-mode-toggle';
+import { WaitingState } from '@/components/waiting-state';
+import { useConnection } from '@/hooks/use-connection';
+import { useTodayPrompt } from '@/hooks/use-today-prompt';
 import { supabase } from '@/lib/supabase';
-
-type SampleQuestion = {
-  id: string;
-  text: string;
-  kind: 'text' | 'voice' | 'either';
-};
+import { submitTextAnswer } from '@/lib/answers';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { user, profile, isAnonymous } = useAuth();
-  const { data: samples = [], isError: loadFailed } = useQuery({
-    queryKey: ['questions', 'samples'],
-    queryFn: async (): Promise<SampleQuestion[]> => {
-      const { data, error } = await supabase.from('questions').select('id, text, kind').limit(3);
-      if (error) throw error;
-      return (data ?? []) as SampleQuestion[];
+  const conn = useConnection();
+  const connectionId = conn.data?.id ?? null;
+  const prompt = useTodayPrompt(connectionId);
+  const myAnswer = useQuery({
+    queryKey: ['answers', 'mine', prompt.data?.promptId],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data } = await supabase.from('answers').select('id').eq('prompt_id', prompt.data!.promptId).eq('user_id', user!.id).maybeSingle();
+      return data;
     },
+    enabled: !!prompt.data,
   });
-
-  const accent = RelationshipThemes.partner;
-
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}>
-          <ThemedView style={styles.hero}>
-            <ThemedText type="code" style={styles.wordmark}>
-              chale,
-            </ThemedText>
-
-            {user ? (
-              <ThemedText type="subtitle" style={styles.title}>
-                Hey{profile?.display_name ? `, ${profile.display_name}` : ''}
-              </ThemedText>
-            ) : (
-              <ThemedText type="subtitle" style={styles.title}>
-                A question a day{'\n'}with your person
-              </ThemedText>
-            )}
-
-            <ThemedText themeColor="textSecondary" style={styles.tagline}>
-              {isAnonymous
-                ? 'Browse free for a while. When you start with your person, that’s when the account moment comes.'
-                : 'Your connection is set up. Today’s question arrives soon.'}
-            </ThemedText>
-          </ThemedView>
-
-          <ThemedView type="backgroundElement" style={styles.sampleCard}>
-            <ThemedText type="smallBold" style={{ color: accent.accent }}>
-              Sample questions
-            </ThemedText>
-            {loadFailed ? (
-              <ThemedText type="small" themeColor="textSecondary">
-                Couldn’t reach the question library — check your connection and reload.
-              </ThemedText>
-            ) : samples.length === 0 ? (
-              <ThemedText type="small" themeColor="textSecondary">
-                Loading…
-              </ThemedText>
-            ) : (
-              samples.map((q) => (
-                <ThemedView key={q.id} style={styles.sampleRow}>
-                  <ThemedText type="code" style={styles.kindTag}>
-                    {q.kind}
-                  </ThemedText>
-                  <ThemedText type="small" style={styles.sampleText}>
-                    {q.text}
-                  </ThemedText>
-                </ThemedView>
-              ))
-            )}
-          </ThemedView>
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.cta,
-              { backgroundColor: accent.accent, opacity: pressed ? 0.85 : 1 },
-            ]}
-            onPress={() => router.push('/start')}>
-            <ThemedText style={[styles.ctaText, { color: accent.accentText }]}>
-              Start with your person
-            </ThemedText>
-          </Pressable>
-
-          <Pressable onPress={() => router.push('/design')} style={styles.designLink}>
-            <ThemedText type="small" themeColor="textSecondary" style={styles.designLinkText}>
-              View design system →
-            </ThemedText>
-          </Pressable>
-        </ScrollView>
-      </SafeAreaView>
-    </ThemedView>
-  );
+  if (conn.isLoading) return <Card><Text variant="body">Loading…</Text></Card>;
+  if (!conn.data) return <Card><Text variant="title">A question a day with your person</Text><Button label="Start with your person" onPress={() => router.push('/start')} /></Card>;
+  if (prompt.isLoading) return <Card><Text variant="body">Loading today&apos;s question…</Text></Card>;
+  if (prompt.error) return <Card><Text variant="body">Couldn&apos;t load today&apos;s question.</Text></Card>;
+  if (!prompt.data) return <Card><Text variant="body">Loading today&apos;s question…</Text></Card>;
+  if (myAnswer.data) return (<><QuestionCard text={prompt.data.text} kind={prompt.data.kind} /><WaitingState /><Button label="Open reveal" variant="outline" onPress={() => router.push(`/prompt/${prompt.data.promptId}` as any)} /></>);
+  return (<><QuestionCard text={prompt.data.text} kind={prompt.data.kind} /><AnswerWithMode promptId={prompt.data.promptId} kind={prompt.data.kind} /></>);
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  safeArea: {
-    flex: 1,
-    maxWidth: MaxContentWidth,
-  },
-  scrollContent: {
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.five,
-    paddingBottom: Spacing.six,
-    gap: Spacing.four,
-  },
-  hero: {
-    gap: Spacing.three,
-  },
-  wordmark: {
-    textTransform: 'uppercase',
-    letterSpacing: 2,
-  },
-  title: {
-    marginTop: Spacing.one,
-  },
-  tagline: {
-    lineHeight: 22,
-  },
-  sampleCard: {
-    borderRadius: Spacing.four,
-    padding: Spacing.four,
-    gap: Spacing.three,
-  },
-  sampleRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.two,
-  },
-  kindTag: {
-    fontSize: 10,
-    textTransform: 'uppercase',
-    paddingTop: 3,
-  },
-  sampleText: {
-    flex: 1,
-  },
-  cta: {
-    borderRadius: Spacing.five,
-    paddingVertical: Spacing.three,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-  },
-  ctaText: {
-    fontSize: 16,
-    fontWeight: 700,
-  },
-  designLink: {
-    alignItems: 'center',
-    paddingVertical: Spacing.two,
-  },
-  designLinkText: {
-    textAlign: 'center',
-  },
-});
+function AnswerWithMode({ promptId, kind }: { promptId: string; kind: string }) {
+  const [mode, setMode] = useState<'text' | 'voice'>(kind === 'voice' ? 'voice' : 'text');
+  const queryClient = useQueryClient();
+  const handleSubmit = async (t: string) => {
+    await submitTextAnswer(promptId, t);
+    await queryClient.invalidateQueries({ queryKey: ['answers', 'mine', promptId] });
+  };
+  if (kind === 'text' || kind === 'voice') return <AnswerComposer onSubmit={handleSubmit} />;
+  return (<><AnswerModeToggle mode={mode} onChange={setMode} />{mode === 'text' ? <AnswerComposer onSubmit={handleSubmit} /> : <Text variant="caption">Voice arrives in Task 8 — switch stays visible per 04 §2 step C.</Text>}</>);
+}
