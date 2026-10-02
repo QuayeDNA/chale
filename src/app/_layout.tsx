@@ -32,11 +32,10 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
       <Stack.Screen name="index" />
       <Stack.Screen name="splash" />
       <Stack.Screen name="welcome" />
-      <Stack.Screen name="home" />
+      <Stack.Screen name="(tabs)" />
       <Stack.Screen name="deck/[id]" />
       <Stack.Screen name="session" />
-      <Stack.Screen name="favourites" />
-      <Stack.Screen name="remote" />
+      <Stack.Screen name="settings" />
       <Stack.Screen name="start" />
       <Stack.Screen name="prompt/[id]" />
       <Stack.Screen name="auth" />

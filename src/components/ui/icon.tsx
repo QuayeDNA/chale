@@ -10,7 +10,19 @@ type ChaleIconName =
   | 'clock'
   | 'play'
   | 'stop'
-  | 'check';
+  | 'check'
+  | 'home'
+  | 'people'
+  | 'user'
+  | 'bell'
+  | 'palette'
+  | 'globe'
+  | 'help'
+  | 'info'
+  | 'logout'
+  | 'chevron'
+  | 'stats'
+  | 'invite';
 
 const ICON_MAP: Record<ChaleIconName, SymbolViewProps['name']> = {
   heart: { ios: 'heart.fill', android: 'favorite', web: 'favorite' },
@@ -22,6 +34,18 @@ const ICON_MAP: Record<ChaleIconName, SymbolViewProps['name']> = {
   play: { ios: 'play.fill', android: 'play_arrow', web: 'play_arrow' },
   stop: { ios: 'stop.fill', android: 'stop', web: 'stop' },
   check: { ios: 'checkmark', android: 'check', web: 'check' },
+  home: { ios: 'house.fill', android: 'home', web: 'home' },
+  people: { ios: 'person.2.fill', android: 'group', web: 'group' },
+  user: { ios: 'person.fill', android: 'person', web: 'person' },
+  bell: { ios: 'bell.fill', android: 'notifications', web: 'notifications' },
+  palette: { ios: 'circle.lefthalf.filled', android: 'palette', web: 'palette' },
+  globe: { ios: 'globe', android: 'language', web: 'language' },
+  help: { ios: 'questionmark.circle.fill', android: 'help', web: 'help' },
+  info: { ios: 'info.circle.fill', android: 'info', web: 'info' },
+  logout: { ios: 'rectangle.portrait.and.arrow.right', android: 'logout', web: 'logout' },
+  chevron: { ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' },
+  stats: { ios: 'chart.bar.fill', android: 'bar_chart', web: 'bar_chart' },
+  invite: { ios: 'envelope.fill', android: 'mail', web: 'mail' },
 };
 
 type IconProps = {
