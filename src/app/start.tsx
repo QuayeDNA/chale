@@ -10,6 +10,7 @@ import { TextInput } from '@/components/ui/text-input';
 import { ConnectionInvite } from '@/components/connection-invite';
 import { RelationshipPicker } from '@/components/relationship-picker';
 import { PendingConnection } from '@/components/pending-connection';
+import { Screen } from '@/components/screen';
 import { createConnection, joinConnection } from '@/lib/pairing';
 import { useAuth } from '@/hooks/use-auth';
 export default function StartScreen() {
@@ -27,6 +28,7 @@ export default function StartScreen() {
   const [err, setErr] = useState<string | null>(null);
   const needAuth = isAnonymous;
   return (
+    <Screen>
     <Card>
       <Text variant="title">Start with your person</Text>
       {needAuth ? <Button label="Create account to continue" onPress={() => router.push('/auth')} /> : null}
@@ -46,5 +48,6 @@ export default function StartScreen() {
       }} />
       {err ? <Text variant="caption">{err}</Text> : null}
     </Card>
+    </Screen>
   );
 }

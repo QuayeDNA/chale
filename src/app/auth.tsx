@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { TextInput } from '@/components/ui/text-input';
 import { Text } from '@/components/ui/text';
 import { Card } from '@/components/ui/card';
+import { Screen } from '@/components/screen';
 import { useAuth } from '@/hooks/use-auth';
 export default function AuthScreen() {
   const { signInWithOtpEmail, verifyOtp, updateDisplayName } = useAuth();
@@ -15,6 +16,7 @@ export default function AuthScreen() {
   const [sent, setSent] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   return (
+    <Screen>
     <Card>
       <Text variant="title">Your account moment</Text>
       <Text variant="body">Browsing is free. Creating or joining a connection needs an account so answers stay yours.</Text>
@@ -30,5 +32,6 @@ export default function AuthScreen() {
       )}
       {err ? <Text variant="caption">{err}</Text> : null}
     </Card>
+    </Screen>
   );
 }

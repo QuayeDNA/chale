@@ -7,6 +7,7 @@ import { Text } from '@/components/ui/text';
 import { WaitingState } from '@/components/waiting-state';
 import { RevealCard } from '@/components/reveal-card';
 import { SaveVoicePrompt } from '@/components/save-voice-prompt';
+import { Screen } from '@/components/screen';
 import { useRealtimePrompt } from '@/hooks/use-realtime-prompt';
 import { supabase } from '@/lib/supabase';
 import { saveOwnClip } from '@/lib/answers';
@@ -48,8 +49,8 @@ export default function PromptDetail() {
     enabled: !!q.data?.myAnswerId && q.data?.myKind === 'voice' && q.data?.reveal === 'revealed',
     refetchInterval: 5000,
   });
-  if (!q.data) return <Card><Text variant="body">Loading…</Text></Card>;
-  if (q.data.reveal !== 'revealed') return <WaitingState />;
+  if (!q.data) return <Screen><Card><Text variant="body">Loading…</Text></Card></Screen>;
+  if (q.data.reveal !== 'revealed') return <Screen><WaitingState /></Screen>;
   const showSave = q.data.myKind === 'voice' && q.data.myExpiry !== 'saved' && (listens.data ?? 0) >= 2 && !skipped;
   const handleSave = async () => {
     setSaving(true);
@@ -63,7 +64,7 @@ export default function PromptDetail() {
       setSaving(false);
     }
   };
-  return (<>
+  return (<Screen>
     <RevealCard question={q.data.text} mine={q.data.mine} theirs={q.data.theirs} />
     {showSave ? <SaveVoicePrompt onSave={handleSave} onSkip={() => setSkipped(true)} /> : null}
     {saving ? <Card><Text variant="body">Saving…</Text></Card> : null}
@@ -72,5 +73,5 @@ export default function PromptDetail() {
     {q.data.myKind === 'voice' && q.data.myExpiry !== 'saved' && !showSave && !skipped ? (
       <Card><Text variant="caption">Play your voice answer above so it counts as listened — once you both have listened you can save it.</Text><Button label="Refresh" variant="outline" onPress={() => { void listens.refetch(); void q.refetch(); }} /></Card>
     ) : null}
-  </>);
+  </Screen>);
 }

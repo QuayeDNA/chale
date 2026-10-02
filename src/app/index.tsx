@@ -9,6 +9,7 @@ import { AnswerComposer } from '@/components/answer-composer';
 import { AnswerModeToggle } from '@/components/answer-mode-toggle';
 import { VoiceRecorder } from '@/components/voice-recorder';
 import { WaitingState } from '@/components/waiting-state';
+import { Screen } from '@/components/screen';
 import { useConnection } from '@/hooks/use-connection';
 import { useTodayPrompt } from '@/hooks/use-today-prompt';
 import { supabase } from '@/lib/supabase';
@@ -29,13 +30,13 @@ export default function HomeScreen() {
     },
     enabled: !!prompt.data,
   });
-  if (conn.isLoading) return <Card><Text variant="body">Loading…</Text></Card>;
-  if (!conn.data) return <Card><Text variant="title">A question a day with your person</Text><Button label="Start with your person" onPress={() => router.push('/start')} /></Card>;
-  if (prompt.isLoading) return <Card><Text variant="body">Loading today&apos;s question…</Text></Card>;
-  if (prompt.error) return <Card><Text variant="body">Couldn&apos;t load today&apos;s question.</Text></Card>;
-  if (!prompt.data) return <Card><Text variant="body">Loading today&apos;s question…</Text></Card>;
-  if (myAnswer.data) return (<><QuestionCard text={prompt.data.text} kind={prompt.data.kind} /><WaitingState /><Button label="Open reveal" variant="outline" onPress={() => router.push({ pathname: '/prompt/[id]', params: { id: prompt.data.promptId } })} /></>);
-  return (<><QuestionCard text={prompt.data.text} kind={prompt.data.kind} /><AnswerWithMode promptId={prompt.data.promptId} kind={prompt.data.kind} /></>);
+  if (conn.isLoading) return <Screen><Card><Text variant="body">Loading…</Text></Card></Screen>;
+  if (!conn.data) return <Screen><Card><Text variant="title">A question a day with your person</Text><Button label="Start with your person" onPress={() => router.push('/start')} /></Card></Screen>;
+  if (prompt.isLoading) return <Screen><Card><Text variant="body">Loading today&apos;s question…</Text></Card></Screen>;
+  if (prompt.error) return <Screen><Card><Text variant="body">Couldn&apos;t load today&apos;s question.</Text></Card></Screen>;
+  if (!prompt.data) return <Screen><Card><Text variant="body">Loading today&apos;s question…</Text></Card></Screen>;
+  if (myAnswer.data) return (<Screen><QuestionCard text={prompt.data.text} kind={prompt.data.kind} /><WaitingState /><Button label="Open reveal" variant="outline" onPress={() => router.push({ pathname: '/prompt/[id]', params: { id: prompt.data.promptId } })} /></Screen>);
+  return (<Screen><QuestionCard text={prompt.data.text} kind={prompt.data.kind} /><AnswerWithMode promptId={prompt.data.promptId} kind={prompt.data.kind} /></Screen>);
 }
 
 function AnswerWithMode({ promptId, kind }: { promptId: string; kind: string }) {
