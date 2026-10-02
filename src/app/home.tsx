@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { StyleSheet } from 'react-native-unistyles';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { DeckTile } from '@/components/deck-tile';
 import { Text } from '@/components/ui/text';
 import { Screen } from '@/components/screen';
 import { supabase } from '@/lib/supabase';
@@ -47,7 +47,7 @@ export default function HomeScreen() {
         </Card>
       ) : null}
       {(packs.data ?? []).map((p) => (
-        <PackButton
+        <PackTile
           key={p.id}
           packId={p.id}
           title={p.title}
@@ -60,7 +60,7 @@ export default function HomeScreen() {
   );
 }
 
-function PackButton({
+function PackTile({
   packId,
   title,
   onPress,
@@ -81,10 +81,7 @@ function PackButton({
     },
   });
   return (
-    <Button
-      label={`${title} · ${count.data ?? '…'} questions`}
-      onPress={onPress}
-    />
+    <DeckTile title={title} count={count.data ?? null} onPress={onPress} />
   );
 }
 
