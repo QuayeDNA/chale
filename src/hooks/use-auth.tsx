@@ -99,9 +99,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   const refreshProfile = useCallback(async () => {
-    if (!session?.user) return;
-    setProfile(await ensureProfileRow(session.user));
-  }, [session]);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+    setProfile(await ensureProfileRow(user));
+  }, []);
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
@@ -117,6 +120,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const verifyOtp = useCallback(async (email: string, token: string) => {
     const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: token.trim(), type: 'email' });
     if (error) throw error;
+    await supabase.auth.getSession();
     await refreshProfile();
   }, [refreshProfile]);
 
