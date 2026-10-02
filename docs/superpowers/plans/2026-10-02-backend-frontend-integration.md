@@ -18,8 +18,14 @@
 - Voice backstop expiry is `now()+7 days` on upload.
 - Save is speaker-only, after both listened.
 - UI uses only `src/components/ui/*` (Button, Card, Text, TextInput, Badge, Icon) + `ThemedText/View` — no new design tokens.
-- MVP relationship_type is `partner` only.
-- Push notifications and scheduler/cron are out of scope.
+- MVP relationship_type is `partner` only, but picker UI must exist with Friend/Family visible-disabled ("soon") per 04-user-flows §1.
+- Push notifications and scheduler/cron are out of scope — realtime subscription is the stand-in; notification triggers (§5) are not built in this pass.
+- Account request at pairing collects display_name + email (OTP); name is written to `users.display_name` on verify.
+- No rollover: each date gets its own prompt (`uq_prompt_connection_date`); unanswered prompts stay on their date, today shows only today's prompt.
+- Waiting states must confirm own submission without leaking whether partner started (never query partner answer count pre-reveal).
+- Submitted answers are never editable (composer unmounts after submit, RPC `on conflict do nothing`).
+- Reveal requires no extra tap once `revealed` — realtime flip auto-swaps Waiting → Reveal.
+- Voice save prompt appears only to speaker after both listened; listener never sees save.
 
 ---
 
@@ -48,15 +54,18 @@ Modified:
 - `package.json` — add `expo-audio`.
 
 New screens/components (functional composition only):
-- `src/app/auth.tsx` — OTP entry.
-- `src/app/prompt/[id].tsx` — answer + reveal detail.
-- `src/components/connection-invite.tsx`
+- `src/app/auth.tsx` — OTP entry + display_name capture.
+- `src/app/prompt/[id].tsx` — answer + reveal detail (auto-swaps, no extra tap).
+- `src/components/connection-invite.tsx` — code + share + explicit pending blocker text.
+- `src/components/relationship-picker.tsx` — Partner selectable, Friend/Family disabled "soon" (04 §1).
+- `src/components/pending-connection.tsx` — "You're connected on your side. Waiting for them to join." (04 §1, not a spinner).
 - `src/components/question-card.tsx`
-- `src/components/answer-composer.tsx`
-- `src/components/waiting-state.tsx`
+- `src/components/answer-mode-toggle.tsx` — Text/Voice switch with accessible active state (04 §2 step C).
+- `src/components/answer-composer.tsx` — unmounts after submit, never editable.
+- `src/components/waiting-state.tsx` — own-confirmation only, no partner-started leak.
 - `src/components/reveal-card.tsx`
 - `src/components/voice-recorder.tsx`
-- `src/components/save-voice-prompt.tsx`
+- `src/components/save-voice-prompt.tsx` — speaker-only.
 
 Docs to check while working: `docs/02-technical-architecture.md` §3-§4, `docs/04-user-flows.md` §1-§4, `supabase/migrations/0001_initial_schema.sql` (RLS + submit_answer pattern).
 
@@ -361,7 +370,7 @@ git commit -m "feat(app): thin RPC clients for pairing prompt answers voice"
 
 **Interfaces:**
 - Consumes: `supabase.auth.signInWithOtp`, `verifyOtp`, `linkIdentity`, existing `ensureProfileRow`.
-- Produces: `signInWithOtpEmail(email:string): Promise<void>`; `verifyOtp(email:string,token:string): Promise<void>`; `isAnonymous:boolean` stays true until verify completes.
+- Produces: `signInWithOtpEmail(email:string): Promise<void>`; `verifyOtp(email:string,token:string): Promise<void>`; `updateDisplayName(name:string): Promise<void>` writing `users.display_name`; `isAnonymous:boolean` stays true until verify completes.
 
 - [ ] **Step 1: Add OTP helpers to use-auth**
 
@@ -381,7 +390,17 @@ const verifyOtp = useCallback(async (email: string, token: string) => {
   if (error) throw error;
   await refreshProfile();
 }, [refreshProfile]);
+const updateDisplayName = useCallback(async (name: string) => {
+  const clean = name.trim();
+  if (!clean) throw new Error('Name cannot be empty');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not signed in');
+  const { error } = await supabase.from('users').update({ display_name: clean }).eq('id', user.id);
+  if (error) throw error;
+  await refreshProfile();
+}, [refreshProfile]);
 ```
+Auth screen must render a `display_name` TextInput before the OTP code step and call `updateDisplayName` immediately after `verifyOtp` succeeds (04 §1 step D: name + email at pairing boundary).
 Keep anonymous session until verify: do not call `signOut()` before OTP; Supabase upgrades the anon user when `linkIdentity` is used for OAuth, and email OTP creates-or-links by email — profile row follows `auth.uid()` via `ensureProfileRow`.
 
 - [ ] **Step 2: Lint the hook**
@@ -410,7 +429,7 @@ git commit -m "feat(auth): email OTP at pairing boundary"
 
 **Interfaces:**
 - Consumes: `createConnection`, `joinConnection`, `useAuth`, `Button`, `Card`, `TextInput`, `Text`.
-- Produces: `ConnectionInvite {inviteCode:string}` component with Copy + Share (`chale://join?code=XXXXXX` via `Linking.createURL`).
+- Produces: `ConnectionInvite {inviteCode:string}` component with Copy + Share (`chale://join?code=XXXXXX` via `Linking.createURL`); `RelationshipPicker` (Partner enabled, Friend/Family disabled "soon"); `PendingConnection` blocker text; deep-link handler on `start` reading `join?code=` via `useLocalSearchParams` and pre-filling the code field (04 §1 steps E–J).
 
 - [ ] **Step 1: Write auth screen**
 
@@ -508,6 +527,29 @@ export function ConnectionInvite({ inviteCode, onShare }: { inviteCode: string; 
 }
 ```
 Note: run `npx expo install expo-clipboard` before this step — Copy uses `expo-clipboard`, Share uses `react-native` Share + `expo-linking` (already present, scheme `chale` in app.json).
+```tsx
+// src/components/relationship-picker.tsx
+import { Button } from './ui/button';
+import { Card } from './ui/card';
+import { Text } from './ui/text';
+export function RelationshipPicker({ value, onChange }: { value: 'partner'; onChange: (v: 'partner') => void }) {
+  return (
+    <Card>
+      <Text variant="label">Who is this connection with?</Text>
+      <Button label="Partner" onPress={() => onChange('partner')} />
+      <Button label="Friend — soon" disabled onPress={() => {}} />
+      <Button label="Family — soon" disabled onPress={() => {}} />
+    </Card>
+  );
+}
+// src/components/pending-connection.tsx
+import { Card } from './ui/card';
+import { Text } from './ui/text';
+export function PendingConnection({ inviteCode }: { inviteCode: string }) {
+  return <Card><Text variant="title">You're connected on your side.</Text><Text variant="body">We're waiting for them to join with code {inviteCode}. This is pending, not broken.</Text></Card>;
+}
+```
+Render order on `start` after create: `RelationshipPicker` (ask once at setup, 04 §1) → `ConnectionInvite` → `PendingConnection` while `status==='pending'`; deep-link `join?code=` pre-fills the join field. After `joinConnection` success route to `/` where `get_or_create_today_prompt` lands on home with first question waiting (04 §1 step L).
 
 - [ ] **Step 3: Register route + typecheck**
 
@@ -524,7 +566,7 @@ git commit -m "feat(app): pairing UI with code plus share link"
 
 **Files:**
 - Modify: `src/app/index.tsx`
-- Create: `src/hooks/use-connection.tsx`, `src/hooks/use-today-prompt.tsx`, `src/components/question-card.tsx`, `src/components/answer-composer.tsx`, `src/components/waiting-state.tsx`
+- Create: `src/hooks/use-connection.tsx`, `src/hooks/use-today-prompt.tsx`, `src/components/question-card.tsx`, `src/components/answer-mode-toggle.tsx`, `src/components/answer-composer.tsx`, `src/components/waiting-state.tsx`
 
 **Interfaces:**
 - Consumes: `getTodayPrompt`, `submitTextAnswer`, `supabase` connection fetch, `Button`, `Card`, `TextInput`.
@@ -567,6 +609,16 @@ import { Card } from './ui/card';
 import { Text } from './ui/text';
 export function QuestionCard({ text, kind }: { text: string; kind: string }) {
   return <Card variant="hero"><Text variant="label">Today's question</Text><Text variant="question">{text}</Text><Text variant="caption">{kind}</Text></Card>;
+}
+// src/components/answer-mode-toggle.tsx
+import { Button } from './ui/button';
+import { Text } from './ui/text';
+export function AnswerModeToggle({ mode, onChange }: { mode: 'text' | 'voice'; onChange: (m: 'text' | 'voice') => void }) {
+  return (<>
+    <Text variant="label">How do you want to answer?</Text>
+    <Button label="Text" variant={mode === 'text' ? 'primary' : 'outline'} onPress={() => onChange('text')} />
+    <Button label="Voice" variant={mode === 'voice' ? 'primary' : 'outline'} onPress={() => onChange('voice')} />
+  </>);
 }
 // src/components/answer-composer.tsx
 import { useState } from 'react';
@@ -619,20 +671,25 @@ export default function HomeScreen() {
   if (prompt.isLoading) return <Card><Text variant="body">Loading today's question…</Text></Card>;
   if (prompt.error) return <Card><Text variant="body">Couldn't load today's question.</Text></Card>;
   if (myAnswer.data) return (<><QuestionCard text={prompt.data!.text} kind={prompt.data!.kind} /><WaitingState /><Button label="Open reveal" variant="outline" onPress={() => router.push(`/prompt/${prompt.data!.promptId}`)} /></>);
-  return (<><QuestionCard text={prompt.data!.text} kind={prompt.data!.kind} /><AnswerComposer onSubmit={(t) => submitTextAnswer(prompt.data!.promptId, t)} /></>);
+  return <AnswerWithMode promptId={prompt.data!.promptId} kind={prompt.data!.kind} />;
+}
+function AnswerWithMode({ promptId, kind }: { promptId: string; kind: string }) {
+  const [mode, setMode] = useState<'text' | 'voice'>(kind === 'voice' ? 'voice' : 'text');
+  if (kind === 'text' || kind === 'voice') return <AnswerComposer onSubmit={(t) => submitTextAnswer(promptId, t)} />;
+  return (<><AnswerModeToggle mode={mode} onChange={setMode} />{mode === 'text' ? <AnswerComposer onSubmit={(t) => submitTextAnswer(promptId, t)} /> : <Text variant="caption">Voice arrives in Task 8 — switch stays visible per 04 §2 step C.</Text>}</>);
 }
 ```
-Check "my answer exists" via the `myAnswer` query above (`answers` + `user_id` + `prompt_id`).
+Check "my answer exists" via the `myAnswer` query above (`answers` + `user_id` + `prompt_id`). `AnswerModeToggle` satisfies 04 §2 step C (choose answer type); Task 8 replaces the voice placeholder with `VoiceRecorder`. Waiting text must never mention partner activity (04 §2 note).
 
 - [ ] **Step 4: Typecheck + lint**
 
-Run: `npx tsc --noEmit && npx expo lint src/hooks/use-connection.tsx src/hooks/use-today-prompt.tsx src/components/question-card.tsx src/components/answer-composer.tsx src/components/waiting-state.tsx src/app/index.tsx`
+Run: `npx tsc --noEmit && npx expo lint src/hooks/use-connection.tsx src/hooks/use-today-prompt.tsx src/components/question-card.tsx src/components/answer-mode-toggle.tsx src/components/answer-composer.tsx src/components/waiting-state.tsx src/app/index.tsx`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/hooks/use-connection.tsx src/hooks/use-today-prompt.tsx src/components/question-card.tsx src/components/answer-composer.tsx src/components/waiting-state.tsx src/app/index.tsx
+git add src/hooks/use-connection.tsx src/hooks/use-today-prompt.tsx src/components/question-card.tsx src/components/answer-mode-toggle.tsx src/components/answer-composer.tsx src/components/waiting-state.tsx src/app/index.tsx
 git commit -m "feat(app): today question text answer plus waiting state"
 ```
 
@@ -803,10 +860,13 @@ Expected: PASS with no output.
 Run: `npx expo lint`
 Expected: PASS with no errors.
 
-- [ ] **Step 2: Two-device functional sweep**
+- [ ] **Step 2: Two-device functional sweep against 04-user-flows.md**
 
-On Android + web: fresh anon → OTP → create → copy/share link → second device join → auto today prompt appears both sides → A text answers → A sees waiting, B sees question → B answers → both realtime to reveal → voice clip round-trip + save.
-Expected: all transitions work, no partner answer visible pre-reveal.
+Flow 1 (§1): fresh anon browses samples → Start → name+email OTP → generate code → share link `chale://join?code=` → second device pre-fills and joins → picker shows Partner only → pending screen reads blocking state → linked lands on first question.
+Flow 2 (§2): text answer → waiting confirms own submit only → partner answers → realtime flips to reveal, no extra tap.
+Flow 3 (§3): voice record → preview/re-record → send → reveal playable → both listen → speaker-only save prompt → saved/expired.
+Flow 4 (§4): reveal side-by-side, voice tap-to-play.
+Expected: all transitions work, no partner answer visible pre-reveal, no partner-started leak in waiting.
 
 - [ ] **Step 3: Commit fixes only if needed**
 
