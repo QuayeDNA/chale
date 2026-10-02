@@ -28,14 +28,15 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
   }, [status, fontsLoaded]);
 
   return (
-    <Stack initialRouteName="splash" screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" />
       <Stack.Screen name="splash" />
       <Stack.Screen name="welcome" />
       <Stack.Screen name="home" />
       <Stack.Screen name="deck/[id]" />
       <Stack.Screen name="session" />
       <Stack.Screen name="favourites" />
-      <Stack.Screen name="index" />
+      <Stack.Screen name="remote" />
       <Stack.Screen name="start" />
       <Stack.Screen name="prompt/[id]" />
       <Stack.Screen name="auth" />

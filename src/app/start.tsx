@@ -44,7 +44,7 @@ export default function StartScreen() {
       ) : null}
       <TextInput placeholder="Enter their code" autoCapitalize="characters" value={code} onChangeText={setCode} maxLength={6} />
       <Button label="Join with code" variant="outline" disabled={needAuth || code.trim().length < 6} onPress={async () => {
-        try { setErr(null); await joinConnection(code); router.replace('/'); } catch (e) { setErr((e as Error).message); }
+        try { setErr(null); await joinConnection(code); router.replace('/remote'); } catch (e) { setErr((e as Error).message); }
       }} />
       {err ? <Text variant="caption">{err}</Text> : null}
     </Card>
