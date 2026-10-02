@@ -7,11 +7,13 @@ import { Text } from '@/components/ui/text';
 import { QuestionCard } from '@/components/question-card';
 import { AnswerComposer } from '@/components/answer-composer';
 import { AnswerModeToggle } from '@/components/answer-mode-toggle';
+import { VoiceRecorder } from '@/components/voice-recorder';
 import { WaitingState } from '@/components/waiting-state';
 import { useConnection } from '@/hooks/use-connection';
 import { useTodayPrompt } from '@/hooks/use-today-prompt';
 import { supabase } from '@/lib/supabase';
-import { submitTextAnswer } from '@/lib/answers';
+import { submitTextAnswer, submitVoiceAnswer } from '@/lib/answers';
+import { uploadVoiceAsync } from '@/lib/voice-upload';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -43,6 +45,13 @@ function AnswerWithMode({ promptId, kind }: { promptId: string; kind: string }) 
     await submitTextAnswer(promptId, t);
     await queryClient.invalidateQueries({ queryKey: ['answers', 'mine', promptId] });
   };
-  if (kind === 'text' || kind === 'voice') return <AnswerComposer onSubmit={handleSubmit} />;
-  return (<><AnswerModeToggle mode={mode} onChange={setMode} />{mode === 'text' ? <AnswerComposer onSubmit={handleSubmit} /> : <Text variant="caption">Voice arrives in Task 8 — switch stays visible per 04 §2 step C.</Text>}</>);
+  const handleVoiceSend = async (localUri: string) => {
+    const key = `${promptId}-${Date.now()}`;
+    const url = await uploadVoiceAsync(localUri, key);
+    await submitVoiceAnswer(promptId, url);
+    await queryClient.invalidateQueries({ queryKey: ['answers', 'mine', promptId] });
+  };
+  if (kind === 'voice') return <VoiceRecorder onSend={handleVoiceSend} />;
+  if (kind === 'text') return <AnswerComposer onSubmit={handleSubmit} />;
+  return (<><AnswerModeToggle mode={mode} onChange={setMode} />{mode === 'text' ? <AnswerComposer onSubmit={handleSubmit} /> : <VoiceRecorder onSend={handleVoiceSend} />}</>);
 }
