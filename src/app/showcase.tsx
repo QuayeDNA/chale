@@ -167,23 +167,28 @@ export default function ShowcaseScreen() {
             </View>
           </Card>
 
-          <SectionLabel>Cards</SectionLabel>
-          <Card variant="default">
-            <Text variant="smallBold">Default card</Text>
+          <SectionLabel>Cards — board instances</SectionLabel>
+          <Card variant="hero">
+            <Text variant="caption" muted>
+              QUESTION CARD (hero, radius 24, padded 32)
+            </Text>
+            <Text variant="title">What&apos;s something you&apos;ve never told me before?</Text>
             <Text variant="body" muted>
-              Base surface, border, standard radius.
+              ♡ Favourite row sits inside the card on the board.
             </Text>
           </Card>
-          <Card variant="hero">
-            <Text variant="smallBold">Hero card</Text>
+          <Card variant="default">
+            <Text variant="caption" muted>DEFAULT (radius 20, padded 24)</Text>
+            <Text variant="smallBold">Waiting on them…</Text>
             <Text variant="body" muted>
-              Larger radius + padding for key moments.
+              Base surface, thin border, subtle shadow — the workhorse.
             </Text>
           </Card>
           <Card variant="elevated">
-            <Text variant="smallBold">Elevated card</Text>
+            <Text variant="caption" muted>ELEVATED (deeper shadow)</Text>
+            <Text variant="smallBold">Deck detail sheet</Text>
             <Text variant="body" muted>
-              Higher elevation.
+              Stronger lift for sheets and overlays.
             </Text>
           </Card>
 

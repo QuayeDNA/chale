@@ -34,7 +34,12 @@ const styles = StyleSheet.create((theme) => ({
       case 'hero':
         return { borderRadius: theme.radii.hero, padding: theme.spacing.five };
       case 'elevated':
-        return { borderRadius: theme.radii.card, elevation: 6 };
+        return {
+          borderRadius: theme.radii.card,
+          shadowOffset: { width: 0, height: 12 },
+          shadowRadius: 24,
+          elevation: 6,
+        };
       case 'default':
       default:
         return { borderRadius: theme.radii.card };
