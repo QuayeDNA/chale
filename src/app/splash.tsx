@@ -1,57 +1,61 @@
 import { useEffect } from 'react';
-import { View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StyleSheet } from 'react-native-unistyles';
-import { Text } from '@/components/ui/text';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { BrandLockup } from '@/components/ui/brand-lockup';
+import { LoadingBar } from '@/components/ui/loading-bar';
+
+const ADVANCE_MS = 1800;
+const BAR_WIDTH = 160;
 
 export default function SplashScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
+  const lockupWidth = Math.min(windowWidth * 0.62, 280);
 
   useEffect(() => {
-    const t = setTimeout(() => router.replace('/welcome'), 1500);
+    const t = setTimeout(() => router.replace('/welcome'), ADVANCE_MS);
     return () => clearTimeout(t);
   }, [router]);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <View style={styles.center}>
-        <Text style={styles.crown}>♛</Text>
-        <Text variant="display" style={styles.wordmark}>
-          chale,
-        </Text>
-        <Text style={styles.tagline}>Better questions. Deeper chats.</Text>
+    <View style={[styles.root, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      <View style={styles.brandZone}>
+        <BrandLockup variant="light" width={lockupWidth} testID="splash-lockup" />
+        <View style={[styles.barWrap, { width: BAR_WIDTH }]}>
+          <LoadingBar
+            indeterminate
+            track="rgba(251, 243, 223, 0.2)"
+            testID="splash-loading"
+            accessibilityLabel="Loading Chale"
+          />
+        </View>
       </View>
-    </SafeAreaView>
+      {/* Lower zone reserved for the splash illustration artwork. */}
+      <View style={styles.artZone} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create((theme) => ({
-  safe: {
+  root: {
     flex: 1,
     backgroundColor: theme.colors.ink,
   },
-  center: {
+  brandZone: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: theme.spacing.three,
-    padding: theme.spacing.five,
+    gap: theme.spacing.five,
+    paddingHorizontal: theme.spacing.five,
   },
-  crown: {
-    fontSize: 30,
-    color: theme.colors.street,
+  barWrap: {
+    maxWidth: '100%',
   },
-  wordmark: {
-    fontSize: 56,
-    lineHeight: 60,
-    color: theme.colors.paper,
-  },
-  tagline: {
-    fontFamily: 'SplineSans_400Regular',
-    fontSize: 16,
-    lineHeight: 24,
-    color: theme.colors.paper,
-    opacity: 0.8,
+  artZone: {
+    flex: 1,
   },
 }));

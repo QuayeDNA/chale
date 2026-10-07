@@ -20,6 +20,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AnimatedIcon, LucideIcon, type ShowcaseIconName } from '@/components/ui/icon';
+import { BrandLockup } from '@/components/ui/brand-lockup';
+import { LoadingBar } from '@/components/ui/loading-bar';
 import { Text } from '@/components/ui/text';
 import { TextInput } from '@/components/ui/text-input';
 
@@ -251,6 +253,48 @@ export default function ShowcaseScreen() {
             </View>
           </Card>
 
+          <SectionLabel>Loading bar</SectionLabel>
+          <Card>
+            <View style={styles.stack}>
+              <Text variant="smallBold">Determinate</Text>
+              <LoadingBar progress={0.25} accessibilityLabel="Example loading 25 percent" />
+              <LoadingBar progress={0.6} accessibilityLabel="Example loading 60 percent" />
+              <LoadingBar progress={1} accessibilityLabel="Example loading complete" />
+              <Text variant="smallBold">Small size</Text>
+              <LoadingBar progress={0.6} size="sm" accessibilityLabel="Example small loading bar" />
+              <Text variant="smallBold">Indeterminate</Text>
+              <LoadingBar indeterminate accessibilityLabel="Example indeterminate loading" />
+            </View>
+          </Card>
+          <Card>
+            <View style={styles.darkPreview}>
+              <Text variant="smallBold" style={styles.darkPreviewLabel}>
+                On ink (splash context)
+              </Text>
+              <LoadingBar
+                indeterminate
+                track="rgba(251, 243, 223, 0.2)"
+                accessibilityLabel="Example loading bar on dark background"
+              />
+            </View>
+          </Card>
+
+          <SectionLabel>Brand lockup</SectionLabel>
+          <Card>
+            <View style={styles.stack}>
+              <Text variant="smallBold">Dark artwork on light</Text>
+              <BrandLockup variant="dark" width={200} />
+            </View>
+          </Card>
+          <Card>
+            <View style={styles.darkPreview}>
+              <Text variant="smallBold" style={styles.darkPreviewLabel}>
+                Light artwork on ink (splash)
+              </Text>
+              <BrandLockup variant="light" width={200} />
+            </View>
+          </Card>
+
           <SectionLabel>Inputs</SectionLabel>
           <Card>
             <TextInput
@@ -451,6 +495,18 @@ const styles = StyleSheet.create((theme) => ({
   sizeCell: {
     alignItems: 'center',
     gap: 6,
+  },
+  stack: {
+    gap: 12,
+  },
+  darkPreview: {
+    backgroundColor: theme.colors.ink,
+    borderRadius: 20,
+    padding: 24,
+    gap: 12,
+  },
+  darkPreviewLabel: {
+    color: theme.colors.paper,
   },
   footer: {
     paddingTop: 12,

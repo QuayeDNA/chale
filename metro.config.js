@@ -9,4 +9,9 @@ const config = getDefaultConfig(__dirname);
 // Without this, `Unable to resolve "./useQueries.js" from .../build/modern/index.js`.
 config.resolver.unstable_enablePackageExports = true;
 
+// Import .svg files as react-native-svg components.
+config.transformer.babelTransformerPath = require.resolve('react-native-svg-transformer');
+config.resolver.assetExts = config.resolver.assetExts.filter((ext) => ext !== 'svg');
+config.resolver.sourceExts.push('svg');
+
 module.exports = config;
