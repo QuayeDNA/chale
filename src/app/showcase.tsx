@@ -60,11 +60,13 @@ export default function ShowcaseScreen() {
   const router = useRouter();
   const [mode, setMode] = useState<'text' | 'voice'>('text');
   const [answer, setAnswer] = useState('');
+  const [fav, setFav] = useState(false);
   const [relation, setRelation] = useState<'partner'>('partner');
 
   if (!__DEV__) return <Redirect href="/" />;
 
   const noopAsync = async () => {};
+  const noop = () => {};
 
   return (
     <View style={styles.page}>
@@ -279,11 +281,38 @@ export default function ShowcaseScreen() {
             </Text>
           </Card>
 
-          <SectionLabel>Question + Answer loop</SectionLabel>
+          <SectionLabel>Question card — states</SectionLabel>
           <QuestionCard
-            text="What's something small that made you smile today?"
-            kind="text"
+            question="What's something you've never told me before?"
+            deckLabel="Love & Relationships"
+            deckTone="partner"
+            index={12}
+            total={100}
+            isFavourite={fav}
+            onToggleFavourite={() => setFav((f) => !f)}
+            onPrevious={noop}
+            onNext={noop}
           />
+          <QuestionCard
+            question="What's a memory of us you never want to forget?"
+            deckLabel="Family"
+            deckTone="family"
+            index={1}
+            total={65}
+            isFavourite
+            onToggleFavourite={noop}
+            onPrevious={noop}
+            onNext={noop}
+            prevDisabled
+          />
+          <QuestionCard
+            question="Your person has sent a question!"
+            deckLabel="Remote"
+            deckTone="muted"
+            hideNavigation
+          />
+
+          <SectionLabel>Question + Answer loop</SectionLabel>
           <AnswerModeToggle mode={mode} onChange={setMode} />
           <Card>
             <Text variant="smallBold">Answer composer (text)</Text>

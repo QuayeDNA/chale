@@ -3,6 +3,7 @@ import {
   AudioLines,
   Bell,
   Check,
+  ChevronLeft,
   ChevronRight,
   CircleHelp,
   Clock,
@@ -107,11 +108,12 @@ type LucideIconProps = {
   size?: number | string;
   color?: string;
   strokeWidth?: number | string;
+  fill?: string;
 };
 
 type LucideComponent = ComponentType<LucideIconProps>;
 
-type ExtraIconName = 'hourglass' | 'loader' | 'waves' | 'audiolines';
+type ExtraIconName = 'hourglass' | 'loader' | 'waves' | 'audiolines' | 'chevron-left';
 
 export type ShowcaseIconName = ChaleIconName | ExtraIconName;
 
@@ -135,6 +137,7 @@ const LUCIDE_MAP: Record<ShowcaseIconName, LucideComponent> = {
   info: Info,
   logout: LogOut,
   chevron: ChevronRight,
+  'chevron-left': ChevronLeft,
   stats: AudioLines,
   invite: Mail,
   hourglass: Hourglass,
@@ -145,22 +148,28 @@ const LUCIDE_MAP: Record<ShowcaseIconName, LucideComponent> = {
 
 /**
  * Static Lucide icon — board spec is Lucide 2px rounded
- * (round caps are Lucide's default).
+ * (round caps are Lucide's default). `filled` paints the
+ * shape for on-states like the favourited heart.
  */
 export function LucideIcon({
   name,
   size = 24,
   color,
   strokeWidth = 2,
+  filled = false,
 }: {
   name: ShowcaseIconName;
   size?: number;
   color?: string;
   strokeWidth?: number;
+  filled?: boolean;
 }) {
   const { theme } = useUnistyles();
+  const tint = color ?? theme.colors.ink;
   const Cmp = LUCIDE_MAP[name];
-  return <Cmp size={size} color={color ?? theme.colors.ink} strokeWidth={strokeWidth} />;
+  return (
+    <Cmp size={size} color={tint} strokeWidth={strokeWidth} fill={filled ? tint : 'none'} />
+  );
 }
 
 export type IconAnimation = 'pulse' | 'beat' | 'ring' | 'spin' | 'twinkle';

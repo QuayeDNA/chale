@@ -2,10 +2,7 @@ import { useState } from 'react';
 import { TextInput as RNTextInput, View, type TextInputProps } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
-import { RelationshipThemes } from '@/constants/theme';
-
 import { Text } from '@/components/ui/text';
-
 type Props = TextInputProps & {
   label?: string;
   hint?: string;
@@ -89,10 +86,11 @@ const styles = StyleSheet.create((theme) => ({
     paddingVertical: 13,
   },
   invalid: {
-    borderColor: RelationshipThemes.partner.accent,
+    // Design-system semantic Error (ref2), not a relationship accent.
+    borderColor: '#D32F2F',
   },
   invalidText: {
-    color: RelationshipThemes.partner.accent,
+    color: '#D32F2F',
   },
   placeholder: {
     color: theme.colors.muted,

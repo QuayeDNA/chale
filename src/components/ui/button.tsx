@@ -1,6 +1,7 @@
 import { ActivityIndicator, Pressable, type PressableProps } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { LucideIcon, type ShowcaseIconName } from './icon';
 import { Text } from './text';
 
 type Variant = 'primary' | 'secondary' | 'accent' | 'ghost' | 'outline' | 'destructive';
@@ -15,6 +16,8 @@ type Props = Omit<PressableProps, 'style' | 'disabled'> & {
   fullWidth?: boolean;
   disabled?: boolean;
   loading?: boolean;
+  icon?: ShowcaseIconName;
+  iconPosition?: 'left' | 'right';
 };
 
 export function Button({
@@ -26,10 +29,19 @@ export function Button({
   fullWidth,
   disabled,
   loading,
+  icon,
+  iconPosition = 'left',
   accessibilityLabel,
   ...rest
 }: Props) {
   const isDisabled = disabled || loading;
+  const iconColor =
+    variant === 'accent' && accentTextColor
+      ? accentTextColor
+      : (styles.label(variant).color as string);
+  const iconElement = icon ? (
+    <LucideIcon name={icon} size={size === 'sm' ? 16 : 20} color={iconColor} />
+  ) : null;
   return (
     <Pressable
       disabled={isDisabled}
@@ -53,6 +65,7 @@ export function Button({
           color={styles.label(variant).color as string}
         />
       ) : null}
+      {icon && iconPosition === 'left' ? iconElement : null}
       <Text
         variant={size === 'sm' ? 'label' : 'bodyStrong'}
         style={[
@@ -62,6 +75,7 @@ export function Button({
         ]}>
         {loading ? 'Loading…' : label}
       </Text>
+      {icon && iconPosition === 'right' ? iconElement : null}
     </Pressable>
   );
 }
