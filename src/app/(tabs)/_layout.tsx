@@ -70,6 +70,8 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: theme.colors.paper,
           borderTopColor: theme.colors.border,
+          paddingTop: 8,
+          paddingBottom: 16,
         },
         tabBarLabelStyle: {
           fontFamily: 'SplineSans_600SemiBold',
@@ -107,7 +109,7 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 2,
-    paddingHorizontal: 18,
+    paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 999,
   },
