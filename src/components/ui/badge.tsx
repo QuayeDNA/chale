@@ -1,6 +1,7 @@
 import { View, type ViewProps } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { Icon, type ChaleIconName } from './icon';
 import { Text } from './text';
 
 type Tone = 'street' | 'partner' | 'family' | 'friend' | 'muted';
@@ -8,12 +9,19 @@ type Tone = 'street' | 'partner' | 'family' | 'friend' | 'muted';
 type Props = ViewProps & {
   label: string;
   tone?: Tone;
+  icon?: ChaleIconName;
+  size?: 'sm' | 'md';
 };
 
-export function Badge({ label, tone = 'street', style, ...rest }: Props) {
+export function Badge({ label, tone = 'street', icon, size = 'sm', style, ...rest }: Props) {
   return (
-    <View style={[styles.base, styles.tone(tone), style]} {...rest}>
-      <Text variant="label" style={styles.label(tone)}>
+    <View
+      accessibilityRole="text"
+      style={[styles.base, styles.tone(tone), styles.size(size), style]}
+      {...rest}
+    >
+      {icon ? <Icon name={icon} size={size === 'md' ? 16 : 13} /> : null}
+      <Text variant="label" style={[styles.label(tone), size === 'md' && styles.labelMd]}>
         {label}
       </Text>
     </View>
@@ -23,10 +31,17 @@ export function Badge({ label, tone = 'street', style, ...rest }: Props) {
 const styles = StyleSheet.create((theme) => ({
   base: {
     alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: theme.radii.pill,
     borderWidth: 1,
+  },
+  size: (s: 'sm' | 'md') => {
+    if (s === 'md') return { paddingVertical: 7, paddingHorizontal: 14 };
+    return {};
   },
   tone: (t: Tone) => {
     switch (t) {
@@ -55,7 +70,9 @@ const styles = StyleSheet.create((theme) => ({
   label: (t: Tone) => {
     switch (t) {
       case 'street':
-        return { color: theme.colors.ink };
+        // Street fill is identical in light + dark, so the label stays
+        // fixed dark ink for contrast instead of following the theme.
+        return { color: '#2B1A0F' };
       case 'partner':
         return { color: theme.relationship.partner.accentText };
       case 'family':
@@ -66,5 +83,8 @@ const styles = StyleSheet.create((theme) => ({
       default:
         return { color: theme.colors.muted };
     }
+  },
+  labelMd: {
+    fontSize: 13,
   },
 }));
