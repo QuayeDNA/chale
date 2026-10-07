@@ -1,63 +1,15 @@
 import { Tabs } from 'expo-router';
-import type { ReactNode } from 'react';
-import {
-  Pressable,
-  View,
-  type GestureResponderEvent,
-  type StyleProp,
-  type ViewStyle,
-} from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { useUnistyles } from 'react-native-unistyles';
 
-import { LucideIcon, type ShowcaseIconName } from '@/components/ui/icon';
+import { FloatingTabBar } from '@/components/floating-tab-bar';
+import type { ChaleIconName } from '@/components/ui/icon';
 
-const TABS: { name: string; title: string; icon: ShowcaseIconName }[] = [
+const TABS: { name: string; title: string; icon: ChaleIconName }[] = [
   { name: 'home', title: 'Home', icon: 'home' },
   { name: 'favourites', title: 'Favourites', icon: 'heart' },
   { name: 'remote', title: 'Remote', icon: 'people' },
   { name: 'profile', title: 'Profile', icon: 'user' },
 ];
-
-type TabBarButtonProps = {
-  accessibilityState?: { selected?: boolean };
-  children?: ReactNode;
-  style?: StyleProp<ViewStyle>;
-  onPress?: ((event: GestureResponderEvent) => void) | null;
-  onLongPress?: ((event: GestureResponderEvent) => void) | null;
-  accessibilityLabel?: string;
-  testID?: string;
-};
-
-/**
- * Board-spec tab button: the active tab sits in a filled pill —
- * ink in light mode, cream in dark (theme ink flips).
- * (Haptics deliberately left out — expo-haptics would need a fresh
- * dev build; add it the next time a native rebuild happens anyway.)
- */
-function TabBarButton({
-  accessibilityState,
-  children,
-  style,
-  onPress,
-  onLongPress,
-  accessibilityLabel,
-  testID,
-}: TabBarButtonProps) {
-  const selected = accessibilityState?.selected === true;
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={accessibilityState}
-      accessibilityLabel={accessibilityLabel}
-      testID={testID}
-      onPress={onPress}
-      onLongPress={onLongPress}
-      style={[styles.button, style]}
-    >
-      <View style={[styles.pill, selected && styles.activePill]}>{children}</View>
-    </Pressable>
-  );
-}
 
 export default function TabsLayout() {
   const { theme } = useUnistyles();
@@ -65,57 +17,23 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarButton: (props) => <TabBarButton {...props} />,
-        tabBarActiveTintColor: theme.colors.paper,
-        tabBarInactiveTintColor: theme.colors.muted,
-        tabBarStyle: {
+        sceneStyle: {
           backgroundColor: theme.colors.paper,
-          borderTopColor: theme.colors.border,
-          paddingTop: 8,
-          paddingBottom: 48,
-        },
-        tabBarLabelStyle: {
-          fontFamily: 'SplineSans_600SemiBold',
-          fontSize: 12,
+          // Clearance for the floating bar (bar height + bottom offset).
+          paddingBottom: 110,
         },
       }}
+      tabBar={(props) => (
+        <FloatingTabBar
+          state={props.state}
+          navigation={props.navigation}
+          tabs={TABS}
+        />
+      )}
     >
       {TABS.map((t) => (
-        <Tabs.Screen
-          key={t.name}
-          name={t.name}
-          options={{
-            title: t.title,
-            tabBarIcon: ({ focused }) => (
-              <LucideIcon
-                name={t.icon}
-                size={24}
-                color={focused ? theme.colors.paper : theme.colors.muted}
-              />
-            ),
-          }}
-        />
+        <Tabs.Screen key={t.name} name={t.name} options={{ title: t.title }} />
       ))}
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create((theme) => ({
-  button: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pill: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 2,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-  // Filled pill: ink in light mode, cream in dark (theme ink flips).
-  activePill: {
-    backgroundColor: theme.colors.ink,
-  },
-}));
