@@ -9,12 +9,13 @@ import {
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import { useColorScheme } from 'react-native';
+import { View, useColorScheme } from 'react-native';
 
 import { QueryClientProvider } from '@tanstack/react-query';
 
 import { AuthProvider, useAuth } from '@/hooks/use-auth';
 import { queryClient } from '@/lib/query-client';
+import { DevFab } from '@/components/dev-fab';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -28,19 +29,23 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
   }, [status, fontsLoaded]);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
-      <Stack.Screen name="splash" />
-      <Stack.Screen name="welcome" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="deck/[id]" />
-      <Stack.Screen name="session" />
-      <Stack.Screen name="settings" />
-      <Stack.Screen name="start" />
-      <Stack.Screen name="prompt/[id]" />
-      <Stack.Screen name="auth" />
-      <Stack.Screen name="design" />
-    </Stack>
+    <View style={{ flex: 1 }}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="splash" />
+        <Stack.Screen name="welcome" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="deck/[id]" />
+        <Stack.Screen name="session" />
+        <Stack.Screen name="settings" />
+        <Stack.Screen name="start" />
+        <Stack.Screen name="prompt/[id]" />
+        <Stack.Screen name="auth" />
+        <Stack.Screen name="design" />
+        <Stack.Screen name="showcase" />
+      </Stack>
+      <DevFab />
+    </View>
   );
 }
 
