@@ -251,21 +251,31 @@ export default function ShowcaseScreen() {
 
           <SectionLabel>Inputs</SectionLabel>
           <Card>
-            <Text variant="smallBold">Text input</Text>
             <TextInput
+              label="Answer"
               placeholder="How are you really doing today?"
               value={answer}
               onChangeText={setAnswer}
+              hint="140 characters, from the heart."
               accessibilityLabel="Example text input"
             />
             <TextInput
+              label="Story"
               placeholder="Multiline…"
               multiline
               numberOfLines={3}
+              hint="Grows to a 96px minimum."
               accessibilityLabel="Example multiline input"
             />
+            <TextInput
+              label="Invite code"
+              placeholder="CHALE-0000"
+              defaultValue="CHALE-00"
+              error="That code doesn't match any street."
+              accessibilityLabel="Example error input"
+            />
             <Text variant="caption" muted>
-              Focus border turns street yellow.
+              56px single-line · street 2px focus ring · partner-red error.
             </Text>
           </Card>
 
