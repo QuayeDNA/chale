@@ -29,7 +29,8 @@ type TabBarButtonProps = {
 };
 
 /**
- * Board-spec tab button: the active tab sits in a street-gold pill.
+ * Board-spec tab button: the active tab sits in a filled pill —
+ * ink in light mode, cream in dark (theme ink flips).
  * (Haptics deliberately left out — expo-haptics would need a fresh
  * dev build; add it the next time a native rebuild happens anyway.)
  */
