@@ -5,6 +5,8 @@
 
 **Locked — Playful Street Energy (2026-09-15).** Foundational palette, type pairing, and token shape are settled. The contextual theming architecture in §2 was already settled and is unchanged — accent shifts per `connections.relationship_type` are applied on top of this foundation.
 
+**Product-behavior direction locked (2026-09-16, per `REVIEW.md`).** The system is a **behavioral system built around `question → answer → wait → reveal`**, not a component-library showcase. Interactions, lifecycle states (voice, reveal, pairing), and accessibility are first-class residents of this doc, not future toppings. P0 build order is defined in §9. Light theme is the documented default; dark is first-class.
+
 ---
 
 ## 1. Foundational elements (fixed across every context)
@@ -43,6 +45,32 @@ Grounded in Accra street culture (trotro yellow, hand-painted sign warmth). The 
 | `street` | `#F5B400` | Same pop — passes on both themes |
 
 Derived tokens: `shadow` is a warm shadow (`rgba(43,26,15,0.12)` light / `rgba(0,0,0,0.45)` dark), `overlay` for modals. Radii are varied by hierarchy (hero 24, card 20, chip 999), not uniform.
+
+Street yellow `#F5B400` is a **signal, not a wash** — it is the app's single high-signal color. Use it for: primary action, focus ring, active answer mode indicator, small product signals. Do **not** use it for: every icon, every border, every card, large page backgrounds, decorative gradients.
+
+### 1a-1. Semantic interaction tokens
+
+Components never reach for arbitrary hex values; they read semantic roles from the theme. These live beside the foundation colors in `src/unistyles.ts`:
+
+```ts
+text.primary          // primary content (ink)
+text.secondary        // secondary content (muted)
+text.inverse          // content on a filled color (paper)
+surface.page          // canvas (paper)
+surface.raised        // normal card (surface)
+surface.inset         // recessed input, sub-surface
+border.subtle         // hairline (border)
+border.strong         // emphasis divider, focus-able boundaries
+action.primary        // filled action (street)
+action.primaryPressed // pressed/dimmed action (derived)
+focus.ring            // visible keyboard/web focus ring
+status.success        // confirmations (green)
+status.warning        // caution, expiring soon (amber)
+status.danger         // errors, destructive (red)
+scrim                 // modal overlay (overlay)
+```
+
+Relationship accents (§2) stay a separate contextual layer; status colors are distinct from relationship colors. Contrast must be verified for every foreground/background pairing (normal text, large text, meaningful icons, focus rings, disabled states, light and dark).
 
 ### 1b. Type pairing
 
