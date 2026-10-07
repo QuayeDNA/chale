@@ -65,13 +65,13 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarButton: (props) => <TabBarButton {...props} />,
-        tabBarActiveTintColor: theme.colors.ink,
+        tabBarActiveTintColor: theme.colors.paper,
         tabBarInactiveTintColor: theme.colors.muted,
         tabBarStyle: {
           backgroundColor: theme.colors.paper,
           borderTopColor: theme.colors.border,
           paddingTop: 8,
-          paddingBottom: 16,
+          paddingBottom: 48,
         },
         tabBarLabelStyle: {
           fontFamily: 'SplineSans_600SemiBold',
@@ -89,7 +89,7 @@ export default function TabsLayout() {
               <LucideIcon
                 name={t.icon}
                 size={24}
-                color={focused ? theme.colors.ink : theme.colors.muted}
+                color={focused ? theme.colors.paper : theme.colors.muted}
               />
             ),
           }}
@@ -113,7 +113,8 @@ const styles = StyleSheet.create((theme) => ({
     paddingVertical: 6,
     borderRadius: 999,
   },
+  // Filled pill: ink in light mode, cream in dark (theme ink flips).
   activePill: {
-    backgroundColor: theme.colors.street,
+    backgroundColor: theme.colors.ink,
   },
 }));
