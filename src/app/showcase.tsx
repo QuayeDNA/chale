@@ -280,20 +280,18 @@ export default function ShowcaseScreen() {
           </Card>
 
           <SectionLabel>Brand lockup</SectionLabel>
-          <Card>
-            <View style={styles.stack}>
-              <Text variant="smallBold">Dark artwork on light</Text>
-              <BrandLockup variant="dark" width={200} />
-            </View>
-          </Card>
-          <Card>
-            <View style={styles.darkPreview}>
-              <Text variant="smallBold" style={styles.darkPreviewLabel}>
-                Light artwork on ink (splash)
-              </Text>
-              <BrandLockup variant="light" width={200} />
-            </View>
-          </Card>
+          <View style={styles.brandLightPreview}>
+            <Text variant="smallBold" style={styles.brandLightLabel}>
+              Dark artwork on light
+            </Text>
+            <BrandLockup variant="dark" width={200} />
+          </View>
+          <View style={styles.darkPreview}>
+            <Text variant="smallBold" style={styles.darkPreviewLabel}>
+              Light artwork on ink (splash)
+            </Text>
+            <BrandLockup variant="light" width={200} />
+          </View>
 
           <SectionLabel>Inputs</SectionLabel>
           <Card>
@@ -500,13 +498,26 @@ const styles = StyleSheet.create((theme) => ({
     gap: 12,
   },
   darkPreview: {
-    backgroundColor: theme.colors.ink,
+    // Fixed brand pair — never follows the theme.
+    backgroundColor: '#2B1A0F',
     borderRadius: 20,
     padding: 24,
     gap: 12,
   },
   darkPreviewLabel: {
-    color: theme.colors.paper,
+    color: '#FBF3DF',
+  },
+  brandLightPreview: {
+    // Fixed brand pair — never follows the theme.
+    backgroundColor: '#FFF9E8',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#EDE0BE',
+    padding: 24,
+    gap: 12,
+  },
+  brandLightLabel: {
+    color: '#2B1A0F',
   },
   footer: {
     paddingTop: 12,
