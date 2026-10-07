@@ -1,8 +1,8 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AnswerComposer } from '@/components/answer-composer';
 import { AnswerModeToggle } from '@/components/answer-mode-toggle';
@@ -64,6 +64,8 @@ export default function ShowcaseScreen() {
   const [answer, setAnswer] = useState('');
   const [fav, setFav] = useState(false);
   const [relation, setRelation] = useState<'partner'>('partner');
+  const { theme, rt } = useUnistyles();
+  const rnScheme = useColorScheme();
 
   if (!__DEV__) return <Redirect href="/" />;
 
@@ -100,6 +102,27 @@ export default function ShowcaseScreen() {
               with mock data — no network calls.
             </Text>
           </View>
+
+          <SectionLabel>Theme readout — report these values</SectionLabel>
+          <Card>
+            <Text variant="body">Unistyles scheme: {rt.colorScheme ?? 'none'}</Text>
+            <Text variant="body">RN scheme: {rnScheme ?? 'none'}</Text>
+            {[
+              { label: 'Tab bar bg (paper)', value: theme.colors.paper },
+              { label: 'Active pill fill (ink)', value: theme.colors.ink },
+              { label: 'Pill content (paper)', value: theme.colors.paper },
+              { label: 'Inactive (muted)', value: theme.colors.muted },
+            ].map((row) => (
+              <View key={row.label} style={styles.readoutRow}>
+                <View
+                  style={[styles.swatch, { backgroundColor: row.value }]}
+                />
+                <Text variant="caption">
+                  {row.label}: {row.value}
+                </Text>
+              </View>
+            ))}
+          </Card>
 
           <SectionLabel>Typography — board spec</SectionLabel>
           <Card>
@@ -493,6 +516,18 @@ const styles = StyleSheet.create((theme) => ({
   sizeCell: {
     alignItems: 'center',
     gap: 6,
+  },
+  readoutRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  swatch: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   stack: {
     gap: 12,
