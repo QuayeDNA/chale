@@ -19,11 +19,11 @@ import { VoiceMessage } from '@/components/voice-message';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Icon, type ChaleIconName } from '@/components/ui/icon';
+import { AnimatedIcon, LucideIcon, type ShowcaseIconName } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { TextInput } from '@/components/ui/text-input';
 
-const ALL_ICONS: ChaleIconName[] = [
+const ALL_ICONS: ShowcaseIconName[] = [
   'heart',
   'message',
   'mic',
@@ -45,6 +45,15 @@ const ALL_ICONS: ChaleIconName[] = [
   'chevron',
   'stats',
   'invite',
+];
+
+const ANIMATED_ICONS: { name: ShowcaseIconName; use: string }[] = [
+  { name: 'mic', use: 'pulse · recording' },
+  { name: 'heart', use: 'beat · favourite' },
+  { name: 'bell', use: 'ring · notification' },
+  { name: 'hourglass', use: 'spin · waiting' },
+  { name: 'sparkles', use: 'twinkle · reveal' },
+  { name: 'loader', use: 'spin · sending' },
 ];
 
 export default function ShowcaseScreen() {
@@ -192,13 +201,49 @@ export default function ShowcaseScreen() {
             </Text>
           </Card>
 
-          <SectionLabel>Icons</SectionLabel>
+          <SectionLabel>Icons — Lucide static (2px, rounded, 24px)</SectionLabel>
           <Card>
-            <View style={styles.rowWrap}>
+            <View style={styles.iconGrid}>
               {ALL_ICONS.map((name) => (
                 <View key={name} style={styles.iconCell}>
-                  <Icon name={name} size={20} />
+                  <View style={styles.iconDisc}>
+                    <LucideIcon name={name} size={24} />
+                  </View>
                   <Text variant="caption">{name}</Text>
+                </View>
+              ))}
+            </View>
+          </Card>
+
+          <SectionLabel>Icon sizes</SectionLabel>
+          <Card>
+            <View style={styles.sizeRow}>
+              {[16, 20, 24, 32].map((s) => (
+                <View key={s} style={styles.sizeCell}>
+                  <LucideIcon name="heart" size={s} />
+                  <Text variant="caption" muted>
+                    {s}px
+                  </Text>
+                </View>
+              ))}
+            </View>
+            <Text variant="caption" muted>
+              Board default 24 · stroke 2 · round caps. Tab bar renders 20–24 by platform.
+            </Text>
+          </Card>
+
+          <SectionLabel>Icons — animated (Reanimated loops)</SectionLabel>
+          <Card>
+            <View style={styles.iconGrid}>
+              {ANIMATED_ICONS.map(({ name, use }) => (
+                <View key={name} style={styles.iconCell}>
+                  <View style={styles.iconDisc}>
+                    <AnimatedIcon name={name} size={24} />
+                  </View>
+                  <Text variant="caption">{name}</Text>
+                  <Text variant="caption" muted>
+                    {use}
+                  </Text>
                 </View>
               ))}
             </View>
@@ -337,11 +382,36 @@ const styles = StyleSheet.create((theme) => ({
     flexWrap: 'wrap',
     gap: 8,
   },
+  iconGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
   iconCell: {
-    width: 72,
+    flexGrow: 1,
+    flexBasis: 100,
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
     paddingVertical: 8,
+  },
+  iconDisc: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  sizeRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 20,
+  },
+  sizeCell: {
+    alignItems: 'center',
+    gap: 6,
   },
   footer: {
     paddingTop: 12,
