@@ -1,30 +1,59 @@
-import { View } from 'react-native';
+import { Pressable, View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StyleSheet } from 'react-native-unistyles';
+
+import { Screen } from '@/components/screen';
+import { BrandLockup } from '@/components/ui/brand-lockup';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
-import { Screen } from '@/components/screen';
+import { useAuth } from '@/hooks/use-auth';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const { isAnonymous } = useAuth();
+  const scheme = useColorScheme();
+  const { width: windowWidth } = useWindowDimensions();
+  const lockupWidth = Math.min(windowWidth * 0.52, 220);
+  // Cream artwork on dark theme, ink artwork on light theme.
+  const lockupVariant = scheme === 'dark' ? 'light' : 'dark';
+
+  const handleGetStarted = () => {
+    if (isAnonymous) {
+      router.push('/auth');
+    } else {
+      router.replace('/home');
+    }
+  };
 
   return (
     <Screen>
       <View style={styles.hero}>
-        <Text style={styles.crown}>♛</Text>
-        <Text variant="display" style={styles.wordmark}>
-          chale,
-        </Text>
-        <Text variant="title" style={styles.tagline}>
-          Real questions. Better conversations.
+        <BrandLockup variant={lockupVariant} width={lockupWidth} testID="welcome-lockup" />
+      </View>
+      {/* Placeholder holding the future welcome illustration's size and position. */}
+      <View style={styles.artPlaceholder} accessibilityLabel="Welcome illustration placeholder">
+        <Text variant="caption" style={styles.artPlaceholderLabel}>
+          Welcome illustration
         </Text>
       </View>
-      <Button label="Get started" onPress={() => router.replace('/home')} />
-      <Button
-        label="Browse questions"
-        variant="outline"
-        onPress={() => router.push('/home')}
-      />
+      <View style={styles.actions}>
+        <Button label="Get started" onPress={handleGetStarted} testID="welcome-get-started" />
+        <Text variant="caption" muted style={styles.accountNote}>
+          Create your free account
+        </Text>
+        <Pressable
+          onPress={() => router.replace('/home')}
+          accessibilityRole="link"
+          accessibilityLabel="Browse as guest"
+          style={styles.guestHitArea}
+          testID="welcome-guest"
+        >
+          <Text variant="small" style={styles.guestLabel}>
+            Browse as guest instead
+          </Text>
+        </Pressable>
+      </View>
     </Screen>
   );
 }
@@ -32,18 +61,33 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create((theme) => ({
   hero: {
     alignItems: 'center',
-    gap: theme.spacing.three,
-    paddingVertical: theme.spacing.five,
+    paddingTop: theme.spacing.five,
   },
-  crown: {
-    fontSize: 30,
-    color: theme.colors.street,
+  artPlaceholder: {
+    height: 220,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: theme.colors.border,
+    borderRadius: 24,
+    marginVertical: theme.spacing.four,
   },
-  wordmark: {
-    fontSize: 48,
-    lineHeight: 52,
+  artPlaceholderLabel: {
+    color: theme.colors.muted,
   },
-  tagline: {
+  actions: {
+    gap: theme.spacing.two,
+  },
+  accountNote: {
     textAlign: 'center',
+  },
+  guestHitArea: {
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  guestLabel: {
+    textDecorationLine: 'underline',
   },
 }));
