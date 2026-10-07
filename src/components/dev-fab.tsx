@@ -29,7 +29,7 @@ export function DevFab() {
 const styles = StyleSheet.create((theme) => ({
   fab: {
     position: 'absolute',
-    bottom: 96,
+    bottom: 32,
     right: 20,
     width: 56,
     height: 56,
