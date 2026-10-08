@@ -28,6 +28,13 @@ import { Avatar } from '@/components/ui/avatar';
 import { Dropdown } from '@/components/ui/dropdown';
 import { Skeleton } from '@/components/ui/skeleton';
 
+/** Stand-in for a captured recording — speech-shaped, ~7s at 70ms intervals. */
+const MOCK_LEVELS = Array.from({ length: 105 }, (_, i) => {
+  const humps = Math.abs(Math.sin(i * 0.42)) * 0.6 + Math.abs(Math.sin(i * 0.13 + 2)) * 0.3;
+  const jitter = Math.abs(Math.sin(i * 2.7)) * 0.18;
+  return Math.min(1, 0.12 + humps + jitter);
+});
+
 const ALL_ICONS: ShowcaseIconName[] = [
   'heart',
   'message',
@@ -328,6 +335,18 @@ export default function ShowcaseScreen() {
             </Text>
             <BrandLockup variant="light" width={200} />
           </View>
+          <View style={styles.brandLightPreview}>
+            <Text variant="smallBold" style={styles.brandLightLabel}>
+              No subtitle — dark on light (header)
+            </Text>
+            <BrandLockup variant="dark" subtitle={false} width={160} />
+          </View>
+          <View style={styles.darkPreview}>
+            <Text variant="smallBold" style={styles.darkPreviewLabel}>
+              No subtitle — light on ink
+            </Text>
+            <BrandLockup variant="light" subtitle={false} width={160} />
+          </View>
 
           <SectionLabel>Inputs</SectionLabel>
           <Card>
@@ -431,6 +450,20 @@ export default function ShowcaseScreen() {
               label="Their voice answer"
             />
           </Card>
+          <Card>
+            <Text variant="smallBold">Voice message — captured levels</Text>
+            <Text variant="body" muted>
+              Same pill with a real waveform shape passed in. Playback needs a
+              real clip; the waveform layout is what you&apos;re checking.
+            </Text>
+            <VoiceMessage
+              url="https://example.com/mock-voice.m4a"
+              answerId="mock-captured"
+              label="Your voice answer"
+              durationMs={7400}
+              levels={MOCK_LEVELS}
+            />
+          </Card>
           <SaveVoicePrompt onSave={noopAsync} onSkip={() => {}} />
 
           <SectionLabel>Deck tiles — board §07</SectionLabel>
@@ -448,25 +481,38 @@ export default function ShowcaseScreen() {
             ))}
           </View>
 
-          <SectionLabel>Avatar — photo → initials → icon</SectionLabel>
+          <SectionLabel>Avatar — photo → generated → initials → icon</SectionLabel>
           <Card>
-            <Text variant="smallBold">Tones vary by person (seeded, random for guests)</Text>
+            <Text variant="smallBold">Generated faces (deterministic per seed)</Text>
+            <View style={styles.avatarRow}>
+              <Avatar seed="user-1" size={48} />
+              <Avatar seed="user-2" size={48} />
+              <Avatar seed="user-3" size={48} />
+              <Avatar seed="user-4" size={48} />
+              <Avatar seed="user-5" size={48} />
+            </View>
+            <Text variant="smallBold">Named — same face + tone every time</Text>
             <View style={styles.avatarRow}>
               <Avatar name="David Okafor" seed="user-1" size={48} />
               <Avatar name="Amara Chen" seed="user-2" size={48} />
               <Avatar name="Jon Park" seed="user-3" size={48} />
-              <Avatar name="Zoe Adeyemi" seed="user-4" size={48} />
-              <Avatar name="Sam Rivera" seed="user-5" size={48} />
             </View>
-            <Text variant="smallBold">Sizes + icon fallback (no name)</Text>
+            <Text variant="smallBold">Initials (generated={false})</Text>
             <View style={styles.avatarRow}>
-              <Avatar name="David Okafor" seed="user-1" size={32} />
-              <Avatar name="David Okafor" seed="user-1" size={40} />
-              <Avatar name="David Okafor" seed="user-1" size={56} />
-              <Avatar size={40} />
+              <Avatar name="David Okafor" seed="user-1" generated={false} size={48} />
+              <Avatar name="Amara Chen" seed="user-2" generated={false} size={48} />
+              <Avatar name="Jo" generated={false} size={48} />
+            </View>
+            <Text variant="smallBold">Sizes + icon fallback (no seed, no name)</Text>
+            <View style={styles.avatarRow}>
+              <Avatar name="David Okafor" seed="user-1" generated={false} size={32} />
+              <Avatar name="David Okafor" seed="user-1" generated={false} size={40} />
+              <Avatar name="David Okafor" seed="user-1" generated={false} size={56} />
+              <Avatar generated={false} size={40} />
             </View>
             <Text variant="caption" muted>
-              Same seed keeps its color. Guests with no seed get a random tone per mount.
+              One seed drives the face, the style and the background tone. Guests
+              with no seed get a face and tone fixed for the session.
             </Text>
           </Card>
 
