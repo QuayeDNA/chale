@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -76,7 +77,11 @@ export function FloatingTabBar({
             accessibilityLabel={meta.title}
             onPress={() => {
               const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-              if (!selected && !event.defaultPrevented) navigation.navigate(route.name);
+              if (!selected && !event.defaultPrevented) {
+                // No-op if the native module isn't in this build yet.
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                navigation.navigate(route.name);
+              }
             }}
             onLayout={(e) => {
               const { x, width } = e.nativeEvent.layout;
