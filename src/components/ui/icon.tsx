@@ -11,6 +11,7 @@ import {
   Heart,
   Home,
   Hourglass,
+  House,
   Info,
   LoaderCircle,
   LogOut,
@@ -22,6 +23,7 @@ import {
   Settings,
   Sparkles,
   Square,
+  Sun,
   User,
   Users,
   Waves,
@@ -58,7 +60,9 @@ type ChaleIconName =
   | 'logout'
   | 'chevron'
   | 'stats'
-  | 'invite';
+  | 'invite'
+  | 'sun'
+  | 'house';
 
 const ICON_MAP: Record<ChaleIconName, SymbolViewProps['name']> = {
   heart: { ios: 'heart.fill', android: 'favorite', web: 'favorite' },
@@ -82,6 +86,8 @@ const ICON_MAP: Record<ChaleIconName, SymbolViewProps['name']> = {
   chevron: { ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' },
   stats: { ios: 'chart.bar.fill', android: 'bar_chart', web: 'bar_chart' },
   invite: { ios: 'envelope.fill', android: 'mail', web: 'mail' },
+  sun: { ios: 'sun.max.fill', android: 'wb_sunny', web: 'wb_sunny' },
+  house: { ios: 'house.fill', android: 'home', web: 'home' },
 };
 
 type IconProps = {
@@ -140,6 +146,8 @@ const LUCIDE_MAP: Record<ShowcaseIconName, LucideComponent> = {
   'chevron-left': ChevronLeft,
   stats: AudioLines,
   invite: Mail,
+  sun: Sun,
+  house: House,
   hourglass: Hourglass,
   loader: LoaderCircle,
   waves: Waves,
