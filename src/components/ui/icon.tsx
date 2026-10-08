@@ -4,6 +4,7 @@ import {
   Bell,
   Check,
   ChevronLeft,
+  ChevronDown,
   ChevronRight,
   CircleHelp,
   Clock,
@@ -62,6 +63,7 @@ type ChaleIconName =
   | 'info'
   | 'logout'
   | 'chevron'
+  | 'chevron-down'
   | 'stats'
   | 'invite'
   | 'sun'
@@ -90,6 +92,7 @@ const ICON_MAP: Record<ChaleIconName, SymbolViewProps['name']> = {
   info: { ios: 'info.circle.fill', android: 'info', web: 'info' },
   logout: { ios: 'rectangle.portrait.and.arrow.right', android: 'logout', web: 'logout' },
   chevron: { ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' },
+  'chevron-down': { ios: 'chevron.down', android: 'expand_more', web: 'expand_more' },
   stats: { ios: 'chart.bar.fill', android: 'bar_chart', web: 'bar_chart' },
   invite: { ios: 'envelope.fill', android: 'mail', web: 'mail' },
   sun: { ios: 'sun.max.fill', android: 'wb_sunny', web: 'wb_sunny' },
@@ -128,9 +131,27 @@ type LucideIconProps = {
 
 type LucideComponent = ComponentType<LucideIconProps>;
 
-type ExtraIconName = 'hourglass' | 'loader' | 'waves' | 'audiolines' | 'chevron-left';
+type ExtraIconName =
+  | 'hourglass'
+  | 'loader'
+  | 'waves'
+  | 'audiolines'
+  | 'chevron-left'
+  | 'chevron-down';
 
 export type ShowcaseIconName = ChaleIconName | ExtraIconName;
+
+/**
+ * Narrows an author-supplied string to a registered icon name, falling back to
+ * `sparkles` instead of throwing. Deck identity (icon key) lives in the
+ * database, so a typo there must degrade to a visible generic icon rather than
+ * take a screen down.
+ */
+export function iconName(name: string | null | undefined): ShowcaseIconName {
+  return name != null && Object.hasOwn(LUCIDE_MAP, name)
+    ? (name as ShowcaseIconName)
+    : 'sparkles';
+}
 
 const LUCIDE_MAP: Record<ShowcaseIconName, LucideComponent> = {
   heart: Heart,
@@ -153,6 +174,7 @@ const LUCIDE_MAP: Record<ShowcaseIconName, LucideComponent> = {
   logout: LogOut,
   chevron: ChevronRight,
   'chevron-left': ChevronLeft,
+  'chevron-down': ChevronDown,
   stats: AudioLines,
   invite: Mail,
   sun: Sun,

@@ -67,16 +67,35 @@ const BG_COLORS = [
   'ffe0a3',
 ];
 
+/**
+ * Generated art is a pure function of the seed but costs a full SVG build,
+ * so keep the strings around. Without this every remount — flipping between
+ * showcase sections, a list row recycling — rebuilds an 11k-character SVG.
+ * FIFO, bounded: seeds are user ids, so the working set is small.
+ */
+const SVG_CACHE_LIMIT = 64;
+const svgCache = new Map<string, string>();
+
 /** Deterministic generated-avatar SVG for a seed (DiceBear). */
 export function generatedAvatarSvg(seed: string): string {
+  const cached = svgCache.get(seed);
+  if (cached !== undefined) return cached;
+
   const style = GENERATED_STYLES[hashString(seed) % GENERATED_STYLES.length];
   const backgroundColor = BG_COLORS[hashString(`bg:${seed}`) % BG_COLORS.length];
-  return createAvatar(style, {
+  const svg = createAvatar(style, {
     seed,
     backgroundColor: [backgroundColor],
     backgroundType: ['solid'],
     radius: 50,
   }).toString();
+
+  if (svgCache.size >= SVG_CACHE_LIMIT) {
+    const oldest = svgCache.keys().next().value;
+    if (oldest !== undefined) svgCache.delete(oldest);
+  }
+  svgCache.set(seed, svg);
+  return svg;
 }
 
 function hashString(value: string): number {

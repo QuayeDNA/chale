@@ -6,9 +6,15 @@
  * Pass `levels` for the real captured waveform. Answers recorded before
  * levels were persisted fall back to a shape derived from the answer id, so
  * the pill still reads as speech rather than a flat line.
+ *
+ * The audio player is only mounted while a clip is loaded. expo-audio's status
+ * event fires on a fixed `updateInterval` whether or not anything is playing,
+ * so a player left mounted idles at ~12 renders a second for every answer on
+ * screen. Unmounting on finish means a resting list of voice answers costs
+ * nothing.
  */
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Easing, useSharedValue, withTiming } from 'react-native-reanimated';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -31,11 +37,76 @@ type Props = {
   onError?: (message: string) => void;
 };
 
-export function VoiceMessage({ url, answerId, label, levels, durationMs, onError }: Props) {
-  const { theme } = useUnistyles();
+export function VoiceMessage({ label, onError, ...clip }: Props) {
+  // Derived, not stored: a new answerId simply doesn't match, so the pill
+  // reads as idle again without a reset effect.
+  const [loadedFor, setLoadedFor] = useState<string | null>(null);
+  const loaded = loadedFor === clip.answerId;
+
+  // Once per viewer per clip — keyed by id, so it survives unmount cycles.
+  const listenedFor = useRef<string | null>(null);
+
+  const handleFinished = useCallback(() => {
+    if (listenedFor.current === clip.answerId) return;
+    listenedFor.current = clip.answerId;
+    recordListen(clip.answerId).catch((e) =>
+      onError?.(e instanceof Error ? e.message : 'Could not record listen.'),
+    );
+  }, [clip.answerId, onError]);
+
+  return (
+    <View style={styles.wrap}>
+      <Text variant="label">{label}</Text>
+      {loaded ? (
+        <ClipPill
+          {...clip}
+          onError={onError}
+          onFinished={handleFinished}
+          onRetire={() => setLoadedFor(null)}
+        />
+      ) : (
+        <IdlePill {...clip} onLoad={() => setLoadedFor(clip.answerId)} />
+      )}
+    </View>
+  );
+}
+
+/** No player mounted — a still pill that only costs a tap to wake up. */
+function IdlePill({
+  levels,
+  durationMs,
+  answerId,
+  onLoad,
+}: Pick<Props, 'url' | 'levels' | 'durationMs' | 'answerId'> & { onLoad: () => void }) {
+  const progress = useSharedValue(0);
+
+  return (
+    <PillShell
+      playing={false}
+      onToggle={onLoad}
+      time={formatDuration(durationMs ?? 0)}
+      progress={progress}
+      levels={levels}
+      answerId={answerId}
+    />
+  );
+}
+
+/** Player mounted: real playback, seeking and the once-per-viewer listen. */
+function ClipPill({
+  url,
+  answerId,
+  levels,
+  durationMs,
+  onError,
+  onFinished,
+  onRetire,
+}: Omit<Props, 'label'> & {
+  onFinished: () => void;
+  onRetire: () => void;
+}) {
   const player = useAudioPlayer(url, { updateInterval: 80 });
   const status = useAudioPlayerStatus(player);
-  const listenedRef = useRef(false);
   const progress = useSharedValue(0);
 
   const { playing, currentTime, didJustFinish } = status;
@@ -48,26 +119,14 @@ export function VoiceMessage({ url, answerId, label, levels, durationMs, onError
     progress.value = value as number;
   };
 
-  useEffect(() => {
-    if (didJustFinish && !listenedRef.current) {
-      listenedRef.current = true;
-      recordListen(answerId).catch((e) =>
-        onError?.(e instanceof Error ? e.message : 'Could not record listen.'),
-      );
-    }
-  }, [didJustFinish, answerId, onError]);
-
-  // Reset the once-per-viewer guard when a different clip loads.
-  useEffect(() => {
-    listenedRef.current = false;
-    player.seekTo(0);
-  }, [answerId, player]);
-
-  // expo-audio doesn't rewind when playback ends — do it ourselves.
+  // expo-audio doesn't rewind when playback ends — do it ourselves, then hand
+  // the pill back so the player (and its status timer) can go away.
   useEffect(() => {
     if (didJustFinish) {
       setProgress(0);
       player.seekTo(0);
+      onFinished();
+      onRetire();
       return;
     }
     const p = total > 0 ? clamp01(currentTime / total) : 0;
@@ -84,39 +143,69 @@ export function VoiceMessage({ url, answerId, label, levels, durationMs, onError
   const shown = playing || currentTime > 0.1 ? currentTime : total;
 
   return (
-    <View style={styles.wrap}>
-      <Text variant="label">{label}</Text>
+    <PillShell
+      playing={playing}
+      onToggle={() => {
+        try {
+          if (playing) player.pause();
+          else player.play();
+        } catch (e) {
+          onError?.(e instanceof Error ? e.message : 'Could not play voice answer.');
+          onRetire();
+        }
+      }}
+      time={formatDuration(shown * 1000)}
+      progress={progress}
+      onSeek={seek}
+      levels={levels}
+      answerId={answerId}
+    />
+  );
+}
 
-      <View style={styles.pill}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={playing ? 'Pause voice message' : 'Play voice message'}
-          onPress={() => {
-            try {
-              if (playing) player.pause();
-              else player.play();
-            } catch (e) {
-              onError?.(e instanceof Error ? e.message : 'Could not play voice answer.');
-            }
-          }}
-          style={[styles.play, { backgroundColor: theme.colors.street }]}
-        >
-          <LucideIcon name={playing ? 'pause' : 'play'} size={18} color={theme.colors.ink} />
-        </Pressable>
+/** Shared chrome so the idle and playing pills can't drift apart. */
+function PillShell({
+  playing,
+  onToggle,
+  time,
+  progress,
+  onSeek,
+  levels,
+  answerId,
+}: {
+  playing: boolean;
+  onToggle: () => void;
+  time: string;
+  progress: ReturnType<typeof useSharedValue<number>>;
+  onSeek?: (ratio: number) => void;
+  levels?: number[];
+  answerId: string;
+}) {
+  const { theme } = useUnistyles();
 
-        <SeekWaveform
-          levels={levels}
-          seed={answerId}
-          progress={progress}
-          onSeek={seek}
-          dimColor={theme.colors.border}
-          fillColor={theme.colors.street}
-        />
+  return (
+    <View style={styles.pill}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={playing ? 'Pause voice message' : 'Play voice message'}
+        onPress={onToggle}
+        style={[styles.play, { backgroundColor: theme.colors.street }]}
+      >
+        <LucideIcon name={playing ? 'pause' : 'play'} size={18} color={theme.colors.ink} />
+      </Pressable>
 
-        <Text variant="smallBold" style={styles.time}>
-          {formatDuration(shown * 1000)}
-        </Text>
-      </View>
+      <SeekWaveform
+        levels={levels}
+        seed={answerId}
+        progress={progress}
+        onSeek={onSeek}
+        dimColor={theme.colors.border}
+        fillColor={theme.colors.street}
+      />
+
+      <Text variant="smallBold" style={styles.time}>
+        {time}
+      </Text>
     </View>
   );
 }

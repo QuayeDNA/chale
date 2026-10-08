@@ -245,7 +245,8 @@ export function SeekWaveform({
   /** Used to shape the placeholder when `levels` is absent. */
   seed?: string;
   progress: SharedValue<number>;
-  onSeek: (ratio: number) => void;
+  /** Omit when there is nothing loaded to seek — renders inert, not pressable. */
+  onSeek?: (ratio: number) => void;
   dimColor: string;
   fillColor: string;
 }) {
@@ -262,9 +263,26 @@ export function SeekWaveform({
   const fillStyle = useAnimatedStyle(() => ({ width: progress.value * width }));
 
   const handlePress = (e: GestureResponderEvent) => {
-    if (width <= 0) return;
+    if (width <= 0 || !onSeek) return;
     onSeek(clamp01(e.nativeEvent.locationX / width));
   };
+
+  const body = (
+    <View pointerEvents="none" style={styles.stack}>
+      <WaveBars bars={bars} color={dimColor} width={width} />
+      <Animated.View style={[styles.fill, fillStyle]}>
+        <WaveBars bars={bars} color={fillColor} width={width} />
+      </Animated.View>
+    </View>
+  );
+
+  if (!onSeek) {
+    return (
+      <View onLayout={onLayout} style={styles.hit}>
+        {body}
+      </View>
+    );
+  }
 
   return (
     <Pressable
@@ -274,12 +292,7 @@ export function SeekWaveform({
       onLayout={onLayout}
       style={styles.hit}
     >
-      <View pointerEvents="none" style={styles.stack}>
-        <WaveBars bars={bars} color={dimColor} width={width} />
-        <Animated.View style={[styles.fill, fillStyle]}>
-          <WaveBars bars={bars} color={fillColor} width={width} />
-        </Animated.View>
-      </View>
+      {body}
     </Pressable>
   );
 }

@@ -1,5 +1,12 @@
 import { Redirect, useRouter } from 'expo-router';
-import { useState } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import { Pressable, ScrollView, View, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -8,6 +15,7 @@ import { AnswerComposer } from '@/components/answer-composer';
 import { AnswerModeToggle } from '@/components/answer-mode-toggle';
 import { ConnectionInvite } from '@/components/connection-invite';
 import { DeckTile, type DeckTone } from '@/components/deck-tile';
+import type { DeckArtKey } from '@/decks/art';
 import { PendingConnection } from '@/components/pending-connection';
 import { QuestionCard } from '@/components/question-card';
 import { RelationshipPicker } from '@/components/relationship-picker';
@@ -19,9 +27,10 @@ import { VoiceMessage } from '@/components/voice-message';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { AnimatedIcon, LucideIcon, type ShowcaseIconName } from '@/components/ui/icon';
+import { ResponsiveGrid } from '@/components/ui/responsive-grid';
+import { AnimatedIcon, LucideIcon, type ChaleIconName, type ShowcaseIconName } from '@/components/ui/icon';
 import { BrandLockup } from '@/components/ui/brand-lockup';
-import { LoadingBar } from '@/components/ui/loading-bar';
+import { LoadingBar, type LoadingBarProps, type LoadingStatus } from '@/components/ui/loading-bar';
 import { Text } from '@/components/ui/text';
 import { TextInput } from '@/components/ui/text-input';
 import { Avatar } from '@/components/ui/avatar';
@@ -68,13 +77,62 @@ const ANIMATED_ICONS: { name: ShowcaseIconName; use: string }[] = [
   { name: 'loader', use: 'spin · sending' },
 ];
 
-const DECKS: { title: string; count: number; icon: ShowcaseIconName; tone: DeckTone }[] = [
-  { title: 'Love & Relationships', count: 100, icon: 'heart', tone: 'love' },
-  { title: 'Deep Talks', count: 80, icon: 'message', tone: 'deep' },
-  { title: 'Fun & Silly', count: 60, icon: 'sun', tone: 'silly' },
-  { title: 'Life & Dreams', count: 75, icon: 'sparkles', tone: 'dreams' },
-  { title: 'Family', count: 65, icon: 'house', tone: 'family' },
-  { title: 'Friends', count: 80, icon: 'people', tone: 'friends' },
+const DECKS: {
+  title: string;
+  count: string;
+  icon: ShowcaseIconName;
+  tone: DeckTone;
+  slug: string;
+  artKey: DeckArtKey;
+}[] = [
+  {
+    title: 'Love & Relationships',
+    count: '100 questions',
+    icon: 'heart',
+    tone: 'love',
+    slug: 'love-and-relationships',
+    artKey: 'stacked',
+  },
+  {
+    title: 'Deep Talks',
+    count: '80 questions',
+    icon: 'message',
+    tone: 'deep',
+    slug: 'deep-talks',
+    artKey: 'deck-edge',
+  },
+  {
+    title: 'Fun & Silly',
+    count: '60 questions',
+    icon: 'sun',
+    tone: 'silly',
+    slug: 'fun-and-silly',
+    artKey: 'scattered',
+  },
+  {
+    title: 'Life & Dreams',
+    count: '75 questions',
+    icon: 'sparkles',
+    tone: 'dreams',
+    slug: 'life-and-dreams',
+    artKey: 'stacked',
+  },
+  {
+    title: 'Family',
+    count: '65 questions',
+    icon: 'house',
+    tone: 'family',
+    slug: 'family',
+    artKey: 'deck-edge',
+  },
+  {
+    title: 'Friends',
+    count: '80 questions',
+    icon: 'people',
+    tone: 'friends',
+    slug: 'friends',
+    artKey: 'scattered',
+  },
 ];
 
 export default function ShowcaseScreen() {
@@ -84,6 +142,9 @@ export default function ShowcaseScreen() {
   const [fav, setFav] = useState(false);
   const [relation, setRelation] = useState<'partner'>('partner');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loadStatus, setLoadStatus] = useState<LoadingStatus>('active');
+  const [section, setSection] = useState<SectionKey>('theme');
+  const scrollRef = useRef<ScrollView>(null);
   const { theme, rt } = useUnistyles();
   const rnScheme = useColorScheme();
 
@@ -92,10 +153,16 @@ export default function ShowcaseScreen() {
   const noopAsync = async () => {};
   const noop = () => {};
 
+  const goToSection = (key: SectionKey) => {
+    setSection(key);
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  };
+
   return (
     <View style={styles.page}>
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <ScrollView
+          ref={scrollRef}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -118,12 +185,16 @@ export default function ShowcaseScreen() {
           <View style={styles.intro}>
             <Text variant="display">Showcase</Text>
             <Text variant="body" muted>
-              Every UI primitive and product component in one place. Rendered
-              with mock data — no network calls.
+              One section at a time, so the demos you are not looking at stay
+              unmounted. Rendered with mock data — no network calls.
             </Text>
           </View>
 
-          <SectionLabel>Theme readout — report these values</SectionLabel>
+          <SectionContext.Provider value={section}>
+            <ShowcaseNav value={section} onChange={goToSection} />
+
+            <ShowSection id="theme">
+              <SectionLabel>Theme readout — report these values</SectionLabel>
           <Card>
             <Text variant="body">Unistyles scheme: {rt.colorScheme ?? 'none'}</Text>
             <Text variant="body">RN scheme: {rnScheme ?? 'none'}</Text>
@@ -144,6 +215,9 @@ export default function ShowcaseScreen() {
             ))}
           </Card>
 
+          </ShowSection>
+
+          <ShowSection id="typography">
           <SectionLabel>Typography — board spec</SectionLabel>
           <Card>
             <Text variant="caption" muted>
@@ -172,6 +246,9 @@ export default function ShowcaseScreen() {
             </Text>
           </Card>
 
+          </ShowSection>
+
+          <ShowSection id="buttons">
           <SectionLabel>Buttons — board instances</SectionLabel>
           <Card>
             <Text variant="smallBold">Variants (fully rounded)</Text>
@@ -205,6 +282,9 @@ export default function ShowcaseScreen() {
             <Button label="Just the two of us" variant="outline" fullWidth />
           </Card>
 
+          </ShowSection>
+
+          <ShowSection id="badges">
           <SectionLabel>Badges — board instances</SectionLabel>
           <Card>
             <Text variant="smallBold">Tones</Text>
@@ -223,6 +303,9 @@ export default function ShowcaseScreen() {
             </View>
           </Card>
 
+          </ShowSection>
+
+          <ShowSection id="cards">
           <SectionLabel>Cards — board instances</SectionLabel>
           <Card variant="hero">
             <Text variant="caption" muted>
@@ -248,6 +331,9 @@ export default function ShowcaseScreen() {
             </Text>
           </Card>
 
+          </ShowSection>
+
+          <ShowSection id="icons">
           <SectionLabel>Icons — Lucide static (2px, rounded, 24px)</SectionLabel>
           <Card>
             <View style={styles.iconGrid}>
@@ -262,6 +348,9 @@ export default function ShowcaseScreen() {
             </View>
           </Card>
 
+          </ShowSection>
+
+          <ShowSection id="icon-sizes">
           <SectionLabel>Icon sizes</SectionLabel>
           <Card>
             <View style={styles.sizeRow}>
@@ -279,6 +368,9 @@ export default function ShowcaseScreen() {
             </Text>
           </Card>
 
+          </ShowSection>
+
+          <ShowSection id="icons-animated">
           <SectionLabel>Icons — animated (Reanimated loops)</SectionLabel>
           <Card>
             <View style={styles.iconGrid}>
@@ -296,19 +388,137 @@ export default function ShowcaseScreen() {
             </View>
           </Card>
 
-          <SectionLabel>Loading bar</SectionLabel>
+          </ShowSection>
+
+          <ShowSection id="loading-bar">
+          <SectionLabel>Loading bar — bar variant</SectionLabel>
           <Card>
             <View style={styles.stack}>
-              <Text variant="smallBold">Determinate</Text>
-              <LoadingBar progress={0.25} accessibilityLabel="Example loading 25 percent" />
-              <LoadingBar progress={0.6} accessibilityLabel="Example loading 60 percent" />
-              <LoadingBar progress={1} accessibilityLabel="Example loading complete" />
-              <Text variant="smallBold">Small size</Text>
-              <LoadingBar progress={0.6} size="sm" accessibilityLabel="Example small loading bar" />
-              <Text variant="smallBold">Indeterminate</Text>
-              <LoadingBar indeterminate accessibilityLabel="Example indeterminate loading" />
+              <Text variant="smallBold">Determinate — auto-fills</Text>
+              <AutoFillBar
+                size="lg"
+                accessibilityLabel="Example determinate loading bar filling"
+              />
+              <AutoFillBar accessibilityLabel="Example determinate loading bar" />
+              <AutoFillBar accessibilityLabel="Example determinate loading bar" />
+              <Text variant="caption" muted>
+                These three loop 0 → 100% on one shared value. Every new progress
+                eases over 450ms, so the fill grows instead of jumping, and the
+                lead edge never thins below one dot.
+              </Text>
+
+              <Text variant="smallBold">Sizes — 6 / 10 / 14</Text>
+              <AutoFillBar size="sm" accessibilityLabel="Small loading bar" />
+              <AutoFillBar size="md" accessibilityLabel="Medium loading bar" />
+              <AutoFillBar size="lg" accessibilityLabel="Large loading bar" />
+
+              <Text variant="smallBold">Indeterminate — travelling sheen</Text>
+              <LoadingBar indeterminate accessibilityLabel="Indeterminate loading bar" />
+              <Text variant="caption" muted>
+                Loops until status settles. With reduced motion on it holds a
+                static 40% instead.
+              </Text>
+
+              <Text variant="smallBold">Status</Text>
+              <AutoFillBar status="success" accessibilityLabel="Completed loading" />
+              <AutoFillBar status="error" accessibilityLabel="Failed loading" />
+              <Text variant="caption" muted>
+                success #2E9E5B, error #D32F2F. Success snaps the fill to full;
+                error keeps the fill and tints it red. Both cross-fade over
+                250ms.
+              </Text>
+
+              <Text variant="smallBold">Tap to cycle status</Text>
+              <Pressable
+                onPress={() =>
+                  setLoadStatus((s) =>
+                    s === 'active' ? 'success' : s === 'success' ? 'error' : 'active',
+                  )
+                }
+                accessibilityRole="button"
+                accessibilityLabel="Cycle loading bar status"
+                style={styles.loadCycle}
+              >
+                <LoadingBar
+                  progress={loadStatus === 'active' ? undefined : 1}
+                  status={loadStatus}
+                  size="lg"
+                  accessibilityLabel={`Live example, status ${loadStatus}`}
+                />
+                <Text variant="caption" muted style={styles.loadCycleHint}>
+                  {loadStatus} — tap to change
+                </Text>
+              </Pressable>
+
+              <Text variant="smallBold">Colour overrides</Text>
+              <AutoFillBar
+                fill={theme.relationship.partner.accent}
+                accessibilityLabel="Loading bar with partner fill"
+              />
+              <LoadingBar
+                indeterminate
+                fill={theme.relationship.friend.accent}
+                track={theme.colors.surface}
+                accessibilityLabel="Loading bar with custom fill and track"
+              />
             </View>
           </Card>
+
+          </ShowSection>
+
+          <ShowSection id="loading-segments">
+          <SectionLabel>Loading bar — segments variant</SectionLabel>
+          <Card>
+            <View style={styles.stack}>
+              <Text variant="smallBold">Determinate — fills pill by pill</Text>
+              <AutoFillBar
+                variant="segments"
+                segments={5}
+                accessibilityLabel="Segmented loading filling pill by pill"
+              />
+              <AutoFillBar
+                variant="segments"
+                segments={8}
+                accessibilityLabel="Eight segment loading filling pill by pill"
+              />
+              <Text variant="caption" muted>
+                Same shared 0 → 100% value. Each pill fills on its own turn, so
+                5 pills read as big steps and 8 as fine ones.
+              </Text>
+
+              <Text variant="smallBold">Indeterminate — wave through the pills</Text>
+              <LoadingBar
+                variant="segments"
+                segments={6}
+                indeterminate
+                size="lg"
+                accessibilityLabel="Segmented indeterminate loading"
+              />
+              <Text variant="caption" muted>
+                A playhead brightens each pill in turn — use this where the wait
+                has visible steps (onboarding, a multi-part upload).
+              </Text>
+
+              <Text variant="smallBold">Status</Text>
+              <LoadingBar
+                variant="segments"
+                segments={5}
+                progress={1}
+                status="success"
+                accessibilityLabel="Segmented loading completed"
+              />
+              <LoadingBar
+                variant="segments"
+                segments={5}
+                progress={1}
+                status="error"
+                accessibilityLabel="Segmented loading failed"
+              />
+            </View>
+          </Card>
+          </ShowSection>
+
+          <ShowSection id="loading-dark">
           <Card>
             <View style={styles.darkPreview}>
               <Text variant="smallBold" style={styles.darkPreviewLabel}>
@@ -317,11 +527,22 @@ export default function ShowcaseScreen() {
               <LoadingBar
                 indeterminate
                 track="rgba(251, 243, 223, 0.2)"
-                accessibilityLabel="Example loading bar on dark background"
+                accessibilityLabel="Loading bar on dark background"
+              />
+              <View style={styles.loadGap} />
+              <LoadingBar
+                variant="segments"
+                segments={5}
+                indeterminate
+                track="rgba(251, 243, 223, 0.2)"
+                accessibilityLabel="Segmented loading bar on dark background"
               />
             </View>
           </Card>
 
+          </ShowSection>
+
+          <ShowSection id="brand">
           <SectionLabel>Brand lockup</SectionLabel>
           <View style={styles.brandLightPreview}>
             <Text variant="smallBold" style={styles.brandLightLabel}>
@@ -348,6 +569,9 @@ export default function ShowcaseScreen() {
             <BrandLockup variant="light" subtitle={false} width={160} />
           </View>
 
+          </ShowSection>
+
+          <ShowSection id="inputs">
           <SectionLabel>Inputs</SectionLabel>
           <Card>
             <TextInput
@@ -378,6 +602,9 @@ export default function ShowcaseScreen() {
             </Text>
           </Card>
 
+          </ShowSection>
+
+          <ShowSection id="question-states">
           <SectionLabel>Question card — states</SectionLabel>
           <QuestionCard
             question="What's something you've never told me before?"
@@ -409,6 +636,9 @@ export default function ShowcaseScreen() {
             hideNavigation
           />
 
+          </ShowSection>
+
+          <ShowSection id="answer-loop">
           <SectionLabel>Question + Answer loop</SectionLabel>
           <AnswerModeToggle mode={mode} onChange={setMode} />
           <Card>
@@ -437,6 +667,9 @@ export default function ShowcaseScreen() {
             }}
           />
 
+          </ShowSection>
+
+          <ShowSection id="voice">
           <SectionLabel>Voice message + save prompt</SectionLabel>
           <Card>
             <Text variant="smallBold">Voice message</Text>
@@ -466,21 +699,28 @@ export default function ShowcaseScreen() {
           </Card>
           <SaveVoicePrompt onSave={noopAsync} onSkip={() => {}} />
 
-          <SectionLabel>Deck tiles — board §07</SectionLabel>
-          <View style={styles.deckGrid}>
-            {DECKS.map((deck) => (
-              <View key={deck.title} style={styles.deckCell}>
-                <DeckTile
-                  title={deck.title}
-                  count={deck.count}
-                  icon={deck.icon}
-                  tone={deck.tone}
-                  onPress={() => {}}
-                />
-              </View>
-            ))}
-          </View>
+          </ShowSection>
 
+          <ShowSection id="decks">
+          <SectionLabel>Deck tiles — board §07</SectionLabel>
+          <ResponsiveGrid minColumnWidth={150} gap={16}>
+            {DECKS.map((deck) => (
+              <DeckTile
+                key={deck.title}
+                title={deck.title}
+                count={deck.count}
+                icon={deck.icon}
+                tone={deck.tone}
+                slug={deck.slug}
+                artKey={deck.artKey}
+                onPress={() => {}}
+              />
+            ))}
+          </ResponsiveGrid>
+
+          </ShowSection>
+
+          <ShowSection id="avatar">
           <SectionLabel>Avatar — photo → generated → initials → icon</SectionLabel>
           <Card>
             <Text variant="smallBold">Generated faces (deterministic per seed)</Text>
@@ -516,6 +756,9 @@ export default function ShowcaseScreen() {
             </Text>
           </Card>
 
+          </ShowSection>
+
+          <ShowSection id="dropdown">
           <SectionLabel>Dropdown — avatar trigger</SectionLabel>
           <Card>
             <View style={styles.dropdownDemo}>
@@ -538,6 +781,9 @@ export default function ShowcaseScreen() {
             </View>
           </Card>
 
+          </ShowSection>
+
+          <ShowSection id="skeleton">
           <SectionLabel>Skeleton — shimmer placeholders</SectionLabel>
           <Card>
             <View style={styles.avatarRow}>
@@ -550,10 +796,16 @@ export default function ShowcaseScreen() {
             <Skeleton height={96} radius={20} />
           </Card>
 
+          </ShowSection>
+
+          <ShowSection id="connections">
           <SectionLabel>Connections</SectionLabel>
           <RelationshipPicker value={relation} onChange={setRelation} />
           <ConnectionInvite inviteCode="CHALE-1234" onShare={() => {}} />
           <PendingConnection inviteCode="CHALE-1234" />
+
+          </ShowSection>
+          </SectionContext.Provider>
 
           <View style={styles.footer}>
             <Text variant="caption" muted>
@@ -565,6 +817,141 @@ export default function ShowcaseScreen() {
       </SafeAreaView>
     </View>
   );
+}
+
+/**
+ * Every group in the showcase is mounted one at a time. The whole page used to
+ * render at once — three live audio players, a metering recorder, endless
+ * Reanimated loops and the DiceBear avatar builder — which made the screen
+ * stutter. Gating on the active key means only the section you are looking at
+ * pays for its demos.
+ */
+const SECTIONS = [
+  { key: 'theme', label: 'Theme readout' },
+  { key: 'typography', label: 'Typography' },
+  { key: 'buttons', label: 'Buttons' },
+  { key: 'badges', label: 'Badges' },
+  { key: 'cards', label: 'Cards' },
+  { key: 'icons', label: 'Icons — static' },
+  { key: 'icon-sizes', label: 'Icons — sizes' },
+  { key: 'icons-animated', label: 'Icons — animated' },
+  { key: 'loading-bar', label: 'Loading bar' },
+  { key: 'loading-segments', label: 'Loading bar — segments' },
+  { key: 'loading-dark', label: 'Loading bar — on ink' },
+  { key: 'brand', label: 'Brand lockup' },
+  { key: 'inputs', label: 'Inputs' },
+  { key: 'question-states', label: 'Question card — states' },
+  { key: 'answer-loop', label: 'Question + answer loop' },
+  { key: 'voice', label: 'Voice message + save prompt' },
+  { key: 'decks', label: 'Deck tiles' },
+  { key: 'avatar', label: 'Avatar' },
+  { key: 'dropdown', label: 'Dropdown' },
+  { key: 'skeleton', label: 'Skeleton' },
+  { key: 'connections', label: 'Connections' },
+] as const;
+
+type SectionKey = (typeof SECTIONS)[number]['key'];
+
+const SectionContext = createContext<SectionKey>('theme');
+
+function ShowSection({
+  id,
+  children,
+}: {
+  id: SectionKey;
+  children: ReactNode;
+}) {
+  const active = useContext(SectionContext);
+  if (active !== id) return null;
+  return <>{children}</>;
+}
+
+function ShowcaseNav({
+  value,
+  onChange,
+}: {
+  value: SectionKey;
+  onChange: (key: SectionKey) => void;
+}) {
+  const { theme } = useUnistyles();
+  const [open, setOpen] = useState(false);
+  const index = SECTIONS.findIndex((s) => s.key === value);
+  const current = SECTIONS[index] ?? SECTIONS[0];
+
+  const step = (delta: number) => {
+    const next = (index + delta + SECTIONS.length) % SECTIONS.length;
+    onChange(SECTIONS[next].key);
+  };
+
+  return (
+    <View style={styles.nav}>
+      <Pressable
+        onPress={() => step(-1)}
+        accessibilityRole="button"
+        accessibilityLabel="Previous section"
+        hitSlop={8}
+        style={styles.navStep}
+      >
+        <LucideIcon name="chevron-left" size={18} />
+      </Pressable>
+
+      <Dropdown
+        open={open}
+        onOpenChange={setOpen}
+        align="left"
+        label="Jump to a component"
+        minWidth={240}
+        items={SECTIONS.map((s) => ({
+          key: s.key,
+          label: s.label,
+          icon: s.key === value ? ('check' as ChaleIconName) : undefined,
+          onPress: () => onChange(s.key),
+        }))}
+        trigger={
+          <View style={styles.navTrigger}>
+            <Text variant="smallBold" numberOfLines={1} style={styles.navTriggerText}>
+              {current.label}
+            </Text>
+            <LucideIcon name="chevron-down" size={16} color={theme.colors.muted} />
+          </View>
+        }
+      />
+
+      <Pressable
+        onPress={() => step(1)}
+        accessibilityRole="button"
+        accessibilityLabel="Next section"
+        hitSlop={8}
+        style={styles.navStep}
+      >
+        <LucideIcon name="chevron" size={18} />
+      </Pressable>
+    </View>
+  );
+}
+
+/**
+ * Demo-only wrapper: owns its own ticker so the 0 -> 100% loop re-renders this
+ * leaf instead of the whole showcase screen. Omit `progress` to let it drive.
+ */
+function AutoFillBar({
+  msPerCycle = 2400,
+  progress,
+  ...barProps
+}: LoadingBarProps & { msPerCycle?: number }) {
+  const [auto, setAuto] = useState(0);
+
+  useEffect(() => {
+    // 80ms is plenty: the bar eases toward each value over 450ms, so a faster
+    // tick just burns renders without looking any smoother.
+    const step = 80;
+    const id = setInterval(() => {
+      setAuto((p) => (p >= 1 ? 0 : p + step / msPerCycle));
+    }, step);
+    return () => clearInterval(id);
+  }, [msPerCycle]);
+
+  return <LoadingBar progress={progress ?? auto} {...barProps} />;
 }
 
 function SectionLabel({ children }: { children: string }) {
@@ -604,6 +991,37 @@ const styles = StyleSheet.create((theme) => ({
   },
   intro: {
     gap: 8,
+  },
+  nav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  navStep: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  navTrigger: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    minHeight: 44,
+    paddingHorizontal: 16,
+    borderRadius: 22,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  navTriggerText: {
+    flexShrink: 1,
   },
   sectionLabel: {
     marginTop: 12,
@@ -686,6 +1104,15 @@ const styles = StyleSheet.create((theme) => ({
   },
   stack: {
     gap: 12,
+  },
+  loadCycle: {
+    gap: 6,
+  },
+  loadCycleHint: {
+    textAlign: 'center',
+  },
+  loadGap: {
+    height: 4,
   },
   darkPreview: {
     // Fixed brand pair — never follows the theme.

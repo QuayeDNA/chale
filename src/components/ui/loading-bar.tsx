@@ -17,7 +17,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 export type LoadingStatus = 'active' | 'success' | 'error';
 
-type LoadingBarProps = {
+export type LoadingBarProps = {
   /** 0–1 fill. Ignored while `indeterminate` is active. */
   progress?: number;
   /** Unknown-duration wait. Loops until `status` flips to success/error. */
