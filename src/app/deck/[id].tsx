@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, useWindowDimensions, View } from 'react-native';
 import Animated, {
   scrollTo,
@@ -29,8 +29,14 @@ import { listDecks, type DeckSummary } from '@/lib/decks';
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList<DeckSummary>);
 
 /** Card width as a share of the screen, leaving neighbours peeking at the edges. */
-const CARD_WIDTH_RATIO = 0.68;
-const CARD_MAX_WIDTH = 300;
+const CARD_WIDTH_RATIO = 0.62;
+const CARD_MAX_WIDTH = 260;
+/**
+ * Clear space either side of a card. The face tilts and its edges fan, so each
+ * cell needs room of its own; without it the neighbours collide. The step is
+ * card + twice the bleed, so the list never overlaps cards itself.
+ */
+const BLEED = 26;
 
 export default function DeckScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -52,16 +58,25 @@ export default function DeckScreen() {
     0,
     decks.data.findIndex((d) => d.id === id),
   );
-  return <DeckSpread decks={decks.data} startIndex={startIndex} />;
+  return <DeckSpread decks={decks.data} startIndex={startIndex} deckId={id} />;
 }
 
-function DeckSpread({ decks, startIndex }: { decks: DeckSummary[]; startIndex: number }) {
+function DeckSpread({
+  decks,
+  startIndex,
+  deckId,
+}: {
+  decks: DeckSummary[];
+  startIndex: number;
+  deckId: string | undefined;
+}) {
   const router = useRouter();
   const { width: screenWidth } = useWindowDimensions();
 
   const cardWidth = Math.min(screenWidth * CARD_WIDTH_RATIO, CARD_MAX_WIDTH);
-  // Card centres sit one card-plus-a-peek apart, so the spread overlaps.
-  const step = cardWidth * 1.08;
+  // Card centres sit one card-plus-bleed apart, so the spread never overlaps
+  // itself but a neighbour always peeks in from each screen edge.
+  const step = cardWidth + BLEED * 2;
 
   const scrollX = useSharedValue(startIndex * step);
   const listRef = useAnimatedRef<FlatList<DeckSummary>>();
@@ -81,6 +96,18 @@ function DeckSpread({ decks, startIndex }: { decks: DeckSummary[]; startIndex: n
     },
     [decks.length, listRef, step],
   );
+
+  // initialScrollIndex only applies on mount, so a deep link that lands while
+  // the spread is already open (pushing the same route again from a tile) would
+  // otherwise leave the carousel showing the previous deck.
+  useEffect(() => {
+    const index = decks.findIndex((d) => d.id === deckId);
+    if (index < 0 || index === active) return;
+    // Deferred a tick: calling setState synchronously in an effect body
+    // cascades renders (react-hooks/set-state-in-effect).
+    const timer = setTimeout(() => goTo(index), 0);
+    return () => clearTimeout(timer);
+  }, [active, deckId, decks, goTo]);
 
   const renderItem = useCallback(
     ({ item, index }: { item: DeckSummary; index: number }) => (
@@ -110,23 +137,31 @@ function DeckSpread({ decks, startIndex }: { decks: DeckSummary[]; startIndex: n
         </Text>
       </View>
 
-      <AnimatedFlatList
-        ref={listRef}
-        data={decks}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        snapToInterval={step}
-        decelerationRate="fast"
-        disableIntervalMomentum
-        initialScrollIndex={startIndex}
-        onScroll={onScroll}
-        scrollEventThrottle={16}
-        onMomentumScrollEnd={(e) => setActive(Math.round(e.nativeEvent.contentOffset.x / step))}
-        contentContainerStyle={{ paddingHorizontal: (screenWidth - cardWidth) / 2 }}
-        getItemLayout={(_, index) => ({ length: step, offset: step * index, index })}
-      />
+      {/* The spread runs edge to edge: Screen insets its content, which would
+          otherwise stop the neighbouring cards before they reach the screen
+          edge. The bleed above the padding is what makes them peek in. */}
+      <View style={styles.carousel}>
+        <AnimatedFlatList
+          ref={listRef}
+          data={decks}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          snapToInterval={step}
+          decelerationRate="fast"
+          disableIntervalMomentum
+          initialScrollIndex={startIndex}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
+          onMomentumScrollEnd={(e) =>
+            setActive(Math.round(e.nativeEvent.contentOffset.x / step))
+          }
+          // Centres the first cell so the selected deck sits dead centre.
+          contentContainerStyle={{ paddingHorizontal: (screenWidth - step) / 2 }}
+          getItemLayout={(_, index) => ({ length: step, offset: step * index, index })}
+        />
+      </View>
 
       <DotPager count={decks.length} active={active} onSelect={goTo} />
 
@@ -187,6 +222,10 @@ function DotPager({
 }
 
 const styles = StyleSheet.create((theme) => ({
+  // Cancels Screen's own horizontal padding so the carousel is full bleed.
+  carousel: {
+    marginHorizontal: -theme.spacing.four,
+  },
   heading: {
     gap: 2,
     alignItems: 'center',

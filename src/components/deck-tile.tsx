@@ -1,3 +1,4 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
@@ -24,9 +25,22 @@ export type DeckTileProps = {
  * Board §07 deck tile: flat brand fill, icon top-left, title and pool count
  * bottom-left, and the dashed stroke inset from the edge.
  *
- * Fill, icon and stack treatment come from the deck's identity keys (slug /
- * tone / art_key) so a deck with its own card design needs a content file and a
- * registry entry, never a change here.
+ * Fill and icon come from the deck's identity keys (slug / tone / art_key) so a
+ * deck with its own card design needs a content file and a registry entry, never
+ * a change here.
+ *
+ * Depth comes from TWO sources, neither of which is a drawn "stacked edge":
+ *
+ *  1. A real cast shadow on the outer shell, so the tile floats above the page.
+ *  2. A single light-to-dark wash across the face — lit at the top, shaded at
+ *     the bottom — which is what makes a flat fill read as a thick printed
+ *     card. An earlier attempt drew outlined cards fanned out behind the face
+ *     to fake thickness; on the one deck with dark ink (Fun & Silly) those
+ *     hairlines read as scratches, so the fake edges are gone for good.
+ *
+ * The two Views are not redundant. `overflow: 'hidden'` clips a view's OWN
+ * shadow on iOS, so the clipping lives on the inner Pressable and the shadow on
+ * the outer shell, which has no clipping.
  *
  * The dashed inset is a real dashed border on a transparent overlay View — RN
  * has no dashed-background shorthand, and a second View keeps the fill clean
@@ -46,14 +60,22 @@ export function DeckTile({
   const ink = art.ink ?? '#FFF9E8';
 
   return (
-    <View style={styles.frame}>
-      <CardStack depth={art.stackDepth} fan={art.fanDegrees} ink={ink} />
+    <View style={styles.shell}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${title}, ${count ?? 'loading'}`}
         onPress={onPress}
-        style={({ pressed }) => [styles.tile, { backgroundColor: bg }, pressed && styles.pressed]}
+        style={({ pressed }) => [
+          styles.tile,
+          { backgroundColor: bg },
+          pressed && styles.pressed,
+        ]}
       >
+        <LinearGradient
+          colors={['rgba(255,255,255,0.26)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0.14)']}
+          locations={[0, 0.52, 1]}
+          style={styles.sheen}
+        />
         <LucideIcon name={icon} size={28} color={ink} />
         <View style={styles.copy}>
           <Text variant="smallBold" numberOfLines={2} style={{ color: ink }}>
@@ -69,65 +91,33 @@ export function DeckTile({
   );
 }
 
-/**
- * The deck's edges showing behind the face. Static for now — the animated
- * shuffle builds on this exact geometry, so stackDepth and fanDegrees are the
- * two numbers a future 3D treatment will animate rather than recompute.
- */
-function CardStack({
-  depth,
-  fan,
-  ink,
-}: {
-  depth: number;
-  fan: number;
-  ink: string;
-}) {
-  if (depth <= 0) return null;
-  return (
-    <>
-      {Array.from({ length: depth }, (_, i) => {
-        // Farther layers sit lower and lean further, so the deck reads as dealt.
-        const lift = (depth - i) * 4;
-        const tilt = (depth - i) * fan * (i % 2 === 0 ? 1 : -1);
-        return (
-          <View
-            key={i}
-            pointerEvents="none"
-            style={[
-              styles.layer,
-              {
-                bottom: -lift,
-                opacity: 0.28 - i * 0.04,
-                transform: [{ rotate: `${tilt}deg` }],
-                borderColor: ink,
-              },
-            ]}
-          />
-        );
-      })}
-    </>
-  );
-}
-
 const styles = StyleSheet.create((theme) => ({
-  frame: {
-    position: 'relative',
-    // Fill whatever width the grid cell hands us, so a tile never leaves a
-    // sliver of dead space beside it. Explicit rather than flex, because a
-    // flex:1 child of an auto-height cell resolves its HEIGHT, not its width.
-    width: '100%',
-  },
-  tile: {
-    borderRadius: theme.radii.card,
-    padding: theme.spacing.three,
+  // Shadow only. No overflow here on purpose — see the note in the doc comment.
+  shell: {
     // Board §07 tiles are slightly taller than wide. Width comes from the grid
     // cell, so the tile sizes itself off that rather than guessing a height.
     aspectRatio: 0.88,
+    borderRadius: theme.radii.card,
+    // A warm brown reads softer than pure black on the paper background.
+    shadowColor: '#2B1A0F',
+    shadowOpacity: 0.24,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
+  },
+  tile: {
+    flex: 1,
+    borderRadius: theme.radii.card,
+    padding: theme.spacing.three,
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: theme.spacing.two,
     overflow: 'hidden',
+  },
+  // Lit at the top, shaded at the bottom: the thickness cue that the removed
+  // stack layers were trying and failing to draw.
+  sheen: {
+    ...StyleSheet.absoluteFillObject,
   },
   dash: {
     position: 'absolute',
@@ -140,19 +130,10 @@ const styles = StyleSheet.create((theme) => ({
     borderStyle: 'dashed',
     opacity: 0.55,
   },
-  layer: {
-    position: 'absolute',
-    left: 6,
-    right: 6,
-    top: 8,
-    bottom: 8,
-    borderRadius: theme.radii.card,
-    borderWidth: 1,
-    borderBottomWidth: 0,
-    backgroundColor: 'transparent',
-  },
+  // Pressed cards sink toward the page, so the shadow tightens with them.
   pressed: {
-    opacity: 0.85,
+    transform: [{ scale: 0.97 }],
+    opacity: 0.95,
   },
   copy: {
     gap: 2,
