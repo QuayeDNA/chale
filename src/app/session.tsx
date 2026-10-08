@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Text } from '@/components/ui/text';
 import { Screen } from '@/components/screen';
 import { QuestionCard } from '@/components/question-card';
-import { supabase } from '@/lib/supabase';
+import { drawSessionQuestions, getDeck } from '@/lib/decks';
 import { isFavourite, toggleFavourite } from '@/lib/favourites';
 
 export default function SessionScreen() {
@@ -13,23 +13,31 @@ export default function SessionScreen() {
   const queryClient = useQueryClient();
   const { pack } = useLocalSearchParams<{ pack: string }>();
   const [index, setIndex] = useState(0);
-  const questions = useQuery({
-    queryKey: ['packs', pack, 'questions'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('questions')
-        .select('id,text,kind')
-        .eq('pack_id', pack!)
-        .order('created_at');
-      if (error) throw error;
-      return data;
-    },
+
+  const deck = useQuery({
+    queryKey: ['decks', pack],
+    queryFn: () => getDeck(pack!),
     enabled: !!pack,
+  });
+
+  // The deck's own session_length decides the draw size, so the board's "20 a
+  // session" copy and the actual number of questions can never drift apart.
+  const sessionLength = deck.data?.session_length ?? 20;
+
+  // A bounded, shuffled draw from Postgres instead of the whole pack walked in
+  // created_at order. The old walk rendered "07/100" and gave every couple the
+  // same sequence in the same order, forever.
+  const questions = useQuery({
+    queryKey: ['decks', pack, 'session', sessionLength],
+    queryFn: () => drawSessionQuestions(pack!, sessionLength),
+    enabled: !!pack && !!deck.data,
   });
 
   const list = questions.data ?? [];
   const current = list[index];
-  const last = index >= list.length - 1;  const fav = useQuery({
+  const last = index >= list.length - 1;
+
+  const fav = useQuery({
     queryKey: ['favourites', 'is', current?.id],
     queryFn: () => isFavourite(current!.id),
     enabled: !!current,
@@ -48,6 +56,8 @@ export default function SessionScreen() {
       ) : (
         <QuestionCard
           question={current.text}
+          deckLabel={deck.data?.title}
+          deckTone={deck.data?.relationship_type}
           index={index + 1}
           total={list.length}
           isFavourite={!!fav.data}

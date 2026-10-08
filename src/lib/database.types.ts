@@ -224,25 +224,46 @@ export type Database = {
       }
       question_packs: {
         Row: {
-          category: string | null
+          art_key: string
           created_at: string
+          icon: string
           id: string
+          is_published: boolean
           relationship_type: Database["public"]["Enums"]["relationship_type"]
+          session_length: number
+          slug: string | null
+          sort_order: number
+          tagline: string | null
           title: string
+          tone: string
         }
         Insert: {
-          category?: string | null
+          art_key?: string
           created_at?: string
+          icon?: string
           id?: string
+          is_published?: boolean
           relationship_type?: Database["public"]["Enums"]["relationship_type"]
+          session_length?: number
+          slug?: string | null
+          sort_order?: number
+          tagline?: string | null
           title: string
+          tone?: string
         }
         Update: {
-          category?: string | null
+          art_key?: string
           created_at?: string
+          icon?: string
           id?: string
+          is_published?: boolean
           relationship_type?: Database["public"]["Enums"]["relationship_type"]
+          session_length?: number
+          slug?: string | null
+          sort_order?: number
+          tagline?: string | null
           title?: string
+          tone?: string
         }
         Relationships: []
       }
@@ -250,21 +271,27 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_active: boolean
           kind: Database["public"]["Enums"]["question_kind"]
+          ordinal: number | null
           pack_id: string
           text: string
         }
         Insert: {
           created_at?: string
           id?: string
+          is_active?: boolean
           kind?: Database["public"]["Enums"]["question_kind"]
+          ordinal?: number | null
           pack_id: string
           text: string
         }
         Update: {
           created_at?: string
           id?: string
+          is_active?: boolean
           kind?: Database["public"]["Enums"]["question_kind"]
+          ordinal?: number | null
           pack_id?: string
           text?: string
         }
@@ -354,6 +381,15 @@ export type Database = {
           out_invite_code: string
         }[]
       }
+      draw_session_questions: {
+        Args: { p_count?: number; p_pack: string }
+        Returns: {
+          id: string
+          kind: Database["public"]["Enums"]["question_kind"]
+          ordinal: number
+          text: string
+        }[]
+      }
       get_or_create_today_prompt: {
         Args: { p_connection: string }
         Returns: {
@@ -369,6 +405,22 @@ export type Database = {
         Returns: {
           out_id: string
           out_status: Database["public"]["Enums"]["connection_status"]
+        }[]
+      }
+      list_packs_with_counts: {
+        Args: never
+        Returns: {
+          art_key: string
+          icon: string
+          id: string
+          question_count: number
+          relationship_type: Database["public"]["Enums"]["relationship_type"]
+          session_length: number
+          slug: string
+          sort_order: number
+          tagline: string
+          title: string
+          tone: string
         }[]
       }
       make_invite_code: { Args: never; Returns: string }
