@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Pressable, View, useColorScheme } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { BrandLockup } from '@/components/ui/brand-lockup';
@@ -11,6 +10,9 @@ import { AnimatedIcon } from '@/components/ui/icon';
 /**
  * Dashboard header — wordmark (no tagline), animated notification
  * bell, and the profile avatar with its menu.
+ *
+ * Renders inside a `Screen`, which already owns the top safe area, so this
+ * adds only its own breathing room. Adding an inset here would double it.
  */
 export function DashboardHeader({
   name,
@@ -32,7 +34,6 @@ export function DashboardHeader({
 }) {
   const { theme } = useUnistyles();
   const isDark = useColorScheme() === 'dark';
-  const insets = useSafeAreaInsets();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const items: DropdownItem[] = [
@@ -42,7 +43,7 @@ export function DashboardHeader({
   ];
 
   return (
-    <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+    <View style={styles.header}>
       <BrandLockup variant={isDark ? 'light' : 'dark'} subtitle={false} width={104} />
 
       <View style={styles.actions}>
@@ -79,6 +80,7 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
+    paddingTop: 8,
     paddingBottom: 12,
   },
   actions: {

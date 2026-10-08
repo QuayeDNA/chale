@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import { useUnistyles } from 'react-native-unistyles';
 
 import { FloatingTabBar } from '@/components/floating-tab-bar';
+import { TabBarClearanceProvider } from '@/components/tab-bar-context';
 import type { ChaleIconName } from '@/components/ui/icon';
 
 const TABS: { name: string; title: string; icon: ChaleIconName }[] = [
@@ -14,26 +15,26 @@ const TABS: { name: string; title: string; icon: ChaleIconName }[] = [
 export default function TabsLayout() {
   const { theme } = useUnistyles();
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        sceneStyle: {
-          backgroundColor: theme.colors.paper,
-          // Clearance for the floating bar (bar height + bottom offset).
-          paddingBottom: 110,
-        },
-      }}
-      tabBar={(props) => (
-        <FloatingTabBar
-          state={props.state}
-          navigation={props.navigation}
-          tabs={TABS}
-        />
-      )}
-    >
-      {TABS.map((t) => (
-        <Tabs.Screen key={t.name} name={t.name} options={{ title: t.title }} />
-      ))}
-    </Tabs>
+    // Wrapping the navigator puts every scene inside the clearance context, so
+    // each Screen reserves room for the floating bar without hardcoding it.
+    <TabBarClearanceProvider>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          sceneStyle: { backgroundColor: theme.colors.paper },
+        }}
+        tabBar={(props) => (
+          <FloatingTabBar
+            state={props.state}
+            navigation={props.navigation}
+            tabs={TABS}
+          />
+        )}
+      >
+        {TABS.map((t) => (
+          <Tabs.Screen key={t.name} name={t.name} options={{ title: t.title }} />
+        ))}
+      </Tabs>
+    </TabBarClearanceProvider>
   );
 }

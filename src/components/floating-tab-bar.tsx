@@ -5,6 +5,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import {
+  TAB_BAR_BOTTOM_GAP,
+  TAB_BAR_ITEM_HEIGHT,
+  TAB_BAR_PADDING,
+} from './tab-bar-context';
 import { LucideIcon, type ChaleIconName } from './ui/icon';
 import { Text } from './ui/text';
 
@@ -62,7 +67,7 @@ export function FloatingTabBar({
   }));
 
   return (
-    <View style={[styles.bar, { bottom: insets.bottom + 12 }]}>
+    <View style={[styles.bar, { bottom: insets.bottom + TAB_BAR_BOTTOM_GAP }]}>
       {/* Width 0 until the first measure lands, so no flash. */}
       <Animated.View style={[styles.pill, pillStyle]} />
       {state.routes.map((route, index) => {
@@ -118,8 +123,8 @@ const styles = StyleSheet.create((theme) => ({
     gap: 4,
     backgroundColor: theme.colors.surface,
     borderRadius: 28,
-    paddingHorizontal: 8,
-    paddingVertical: 8,
+    paddingHorizontal: TAB_BAR_PADDING,
+    paddingVertical: TAB_BAR_PADDING,
     borderWidth: 1,
     borderColor: theme.colors.border,
     shadowColor: '#2B1A0F',
@@ -131,8 +136,8 @@ const styles = StyleSheet.create((theme) => ({
   pill: {
     position: 'absolute',
     // Matches the bar's vertical padding so the pill hugs the items.
-    top: 8,
-    bottom: 8,
+    top: TAB_BAR_PADDING,
+    bottom: TAB_BAR_PADDING,
     left: 0,
     // Board ref1: active tab is a street-gold pill with ink content.
     backgroundColor: theme.colors.street,
@@ -144,7 +149,7 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 2,
-    minHeight: 56,
+    minHeight: TAB_BAR_ITEM_HEIGHT,
     borderRadius: 20,
     paddingHorizontal: 6,
     paddingVertical: 6,
