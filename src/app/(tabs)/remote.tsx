@@ -7,7 +7,7 @@ import { Text } from '@/components/ui/text';
 import { QuestionCard } from '@/components/question-card';
 import { AnswerComposer } from '@/components/answer-composer';
 import { AnswerModeToggle } from '@/components/answer-mode-toggle';
-import { VoiceRecorder } from '@/components/voice-recorder';
+import { VoiceRecorder, type VoiceRecording } from '@/components/voice-recorder';
 import { WaitingState } from '@/components/waiting-state';
 import { Screen } from '@/components/screen';
 import { useConnection } from '@/hooks/use-connection';
@@ -46,9 +46,9 @@ function AnswerWithMode({ promptId, kind }: { promptId: string; kind: string }) 
     await submitTextAnswer(promptId, t);
     await queryClient.invalidateQueries({ queryKey: ['answers', 'mine', promptId] });
   };
-  const handleVoiceSend = async (localUri: string) => {
+  const handleVoiceSend = async ({ uri }: VoiceRecording) => {
     const key = `${promptId}-${Date.now()}`;
-    const url = await uploadVoiceAsync(localUri, key);
+    const url = await uploadVoiceAsync(uri, key);
     await submitVoiceAnswer(promptId, url);
     await queryClient.invalidateQueries({ queryKey: ['answers', 'mine', promptId] });
   };

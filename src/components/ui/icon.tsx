@@ -19,11 +19,14 @@ import {
   MessageCircle,
   Mic,
   Palette,
+  Pause,
   Play,
+  Send,
   Settings,
   Sparkles,
   Square,
   Sun,
+  Trash2,
   User,
   Users,
   Waves,
@@ -62,7 +65,10 @@ type ChaleIconName =
   | 'stats'
   | 'invite'
   | 'sun'
-  | 'house';
+  | 'house'
+  | 'pause'
+  | 'trash-2'
+  | 'send';
 
 const ICON_MAP: Record<ChaleIconName, SymbolViewProps['name']> = {
   heart: { ios: 'heart.fill', android: 'favorite', web: 'favorite' },
@@ -88,6 +94,9 @@ const ICON_MAP: Record<ChaleIconName, SymbolViewProps['name']> = {
   invite: { ios: 'envelope.fill', android: 'mail', web: 'mail' },
   sun: { ios: 'sun.max.fill', android: 'wb_sunny', web: 'wb_sunny' },
   house: { ios: 'house.fill', android: 'home', web: 'home' },
+  pause: { ios: 'pause.fill', android: 'pause', web: 'pause' },
+  'trash-2': { ios: 'trash.fill', android: 'delete', web: 'delete' },
+  send: { ios: 'paperplane.fill', android: 'send', web: 'send' },
 };
 
 type IconProps = {
@@ -148,6 +157,9 @@ const LUCIDE_MAP: Record<ShowcaseIconName, LucideComponent> = {
   invite: Mail,
   sun: Sun,
   house: House,
+  pause: Pause,
+  'trash-2': Trash2,
+  send: Send,
   hourglass: Hourglass,
   loader: LoaderCircle,
   waves: Waves,
