@@ -2,9 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { StyleSheet } from 'react-native-unistyles';
 import { Card } from '@/components/ui/card';
+import { DashboardHeader } from '@/components/dashboard-header';
 import { DeckTile } from '@/components/deck-tile';
 import { Text } from '@/components/ui/text';
 import { Screen } from '@/components/screen';
+import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/lib/supabase';
 
 function greeting(): string {
@@ -16,6 +18,7 @@ function greeting(): string {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { profile, user, isAnonymous, signOut } = useAuth();
   const packs = useQuery({
     queryKey: ['packs'],
     queryFn: async () => {
@@ -28,13 +31,21 @@ export default function HomeScreen() {
     },
   });
 
+  const name = profile?.display_name ?? null;
+  const firstName = name?.split(/\s+/)[0];
+
   return (
     <Screen>
-      <Text variant="display" style={styles.brand}>
-        chale,
-      </Text>
+      <DashboardHeader
+        name={name}
+        seed={user?.id}
+        onOpenProfile={() => router.push('/profile')}
+        onOpenSettings={() => router.push('/settings')}
+        onSignOut={() => void signOut()}
+      />
       <Text variant="title">
-        {greeting()}. What would you like to do today?
+        {greeting()}
+        {firstName ? `, ${firstName}` : ''}. What would you like to do today?
       </Text>
       {packs.isLoading ? (
         <Card>

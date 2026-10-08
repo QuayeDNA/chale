@@ -3,6 +3,11 @@
   "main": "index.ts",
   "version": "1.0.0",
   "dependencies": {
+    "@dicebear/adventurer": "9.4.2",
+    "@dicebear/core": "9.4.2",
+    "@dicebear/lorelei": "9.4.2",
+    "@dicebear/micah": "9.4.2",
+    "@dicebear/notionists": "9.4.2",
     "@expo-google-fonts/archivo-black": "^0.4.1",
     "@expo-google-fonts/spline-sans": "^0.4.2",
     "@expo/ui": "~57.0.18",
