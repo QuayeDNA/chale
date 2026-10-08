@@ -7,7 +7,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { AnswerComposer } from '@/components/answer-composer';
 import { AnswerModeToggle } from '@/components/answer-mode-toggle';
 import { ConnectionInvite } from '@/components/connection-invite';
-import { DeckTile } from '@/components/deck-tile';
+import { DeckTile, type DeckTone } from '@/components/deck-tile';
 import { PendingConnection } from '@/components/pending-connection';
 import { QuestionCard } from '@/components/question-card';
 import { RelationshipPicker } from '@/components/relationship-picker';
@@ -24,6 +24,9 @@ import { BrandLockup } from '@/components/ui/brand-lockup';
 import { LoadingBar } from '@/components/ui/loading-bar';
 import { Text } from '@/components/ui/text';
 import { TextInput } from '@/components/ui/text-input';
+import { Avatar } from '@/components/ui/avatar';
+import { Dropdown } from '@/components/ui/dropdown';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const ALL_ICONS: ShowcaseIconName[] = [
   'heart',
@@ -58,12 +61,22 @@ const ANIMATED_ICONS: { name: ShowcaseIconName; use: string }[] = [
   { name: 'loader', use: 'spin · sending' },
 ];
 
+const DECKS: { title: string; count: number; icon: ShowcaseIconName; tone: DeckTone }[] = [
+  { title: 'Love & Relationships', count: 100, icon: 'heart', tone: 'love' },
+  { title: 'Deep Talks', count: 80, icon: 'message', tone: 'deep' },
+  { title: 'Fun & Silly', count: 60, icon: 'sun', tone: 'silly' },
+  { title: 'Life & Dreams', count: 75, icon: 'sparkles', tone: 'dreams' },
+  { title: 'Family', count: 65, icon: 'house', tone: 'family' },
+  { title: 'Friends', count: 80, icon: 'people', tone: 'friends' },
+];
+
 export default function ShowcaseScreen() {
   const router = useRouter();
   const [mode, setMode] = useState<'text' | 'voice'>('text');
   const [answer, setAnswer] = useState('');
   const [fav, setFav] = useState(false);
   const [relation, setRelation] = useState<'partner'>('partner');
+  const [menuOpen, setMenuOpen] = useState(false);
   const { theme, rt } = useUnistyles();
   const rnScheme = useColorScheme();
 
@@ -420,9 +433,78 @@ export default function ShowcaseScreen() {
           </Card>
           <SaveVoicePrompt onSave={noopAsync} onSkip={() => {}} />
 
-          <SectionLabel>Decks + connections</SectionLabel>
-          <DeckTile title="Trotro Talks" count={24} onPress={() => {}} />
-          <DeckTile title="Loading count" count={null} onPress={() => {}} />
+          <SectionLabel>Deck tiles — board §07</SectionLabel>
+          <View style={styles.deckGrid}>
+            {DECKS.map((deck) => (
+              <View key={deck.title} style={styles.deckCell}>
+                <DeckTile
+                  title={deck.title}
+                  count={deck.count}
+                  icon={deck.icon}
+                  tone={deck.tone}
+                  onPress={() => {}}
+                />
+              </View>
+            ))}
+          </View>
+
+          <SectionLabel>Avatar — photo → initials → icon</SectionLabel>
+          <Card>
+            <Text variant="smallBold">Tones vary by person (seeded, random for guests)</Text>
+            <View style={styles.avatarRow}>
+              <Avatar name="David Okafor" seed="user-1" size={48} />
+              <Avatar name="Amara Chen" seed="user-2" size={48} />
+              <Avatar name="Jon Park" seed="user-3" size={48} />
+              <Avatar name="Zoe Adeyemi" seed="user-4" size={48} />
+              <Avatar name="Sam Rivera" seed="user-5" size={48} />
+            </View>
+            <Text variant="smallBold">Sizes + icon fallback (no name)</Text>
+            <View style={styles.avatarRow}>
+              <Avatar name="David Okafor" seed="user-1" size={32} />
+              <Avatar name="David Okafor" seed="user-1" size={40} />
+              <Avatar name="David Okafor" seed="user-1" size={56} />
+              <Avatar size={40} />
+            </View>
+            <Text variant="caption" muted>
+              Same seed keeps its color. Guests with no seed get a random tone per mount.
+            </Text>
+          </Card>
+
+          <SectionLabel>Dropdown — avatar trigger</SectionLabel>
+          <Card>
+            <View style={styles.dropdownDemo}>
+              <Dropdown
+                open={menuOpen}
+                onOpenChange={setMenuOpen}
+                label="Profile menu"
+                align="left"
+                trigger={<Avatar name="David Okafor" seed="user-1" size={48} />}
+                items={[
+                  { key: 'profile', label: 'Profile', icon: 'user', onPress: noop },
+                  { key: 'settings', label: 'Settings', icon: 'settings', onPress: noop },
+                  { key: 'logout', label: 'Log out', icon: 'logout', destructive: true, onPress: noop },
+                ]}
+              />
+              <Text variant="caption" muted style={styles.dropdownNote}>
+                Controlled (open state lives in the parent). Tap the avatar, tap outside to dismiss.
+                Anchor left when the trigger sits left, right when it sits right (header avatar).
+              </Text>
+            </View>
+          </Card>
+
+          <SectionLabel>Skeleton — shimmer placeholders</SectionLabel>
+          <Card>
+            <View style={styles.avatarRow}>
+              <Skeleton width={56} height={56} radius={28} />
+              <View style={styles.skeletonLines}>
+                <Skeleton width="80%" height={16} />
+                <Skeleton width="55%" height={12} radius={8} />
+              </View>
+            </View>
+            <Skeleton height={96} radius={20} />
+          </Card>
+
+          <SectionLabel>Connections</SectionLabel>
           <RelationshipPicker value={relation} onChange={setRelation} />
           <ConnectionInvite inviteCode="CHALE-1234" onShare={() => {}} />
           <PendingConnection inviteCode="CHALE-1234" />
@@ -520,6 +602,33 @@ const styles = StyleSheet.create((theme) => ({
   readoutRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
+  },
+  deckGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  deckCell: {
+    flexGrow: 1,
+    flexBasis: 160,
+  },
+  avatarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  dropdownDemo: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 16,
+  },
+  dropdownNote: {
+    flex: 1,
+    flexShrink: 1,
+  },
+  skeletonLines: {
+    flex: 1,
     gap: 8,
   },
   swatch: {

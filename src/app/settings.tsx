@@ -43,6 +43,14 @@ export default function SettingsScreen() {
         <LinkRow icon="globe" label="Language" value="English" />
         <LinkRow icon="help" label="Help & support" />
         <LinkRow icon="info" label="About Chale" />
+        {__DEV__ ? (
+          <LinkRow
+            icon="sparkles"
+            label="Component showcase"
+            value="DEV"
+            onPress={() => router.push('/showcase')}
+          />
+        ) : null}
       </Card>
       {!isAnonymous ? (
         <Pressable

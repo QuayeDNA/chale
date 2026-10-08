@@ -15,7 +15,6 @@ import { QueryClientProvider } from '@tanstack/react-query';
 
 import { AuthProvider, useAuth } from '@/hooks/use-auth';
 import { queryClient } from '@/lib/query-client';
-import { DevFab } from '@/components/dev-fab';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -44,7 +43,6 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
         <Stack.Screen name="design" />
         <Stack.Screen name="showcase" />
       </Stack>
-      <DevFab />
     </View>
   );
 }
