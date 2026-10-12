@@ -6,15 +6,27 @@ import { StyleSheet } from 'react-native-unistyles';
 
 import { DashboardHeader } from '@/components/dashboard-header';
 import { DailyPromptCard, type DailyPromptState } from '@/components/daily-prompt-card';
+import { DeckBrowseRow } from '@/components/deck-browse-row';
+import { ErrorCard } from '@/components/error-card';
+import { FavouritesRow } from '@/components/favourites-row';
+import {
+  BrowseRowSkeleton,
+  DailyCardSkeleton,
+  FavouritesRowSkeleton,
+  ResumeTraySkeleton,
+} from '@/components/home-skeleton';
 import { ResumeCarousel, type ResumableSession } from '@/components/resume-carousel';
+import { PremiumBanner } from '@/components/premium-banner';
 import { Text } from '@/components/ui/text';
 import { Screen } from '@/components/screen';
+import { PREMIUM_DECKS } from '@/decks/storefront';
 import { useAuth } from '@/hooks/use-auth';
 import { useConnection } from '@/hooks/use-connection';
 import { useMyAnswer } from '@/hooks/use-my-answer';
 import { useRealtimePrompt } from '@/hooks/use-realtime-prompt';
 import { useTodayPromptPeek } from '@/hooks/use-today-prompt';
 import { listDecks } from '@/lib/decks';
+import { listFavourites } from '@/lib/favourites';
 import { clearSession, listActiveSessions } from '@/lib/session-store';
 
 function greeting(): string {
@@ -117,6 +129,18 @@ export default function HomeScreen() {
   };
 
   /**
+   * Saved questions. Gated on the user existing, because `listFavourites`
+   * throws without one and a signed-out frame is not a failure worth showing.
+   * Shares the `['favourites']` cache with the favourites tab and the profile
+   * count, so hearting a question in a session lights this row up for free.
+   */
+  const favourites = useQuery({
+    queryKey: ['favourites'],
+    queryFn: listFavourites,
+    enabled: !!user,
+  });
+
+  /**
    * Six honest shapes for a day. A connection is the only one we cannot infer
    * from the prompt, and `revealed` is the database's own word for
    * both-people-have-answered — it is only ever set by an answer being
@@ -153,12 +177,16 @@ export default function HomeScreen() {
     router.push('/remote');
   };
 
-  // Nothing renders until the day is fully known. A skeleton would have to
-  // guess at the box, and the five states are one box now — so the honest
-  // answer is to wait rather than to guess. A failed connection lookup is not
-  // knowledge that there is no partner, so it hides the card rather than
+  // The five states are one box now, so nothing renders until the day is fully
+  // known — a skeleton would have to guess which box it is. A failed lookup is
+  // not knowledge that there is no partner, so it hides the card rather than
   // inviting someone who is already linked.
   const dailyReady = !dailyLoading && !peek.isError && !conn.isError;
+
+  // Failure gets its own section instead of a silent gap: a person opening the
+  // app to a missing card cannot tell whether nothing is waiting or something
+  // broke, and those want opposite reactions.
+  const dailyError = !dailyLoading && (peek.isError || conn.isError);
 
   return (
     <Screen
@@ -193,7 +221,20 @@ export default function HomeScreen() {
         </Text>
       </View>
 
-      {dailyReady ? (
+      {/*
+        Each section owns its own loading and failure shape rather than the page
+        having one spinner. The skeletons are the geometry of the thing they
+        replace, so the layout does not jump when the real section lands.
+      */}
+      {dailyLoading ? (
+        <DailyCardSkeleton />
+      ) : dailyError ? (
+        <ErrorCard
+          title="Couldn't load today's question"
+          body="Your decks are fine — this is just the connection between us and the server."
+          onRetry={refresh}
+        />
+      ) : dailyReady ? (
         <DailyPromptCard
           state={dailyState}
           question={peek.data?.text}
@@ -201,13 +242,56 @@ export default function HomeScreen() {
         />
       ) : null}
 
-      <ResumeCarousel
-        sessions={resumable}
-        onContinue={(packId) =>
-          router.push({ pathname: '/session', params: { pack: packId } })
-        }
-        onDiscard={discardSession}
-      />
+      {/* The tray only exists when there is something half-finished, so while
+          the sessions are still loading the shape is reserved and then either
+          filled or dropped. */}
+      {sessions.isPending ? (
+        <ResumeTraySkeleton />
+      ) : (
+        <ResumeCarousel
+          sessions={resumable}
+          onContinue={(packId) =>
+            router.push({ pathname: '/session', params: { pack: packId } })
+          }
+          onDiscard={discardSession}
+        />
+      )}
+
+      {/* Home is a dashboard, not a second catalogue. Browsing lives on /decks. */}
+      {decks.isPending ? (
+        <BrowseRowSkeleton />
+      ) : decks.isError ? (
+        <ErrorCard
+          icon="palette"
+          title="Couldn't reach your decks"
+          body="Every deck comes from the server, so there is nothing to show until it answers."
+          onRetry={refresh}
+        />
+      ) : all.length > 0 ? (
+        <DeckBrowseRow decks={all} onPress={() => router.push('/decks')} />
+      ) : null}
+
+      {favourites.isPending ? (
+        <FavouritesRowSkeleton />
+      ) : favourites.isError ? (
+        <ErrorCard
+          icon="heart"
+          title="Couldn't load your favourites"
+          onRetry={refresh}
+        />
+      ) : (
+        <FavouritesRow
+          count={favourites.data?.length ?? 0}
+          onPress={() => router.push('/favourites')}
+        />
+      )}
+
+      {/*
+        The premium plate is the one thing on a partner dashboard that is not
+        about today's question, so it sits last: after what you saved, not
+        before it.
+      */}
+      <PremiumBanner deck={PREMIUM_DECKS[0]} />
     </Screen>
   );
 }
