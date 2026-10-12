@@ -278,7 +278,7 @@ export default function HomeScreen() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`Browse all decks, ${others.length} more`}
-            onPress={() => openDeck(others[0]!.id)}
+            onPress={() => router.push('/decks')}
             style={({ pressed }) => [styles.moreRow, pressed && styles.morePressed]}
           >
             <View style={styles.moreCopy}>

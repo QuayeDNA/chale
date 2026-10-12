@@ -25,6 +25,11 @@ import { WaitingState } from '@/components/waiting-state';
 import { VoiceRecorder } from '@/components/voice-recorder';
 import { VoiceMessage } from '@/components/voice-message';
 import { Badge } from '@/components/ui/badge';
+import { FilterChips, type ChipOption } from '@/components/ui/filter-chips';
+import { StorefrontCard } from '@/components/storefront-card';
+import { StorefrontFlowView } from '@/components/storefront-flow-view';
+import { gradientFor } from '@/decks/art';
+import type { DeckSummary } from '@/lib/decks';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ResponsiveGrid } from '@/components/ui/responsive-grid';
@@ -86,8 +91,7 @@ const DECKS: {
   tone: DeckTone;
   slug: string;
   artKey: DeckArtKey;
-}[] = [
-  {
+}[] = [  {
     title: 'Love & Relationships',
     count: '100 questions',
     icon: 'heart',
@@ -137,6 +141,35 @@ const DECKS: {
   },
 ];
 
+const FLOW_TAGLINES = [
+  'Closer, honestly.',
+  'The stuff that actually matters.',
+  'No deep answers required.',
+  'Where do you want to go from here?',
+  'The people who made you.',
+  'The people who knew you first.',
+];
+
+/**
+ * The same six decks as list_packs_with_counts() would return them, so the
+ * coverflow demo below drives the real carousel and the real dot track rather
+ * than a stand-in for either.
+ */
+const FLOW_DECKS: DeckSummary[] = DECKS.map((deck, index) => ({
+  id: `mock-${deck.slug}`,
+  slug: deck.slug,
+  title: deck.title,
+  tagline: FLOW_TAGLINES[index] ?? null,
+  icon: deck.icon,
+  tone: deck.tone,
+  art_key: deck.artKey,
+  relationship_type:
+    deck.tone === 'family' ? 'family' : deck.tone === 'friends' ? 'friend' : 'partner',
+  session_length: 20,
+  sort_order: index,
+  question_count: Number.parseInt(deck.count, 10) || 0,
+}));
+
 export default function ShowcaseScreen() {
   const router = useRouter();
   const [mode, setMode] = useState<'text' | 'voice'>('text');
@@ -147,6 +180,9 @@ export default function ShowcaseScreen() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [remember, setRemember] = useState(true);
   const [loadStatus, setLoadStatus] = useState<LoadingStatus>('active');
+  const [chipDemo, setChipDemo] = useState<string>('partner');
+  const [storefrontPick, setStorefrontPick] = useState<string | null>(null);
+  const [flowActive, setFlowActive] = useState(0);
   const [section, setSection] = useState<SectionKey>('theme');
   const scrollRef = useRef<ScrollView>(null);
   const { theme, rt } = useUnistyles();
@@ -305,6 +341,12 @@ export default function ShowcaseScreen() {
               <Badge label="Love & Relationships" tone="street" size="md" />
               <Badge label="partner" tone="partner" size="md" />
             </View>
+            <Text variant="smallBold">Filter chips — color-coded, single select</Text>
+            <FilterChips
+              options={CHIP_DEMO_OPTIONS}
+              value={chipDemo}
+              onChange={setChipDemo}
+            />
           </Card>
 
           </ShowSection>
@@ -724,6 +766,79 @@ export default function ShowcaseScreen() {
 
           </ShowSection>
 
+          <ShowSection id="storefront-card">
+          <SectionLabel>Storefront card — gradient face</SectionLabel>
+          <Text variant="caption">
+            Tap a card to select it. Radial gradient per tone, soft ring
+            bottom-right, icon tile, tag chip.
+          </Text>
+          <View style={styles.storefrontRow}>
+            {DECKS.slice(0, 3).map((deck) => {
+              const selected = storefrontPick === deck.title;
+              return (
+                <View key={deck.title} style={styles.storefrontCell}>
+                  <StorefrontCard
+                    title={deck.title}
+                    meta={deck.count}
+                    icon={deck.icon}
+                    colors={gradientFor(deck.tone)}
+                    tag={selected ? 'SELECTED' : undefined}
+                    selected={selected}
+                    onPress={() => setStorefrontPick(deck.title)}
+                  />
+                </View>
+              );
+            })}
+          </View>
+          <Text variant="caption" muted>
+            Selected: {storefrontPick ?? 'none yet'}
+          </Text>
+          <View style={styles.storefrontRow}>
+            <View style={styles.storefrontCell}>
+              <StorefrontCard
+                title="Deep Talks"
+                meta="80 questions · Partners"
+                icon="message"
+                colors={gradientFor('deep')}
+                tag="POPULAR"
+                onPress={() => {}}
+              />
+            </View>
+            <View style={styles.storefrontCell}>
+              <StorefrontCard
+                title="Late Night"
+                meta="50 questions · Partners"
+                icon="clock"
+                colors={['#7C5CFF', '#1B1240']}
+                tag="PAID"
+                onPress={() => {}}
+              />
+            </View>
+          </View>
+
+          </ShowSection>
+
+          <ShowSection id="carousel">
+          <SectionLabel>Coverflow carousel — rail + dot track</SectionLabel>
+          <Text variant="caption">
+            Drag the rail, or tap a neighbour to spring it to the centre. The
+            street-gold bar under the rail slides after it and covers whichever
+            dot it passes over.
+          </Text>
+          <View style={styles.flowDemo}>
+            <StorefrontFlowView
+              decks={FLOW_DECKS}
+              active={flowActive}
+              onActiveChange={setFlowActive}
+              onOpenDeck={noop}
+            />
+          </View>
+          <Text variant="caption" muted>
+            Centred: {FLOW_DECKS[flowActive]?.title ?? 'none'}
+          </Text>
+
+          </ShowSection>
+
           <ShowSection id="avatar">
           <SectionLabel>Avatar — photo → generated → initials → icon</SectionLabel>
           <Card>
@@ -874,6 +989,14 @@ export default function ShowcaseScreen() {
  * stutter. Gating on the active key means only the section you are looking at
  * pays for its demos.
  */
+const CHIP_DEMO_OPTIONS: ChipOption<string>[] = [
+  { value: 'all', label: 'All', tone: 'street' },
+  { value: 'partner', label: 'Partners', tone: 'partner' },
+  { value: 'family', label: 'Family', tone: 'family' },
+  { value: 'friend', label: 'Friends', tone: 'friend' },
+  { value: 'store', label: 'Shop', tone: 'muted' },
+];
+
 const SECTIONS = [
   { key: 'theme', label: 'Theme readout' },
   { key: 'typography', label: 'Typography' },
@@ -892,6 +1015,8 @@ const SECTIONS = [
   { key: 'answer-loop', label: 'Question + answer loop' },
   { key: 'voice', label: 'Voice message + save prompt' },
   { key: 'decks', label: 'Deck tiles' },
+  { key: 'storefront-card', label: 'Storefront card' },
+  { key: 'carousel', label: 'Coverflow carousel' },
   { key: 'avatar', label: 'Avatar' },
   { key: 'dropdown', label: 'Dropdown' },
   { key: 'sheet', label: 'Sheet + checkbox' },
@@ -1125,6 +1250,18 @@ const styles = StyleSheet.create((theme) => ({
   deckCell: {
     flexGrow: 1,
     flexBasis: 160,
+  },
+  storefrontRow: {
+    flexDirection: 'row',
+    gap: 14,
+    marginBottom: 8,
+  },
+  storefrontCell: {
+    width: 148,
+  },
+  flowDemo: {
+    // The carousel is edge to edge, so it cancels the showcase's own padding.
+    marginHorizontal: -theme.spacing.four,
   },
   avatarRow: {
     flexDirection: 'row',
