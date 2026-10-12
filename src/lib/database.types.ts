@@ -95,6 +95,7 @@ export type Database = {
       }
       connections: {
         Row: {
+          active_deck_id: string | null
           created_at: string
           id: string
           invite_code: string
@@ -107,6 +108,7 @@ export type Database = {
           user_b_id: string | null
         }
         Insert: {
+          active_deck_id?: string | null
           created_at?: string
           id?: string
           invite_code: string
@@ -119,6 +121,7 @@ export type Database = {
           user_b_id?: string | null
         }
         Update: {
+          active_deck_id?: string | null
           created_at?: string
           id?: string
           invite_code?: string
@@ -131,6 +134,13 @@ export type Database = {
           user_b_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "connections_active_deck_id_fkey"
+            columns: ["active_deck_id"]
+            isOneToOne: false
+            referencedRelation: "question_packs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "connections_user_a_id_fkey"
             columns: ["user_a_id"]
@@ -375,7 +385,7 @@ export type Database = {
         Returns: string[]
       }
       create_connection: {
-        Args: never
+        Args: { p_deck?: string }
         Returns: {
           out_id: string
           out_invite_code: string
@@ -424,6 +434,16 @@ export type Database = {
         }[]
       }
       make_invite_code: { Args: never; Returns: string }
+      read_today_prompt: {
+        Args: { p_connection: string }
+        Returns: {
+          out_kind: Database["public"]["Enums"]["question_kind"]
+          out_prompt: string
+          out_question: string
+          out_reveal_state: Database["public"]["Enums"]["reveal_state"]
+          out_text: string
+        }[]
+      }
       record_listen: { Args: { p_answer: string }; Returns: undefined }
       save_own_clip: { Args: { p_answer: string }; Returns: undefined }
       submit_answer: {

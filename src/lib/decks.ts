@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { READ_TIMEOUT_MS, withTimeout } from './with-timeout';
 
 /** A deck as list_packs_with_counts() returns it. */
 export type DeckSummary = {
@@ -24,9 +25,18 @@ export type DrawnQuestion = {
 };
 
 export async function listDecks(): Promise<DeckSummary[]> {
-  const { data, error } = await supabase.rpc('list_packs_with_counts');
-  if (error) throw error;
-  return (data ?? []) as DeckSummary[];
+  // Bounded: a stalled connection would otherwise leave the grid's skeletons
+  // spinning with no error and no retry. Timing out turns "loading forever"
+  // into the error card with its Try again button.
+  return withTimeout(
+    (async () => {
+      const { data, error } = await supabase.rpc('list_packs_with_counts');
+      if (error) throw error;
+      return (data ?? []) as DeckSummary[];
+    })(),
+    READ_TIMEOUT_MS,
+    "Loading your decks",
+  );
 }
 
 export async function getDeck(id: string): Promise<DeckSummary> {
@@ -48,10 +58,18 @@ export async function drawSessionQuestions(
   packId: string,
   count = 20,
 ): Promise<DrawnQuestion[]> {
-  const { data, error } = await supabase.rpc('draw_session_questions', {
-    p_pack: packId,
-    p_count: count,
-  });
-  if (error) throw error;
-  return (data ?? []) as DrawnQuestion[];
+  // Same bound as the deck list: a session that never draws should fail into
+  // its error state rather than hold the loading screen open indefinitely.
+  return withTimeout(
+    (async () => {
+      const { data, error } = await supabase.rpc('draw_session_questions', {
+        p_pack: packId,
+        p_count: count,
+      });
+      if (error) throw error;
+      return (data ?? []) as DrawnQuestion[];
+    })(),
+    READ_TIMEOUT_MS,
+    'Drawing your questions',
+  );
 }
