@@ -1,10 +1,11 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { artFor, type DeckArtKey, type DeckToneName } from '@/decks/art';
 
 import { LucideIcon, type ShowcaseIconName } from './ui/icon';
+import { Skeleton } from './ui/skeleton';
 import { Text } from './ui/text';
 
 export type DeckTone = DeckToneName;
@@ -85,8 +86,31 @@ export function DeckTile({
             {count ?? '…'}
           </Text>
         </View>
-        <View pointerEvents="none" style={[styles.dash, { borderColor: ink }]} />
+        {/*<View pointerEvents="none" style={[styles.dash, { borderColor: ink }]} />*/}
       </Pressable>
+    </View>
+  );
+}
+
+/**
+ * Placeholder for a tile whose deck has not arrived yet.
+ *
+ * A full shimmering card, end to end — the same treatment as the big block in
+ * the showcase's skeleton section. Guessing at the tile's interior (an icon
+ * dot and two text stubs) was wrong: it invented a layout the data might not
+ * confirm and left gaps the real tile would never have. The shell keeps the
+ * aspect ratio, radius and shadow, so the grid does not reflow when the deck
+ * lands.
+ */
+export function DeckTileSkeleton() {
+  const { theme } = useUnistyles();
+  return (
+    <View
+      style={styles.shell}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
+      <Skeleton width="100%" height="100%" radius={theme.radii.card} />
     </View>
   );
 }

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ScrollView, View } from 'react-native';
+import { RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
@@ -16,15 +16,22 @@ import { useTabBarClearance } from './tab-bar-context';
  * `align` defaults to 'center' because the auth/welcome/start screens were
  * built around vertically centred content; pass 'start' for a document-style
  * screen whose content should begin under the header.
+ *
+ * Pass `onRefresh` to get pull-to-refresh. The spinner is tinted with the page
+ * colour so it reads on the paper background instead of the system blue.
  */
 export function Screen({
   children,
   header,
   align = 'center',
+  onRefresh,
+  refreshing = false,
 }: {
   children: ReactNode;
   header?: ReactNode;
   align?: 'start' | 'center';
+  onRefresh?: () => void;
+  refreshing?: boolean;
 }) {
   const { theme } = useUnistyles();
   const clearance = useTabBarClearance();
@@ -40,6 +47,17 @@ export function Screen({
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={theme.colors.ink}
+              colors={[theme.colors.street]}
+              progressBackgroundColor={theme.colors.surface}
+            />
+          ) : undefined
+        }
       >
         {children}
       </ScrollView>

@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, type ReactNode } from 'react';
 import {
   LayoutChangeEvent,
   StyleProp,
-  StyleSheet,
+  StyleSheet as RNStyleSheet,
   View,
   ViewStyle,
   useColorScheme,
@@ -18,25 +18,30 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-// Bare RN? Swap for: import LinearGradient from 'react-native-linear-gradient';
 import { LinearGradient } from 'expo-linear-gradient';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 /* -------------------------------------------------------------------------- */
 /*  Theme                                                                     */
 /* -------------------------------------------------------------------------- */
 
-const PALETTE = {
-  light: {
-    base: '#E8EAEF',
-    highlight: 'rgba(255,255,255,0.70)',
-    clear: 'rgba(255,255,255,0)',
-  },
-  dark: {
-    base: '#22252C',
-    highlight: 'rgba(255,255,255,0.07)',
-    clear: 'rgba(255,255,255,0)',
-  },
-} as const;
+/**
+ * The base fill is the theme's own border token, not a grey.
+ *
+ * A skeleton is a shape waiting for content, so it has to be made of the same
+ * material the real surface is made of. A neutral grey on this palette reads as
+ * a rendering fault rather than as "loading" — it is a colour the app uses
+ * nowhere else.
+ */
+function useSkeletonPalette() {
+  const { theme } = useUnistyles();
+  const dark = useColorScheme() === 'dark';
+  return {
+    base: theme.colors.border,
+    highlight: dark ? 'rgba(251,243,223,0.14)' : 'rgba(255,255,255,0.85)',
+    clear: 'rgba(0,0,0,0)',
+  };
+}
 
 /* -------------------------------------------------------------------------- */
 /*  Skeleton (base primitive)                                                 */
@@ -62,8 +67,7 @@ export function Skeleton({
   duration = 1300,
   style,
 }: SkeletonProps) {
-  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  const colors = PALETTE[scheme];
+  const colors = useSkeletonPalette();
   const reduceMotion = useReducedMotion();
 
   const [measuredWidth, setMeasuredWidth] = useState(0);
@@ -119,12 +123,12 @@ export function Skeleton({
       ]}
     >
       {isShimmer && (
-        <Animated.View style={[StyleSheet.absoluteFill, shimmerStyle]}>
+        <Animated.View style={[RNStyleSheet.absoluteFill, shimmerStyle]}>
           <LinearGradient
             colors={[colors.clear, colors.highlight, colors.clear]}
             start={{ x: 0, y: 0.5 }}
             end={{ x: 1, y: 0.5 }}
-            style={StyleSheet.absoluteFill}
+            style={RNStyleSheet.absoluteFill}
           />
         </Animated.View>
       )}
@@ -144,22 +148,28 @@ export function SkeletonText({
   lines = 3,
   lineHeight = 12,
   gap = 8,
+  widths,
   variant,
 }: {
   lines?: number;
   lineHeight?: number;
   gap?: number;
+  /**
+   * Per-line widths. Defaults to full-width bars with a short last line, which
+   * is what a paragraph looks like. Pass explicit widths for a title, where
+   * "70%, 46%" reads as a heading rather than a paragraph.
+   */
+  widths?: DimensionValue[];
   variant?: SkeletonProps['variant'];
 }) {
   return (
     <View style={{ gap }}>
-      {Array.from({ length: lines }).map((_, i) => (
+      {Array.from({ length: lines }, (_, i) => (
         <Skeleton
           key={i}
           height={lineHeight}
           radius={lineHeight / 2}
-          // last line shorter so it reads like a paragraph
-          width={i === lines - 1 && lines > 1 ? '60%' : '100%'}
+          width={widths?.[i] ?? (i === lines - 1 && lines > 1 ? '60%' : '100%')}
           variant={variant}
         />
       ))}
@@ -167,40 +177,50 @@ export function SkeletonText({
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Example: card skeleton                                                    */
-/* -------------------------------------------------------------------------- */
-
-export function CardSkeleton() {
-  const scheme = useColorScheme();
-  const dark = scheme === 'dark';
-
+/**
+ * A card-shaped placeholder.
+ *
+ * Every skeleton that stands in for something with a surface was previously
+ * hand-assembled out of bare `Skeleton` bars, which is how the deck grid ended
+ * up as three floating blobs: the bars were there, the card they belonged to was
+ * not. This owns the card geometry — the same padding, radius, border and shadow
+ * as `Card` — so a placeholder and the real component it precedes are the same
+ * size and the page does not jump when the data lands.
+ *
+ * `top` and `bottom` take `Skeleton` children rather than props, because the
+ * things worth placeholdering vary too much to enumerate: an icon and a title
+ * up top, copy and actions underneath.
+ */
+export function SkeletonCard({
+  top,
+  bottom,
+  style,
+}: {
+  top?: ReactNode;
+  bottom?: ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const { theme } = useUnistyles();
   return (
     <View
+      // A skeleton is decoration for something that has not arrived, so it is
+      // never announced — otherwise a grid of four reads out as four loading
+      // cards to a screen reader.
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
       style={[
-        styles.card,
+styles.card,
         {
-          backgroundColor: dark ? '#16181D' : '#FFFFFF',
-          borderColor: dark ? '#2A2D35' : '#EEF0F4',
+          borderRadius: theme.radii.card,
+          padding: theme.spacing.four,
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.border,
         },
+        style,
       ]}
     >
-      <View style={styles.row}>
-        <SkeletonAvatar size={44} />
-        <View style={styles.headerText}>
-          <Skeleton width="55%" height={14} radius={7} />
-          <Skeleton width="35%" height={10} radius={5} />
-        </View>
-      </View>
-
-      <Skeleton height={160} radius={14} />
-
-      <SkeletonText lines={3} />
-
-      <View style={styles.row}>
-        <Skeleton width={84} height={34} radius={17} />
-        <Skeleton width={84} height={34} radius={17} />
-      </View>
+      {top ? <View style={styles.slot}>{top}</View> : null}
+      {bottom ? <View style={styles.slot}>{bottom}</View> : null}
     </View>
   );
 }
@@ -209,37 +229,23 @@ export function CardSkeleton() {
 /*  Styles                                                                    */
 /* -------------------------------------------------------------------------- */
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create((theme) => ({
   base: {
     overflow: 'hidden',
   },
   card: {
-    padding: 16,
-    gap: 16,
-    borderRadius: 20,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  headerText: {
     flex: 1,
-    gap: 8,
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    // Matches Card's depth so a placeholder is not a flatter object than the
+    // thing it becomes.
+    shadowColor: theme.colors.shadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 16,
+    elevation: 3,
   },
-});
-
-/* -------------------------------------------------------------------------- */
-/*  Usage                                                                     */
-/* -------------------------------------------------------------------------- */
-/*
-  import { Skeleton, SkeletonText, SkeletonAvatar, CardSkeleton } from './Skeleton';
-
-  {isLoading ? <CardSkeleton /> : <RealCard data={data} />}
-
-  <Skeleton width={120} height={20} />               // shimmer (default)
-  <Skeleton variant="pulse" height={48} radius={12} /> // pulse, no gradient dep
-  <SkeletonText lines={4} />
-  <SkeletonAvatar size={64} />
-*/
+  slot: {
+    gap: theme.spacing.two,
+  },
+}));
