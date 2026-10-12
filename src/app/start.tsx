@@ -17,10 +17,23 @@ export default function StartScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { isAnonymous } = useAuth();
+  // The deck chosen on the spread rides along and gets pinned to the
+  // connection, so the daily prompt is drawn from it rather than from
+  // whatever the relationship type happens to match.
+  const deckId = (() => {
+    const incoming = params.deck;
+    const raw = Array.isArray(incoming) ? incoming[0] : incoming;
+    return typeof raw === 'string' && raw ? raw : null;
+  })();
   const initialCode = (() => {
     const incoming = params.code;
     const raw = Array.isArray(incoming) ? incoming[0] : incoming;
     return typeof raw === 'string' ? raw.trim().toUpperCase() : '';
+  })();
+  const deckTitle = (() => {
+    const incoming = params.deckTitle;
+    const raw = Array.isArray(incoming) ? incoming[0] : incoming;
+    return typeof raw === 'string' && raw ? raw : null;
   })();
   const [code, setCode] = useState(initialCode);
   const [mine, setMine] = useState<string | null>(null);
@@ -31,9 +44,15 @@ export default function StartScreen() {
     <Screen>
     <Card>
       <Text variant="title">Start with your person</Text>
+      {deckTitle ? (
+        <Text variant="caption">
+          {deckTitle} will arrive a day at a time. Whoever shares the code sets the deck, so
+          theirs wins if you picked a different one.
+        </Text>
+      ) : null}
       {needAuth ? <Button label="Create account to continue" onPress={() => router.push('/auth')} /> : null}
       <Button label="Generate my invite code" disabled={needAuth} onPress={async () => {
-        try { setErr(null); const c = await createConnection(); setMine(c.invite_code); } catch (e) { setErr((e as Error).message); }
+        try { setErr(null); const c = await createConnection(deckId); setMine(c.invite_code); } catch (e) { setErr((e as Error).message); }
       }} />
       {mine ? (
         <>

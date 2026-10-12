@@ -12,8 +12,11 @@ import { StyleSheet } from 'react-native-unistyles';
 
 import { DeckStackCard } from '@/components/deck-stack-card';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Sheet, SheetOption, useSheetAction } from '@/components/ui/sheet';
 import { Text } from '@/components/ui/text';
 import { Screen } from '@/components/screen';
+import { usePlayMode, type PlayMode } from '@/hooks/use-play-mode';
 import { artFor, deckCountCopy, toneName } from '@/decks/art';
 import { listDecks, type DeckSummary } from '@/lib/decks';
 
@@ -24,6 +27,10 @@ import { listDecks, type DeckSummary } from '@/lib/decks';
  *
  * Card depth, splay and face tilt are all derived from scrollX on the UI
  * thread — see DeckStackCard.
+ *
+ * The screen's only job is choosing a deck. How they play it is a separate
+ * decision, so it lives in a sheet over the spread rather than as more
+ * buttons underneath it — see PlayModeSheet.
  */
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList<DeckSummary>);
@@ -72,6 +79,8 @@ function DeckSpread({
 }) {
   const router = useRouter();
   const { width: screenWidth } = useWindowDimensions();
+  const { mode, remember, ready, choose } = usePlayMode();
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const cardWidth = Math.min(screenWidth * CARD_WIDTH_RATIO, CARD_MAX_WIDTH);
   // Card centres sit one card-plus-bleed apart, so the spread never overlaps
@@ -117,16 +126,49 @@ function DeckSpread({
         step={step}
         scrollX={scrollX}
         width={cardWidth}
-        onPress={() => router.push({ pathname: '/session', params: { pack: item.id } })}
+        onPress={() => goTo(index)}
       />
     ),
-    [cardWidth, router, scrollX, step],
+    [cardWidth, goTo, scrollX, step],
   );
 
   const selected = decks[active] ?? decks[startIndex];
   const art = selected
     ? artFor({ slug: selected.slug, tone: toneName(selected.tone), art_key: selected.art_key })
     : null;
+
+  /**
+   * Pushing, not replacing: back from a session returns to the spread, which
+   * is the natural undo if the wrong deck was picked.
+   */
+  const start = useCallback(
+    (play: PlayMode) => {
+      if (play === 'inperson') {
+        router.push({ pathname: '/session', params: { pack: selected.id } });
+      } else {
+        // The deck travels to /start and gets pinned to the connection, so
+        // "Deep Talks -> remote" still means Deep Talks. The title rides along
+        // too: pairing is a commitment to a deck, so name it.
+        router.push({
+          pathname: '/start',
+          params: { deck: selected.id, deckTitle: selected.title },
+        });
+      }
+    },
+    [router, selected],
+  );
+
+  const primaryLabel = mode === 'inperson' ? 'Start in person' : 'Send remotely';
+
+  // The sheet is the only place a mode can be remembered: the CTA and its
+  // override are one-shot starts that leave the preference exactly as it was.
+  const commit = useCallback(
+    (play: PlayMode, rememberIt: boolean) => {
+      choose(play, rememberIt);
+      start(play);
+    },
+    [choose, start],
+  );
 
   return (
     <Screen align="start">
@@ -166,15 +208,31 @@ function DeckSpread({
       <DotPager count={decks.length} active={active} onSelect={goTo} />
 
       <View style={styles.actions}>
-        <Button
-          label="Just the two of us"
-          onPress={() => router.push({ pathname: '/session', params: { pack: selected.id } })}
-        />
-        <Button
-          label="Start remote session"
-          variant="outline"
-          onPress={() => router.push('/start')}
-        />
+        {/* Nothing renders until the stored preference has been read, so the
+            CTA never flashes the wrong mode on a cold start. */}
+        {ready && (
+          <Button
+            label={mode ? primaryLabel : 'How do you want to play?'}
+            onPress={() => (mode ? start(mode) : setSheetOpen(true))}
+          />
+        )}
+
+        {/* Exactly one override, and only when there is something to override.
+            A remembered mode must never trap the user in it. Choosing here
+            applies to this deck only and deliberately leaves the preference
+            alone. */}
+        {mode && (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => start(mode === 'inperson' ? 'remote' : 'inperson')}
+            style={styles.override}
+          >
+            <Text variant="small" muted>
+              {mode === 'inperson' ? 'Send it remotely instead' : 'Play in person instead'}
+            </Text>
+          </Pressable>
+        )}
+
         <View style={styles.detailRow}>
           <View
             style={[
@@ -188,7 +246,68 @@ function DeckSpread({
           </View>
         </View>
       </View>
+
+      <Sheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        title="How do you want to play?"
+        caption={`${selected.title} · ${selected.session_length} questions a session`}
+      >
+        <PlayModeSheet
+          deckTitle={selected.title}
+          sessionLength={selected.session_length}
+          remember={remember}
+          onCommit={commit}
+        />
+      </Sheet>
     </Screen>
+  );
+}
+
+/**
+ * The sheet's body. Mounted only while the sheet is open (RN's Modal renders
+ * nothing when closed), so it can own a draft of the remember flag without
+ * resetting it between openings. It is seeded from the screen's already-loaded
+ * value rather than reading storage again, so the box never renders unchecked
+ * and then flips.
+ */
+function PlayModeSheet({
+  deckTitle,
+  sessionLength,
+  remember,
+  onCommit,
+}: {
+  deckTitle: string;
+  sessionLength: number;
+  remember: boolean;
+  onCommit: (mode: PlayMode, remember: boolean) => void;
+}) {
+  const [rememberDraft, setRememberDraft] = useState(remember);
+  const run = useSheetAction();
+
+  const pick = (mode: PlayMode) => run(() => onCommit(mode, rememberDraft));
+
+  return (
+    <>
+      <SheetOption
+        icon="people"
+        label="Just the two of us"
+        hint={`One device, ${sessionLength} questions, you take turns.`}
+        onPress={() => pick('inperson')}
+      />
+      <SheetOption
+        icon="invite"
+        label="Send it remotely"
+        hint={`Get an invite code, then ${deckTitle} arrives a day at a time.`}
+        onPress={() => pick('remote')}
+      />
+      <Checkbox
+        checked={rememberDraft}
+        onChange={setRememberDraft}
+        label="Remember my choice"
+        hint="Skips this next time. You can still change it any time."
+      />
+    </>
   );
 }
 
@@ -252,6 +371,11 @@ const styles = StyleSheet.create((theme) => ({
   },
   actions: {
     gap: theme.spacing.two,
+  },
+  override: {
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   detailRow: {
     flexDirection: 'row',

@@ -35,6 +35,8 @@ import { Text } from '@/components/ui/text';
 import { TextInput } from '@/components/ui/text-input';
 import { Avatar } from '@/components/ui/avatar';
 import { Dropdown } from '@/components/ui/dropdown';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Sheet, SheetOption } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 
 /** Stand-in for a captured recording — speech-shaped, ~7s at 70ms intervals. */
@@ -142,6 +144,8 @@ export default function ShowcaseScreen() {
   const [fav, setFav] = useState(false);
   const [relation, setRelation] = useState<'partner'>('partner');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [remember, setRemember] = useState(true);
   const [loadStatus, setLoadStatus] = useState<LoadingStatus>('active');
   const [section, setSection] = useState<SectionKey>('theme');
   const scrollRef = useRef<ScrollView>(null);
@@ -783,6 +787,50 @@ export default function ShowcaseScreen() {
 
           </ShowSection>
 
+          <ShowSection id="sheet">
+          <SectionLabel>Bottom sheet — a decision, not a screen</SectionLabel>
+          <Card>
+            <Checkbox
+              checked={remember}
+              onChange={setRemember}
+              label="Remember my choice"
+              hint="Skips this next time. You can still change it any time."
+            />
+            <Checkbox checked={false} onChange={noop} label="Unchecked state" />
+            <Text variant="caption" muted style={styles.dropdownNote}>
+              Whole row is the target, so the 22pt box never has to be hit.
+            </Text>
+            <Button label="How do you want to play?" onPress={() => setSheetOpen(true)} />
+          </Card>
+
+          <Sheet
+            open={sheetOpen}
+            onOpenChange={setSheetOpen}
+            title="How do you want to play?"
+            caption="Deep Talks · 20 questions a session"
+          >
+            <SheetOption
+              icon="people"
+              label="Just the two of us"
+              hint="One device, 20 questions, you take turns."
+              onPress={() => setSheetOpen(false)}
+            />
+            <SheetOption
+              icon="invite"
+              label="Send it remotely"
+              hint="Get an invite code, then Deep Talks arrives a day at a time."
+              onPress={() => setSheetOpen(false)}
+            />
+            <Checkbox
+              checked={remember}
+              onChange={setRemember}
+              label="Remember my choice"
+              hint="Skips this next time. You can still change it any time."
+            />
+          </Sheet>
+
+          </ShowSection>
+
           <ShowSection id="skeleton">
           <SectionLabel>Skeleton — shimmer placeholders</SectionLabel>
           <Card>
@@ -846,6 +894,7 @@ const SECTIONS = [
   { key: 'decks', label: 'Deck tiles' },
   { key: 'avatar', label: 'Avatar' },
   { key: 'dropdown', label: 'Dropdown' },
+  { key: 'sheet', label: 'Sheet + checkbox' },
   { key: 'skeleton', label: 'Skeleton' },
   { key: 'connections', label: 'Connections' },
 ] as const;
