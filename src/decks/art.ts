@@ -52,6 +52,28 @@ export const DECK_INKS: Record<string, string> = {
   friends: '#FFF9E8',
 };
 
+/**
+ * Storefront gradient stops per tone — a lighter lead-in fading to a deep
+ * shade, drawn as a radial from the top-left. Keys match DECK_FILLS so a
+ * tone drives both the flat tiles (home) and the gradient cards (storefront).
+ */
+export const DECK_GRADIENTS: Record<string, readonly [string, string]> = {
+  love: ['#F2704A', '#8F2A12'],
+  deep: ['#4A6BFF', '#15207A'],
+  silly: ['#FFC81A', '#B5620A'],
+  dreams: ['#2FB566', '#0C4A2A'],
+  family: ['#8CC63F', '#34561A'],
+  friends: ['#FF6FA1', '#8A1F4D'],
+};
+
+/** Gradient for a tone, falling back to a flat pair off the tone's fill. */
+export function gradientFor(tone: string | null | undefined): readonly [string, string] {
+  const stops = tone ? DECK_GRADIENTS[tone] : undefined;
+  if (stops) return stops;
+  const flat = (tone ? DECK_FILLS[tone] : undefined) ?? '#2B4BD8';
+  return [flat, flat];
+}
+
 export type DeckArtKey = 'default' | 'stacked' | 'deck-edge' | 'scattered';
 
 /**
