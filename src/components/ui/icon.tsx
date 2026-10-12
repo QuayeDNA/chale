@@ -13,6 +13,7 @@ import {
   Home,
   Hourglass,
   House,
+  Flame,
   Info,
   Layers,
   LayoutGrid,
@@ -23,8 +24,10 @@ import {
   Mail,
   MessageCircle,
   Mic,
+  Moon,
   Palette,
   Pause,
+  Plane,
   Play,
   Send,
   Search,
@@ -36,6 +39,7 @@ import {
   User,
   Users,
   Waves,
+  X,
 } from 'lucide-react-native';
 import { useEffect, type ComponentType } from 'react';
 import Animated, {
@@ -80,7 +84,11 @@ type ChaleIconName =
   | 'lock'
   | 'layers'
   | 'grid'
-  | 'list';
+  | 'list'
+  | 'close'
+  | 'moon'
+  | 'plane'
+  | 'flame';
 
 const ICON_MAP: Record<ChaleIconName, SymbolViewProps['name']> = {
   heart: { ios: 'heart.fill', android: 'favorite', web: 'favorite' },
@@ -115,6 +123,10 @@ const ICON_MAP: Record<ChaleIconName, SymbolViewProps['name']> = {
   layers: { ios: 'square.stack.3d.up.fill', android: 'layers', web: 'layers' },
   grid: { ios: 'square.grid.2x2.fill', android: 'grid_view', web: 'grid_view' },
   list: { ios: 'list.bullet', android: 'list', web: 'list' },
+  close: { ios: 'xmark', android: 'close', web: 'close' },
+  moon: { ios: 'moon.stars', android: 'dark_mode', web: 'dark_mode' },
+  plane: { ios: 'airplane', android: 'flight', web: 'flight' },
+  flame: { ios: 'flame', android: 'local_fire_department', web: 'local_fire_department' },
 };
 
 type IconProps = {
@@ -202,6 +214,10 @@ const LUCIDE_MAP: Record<ShowcaseIconName, LucideComponent> = {
   layers: Layers,
   grid: LayoutGrid,
   list: List,
+  close: X,
+  moon: Moon,
+  plane: Plane,
+  flame: Flame,
   hourglass: Hourglass,
   loader: LoaderCircle,
   waves: Waves,

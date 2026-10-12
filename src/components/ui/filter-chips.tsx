@@ -32,7 +32,7 @@ export function FilterChips<T extends string>({ options, value, onChange, bleed 
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      style={bleed ? styles.bleed : undefined}
+      style={[styles.base, bleed && styles.bleed]}
       contentContainerStyle={[styles.row, bleed && styles.rowPad]}
     >
       {options.map((option) => {
@@ -64,6 +64,14 @@ export function FilterChips<T extends string>({ options, value, onChange, bleed 
 }
 
 const styles = StyleSheet.create((theme) => ({
+  // React Native gives every ScrollView `flexGrow: 1, flexShrink: 1`. Inside a
+  // column — which is what Screen's content is — flexGrow makes the row eat
+  // whatever vertical space is left over, so the gap below the chips grew every
+  // time a filter left fewer items on screen. Pin the row to its content.
+  base: {
+    flexGrow: 0,
+    flexShrink: 0,
+  },
   row: {
     flexDirection: 'row',
     gap: 8,

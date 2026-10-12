@@ -1,5 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useRef } from 'react';
-import { Modal, Platform, Pressable, View } from 'react-native';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import {
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -14,6 +21,18 @@ import { LucideIcon, type ShowcaseIconName } from './icon';
 import { Text } from './text';
 
 const SheetActionContext = createContext<(action: () => void) => void>(() => {});
+
+/** Slide up into place, slide back down out of it. */
+const OPEN_MS = 300;
+const CLOSE_MS = 220;
+/**
+ * The Modal must outlive the exit slide. React tears a `visible={false}` Modal
+ * down on the very frame `open` flips, so without this grace the close is an
+ * instant vanish — the slide-down never gets a frame to play in.
+ */
+const UNMOUNT_GRACE_MS = 90;
+/** Extra travel so the sheet clears the bottom edge instead of stopping on it. */
+const TRAVEL_PAD = 32;
 
 /**
  * Inside a Sheet, wrap anything that navigates in run() so iOS waits for the
@@ -43,25 +62,45 @@ export function Sheet({
   onOpenChange,
   title,
   caption,
+  scroll = false,
   children,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
   caption?: string;
+  /**
+   * Wraps the body in a scroll view capped at 92% of the screen. For a sheet
+   * whose content can outgrow a short screen — a long list, or sample cards
+   * that scroll sideways — so it never runs off the top.
+   */
+  scroll?: boolean;
   children: React.ReactNode;
 }) {
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
   const progress = useSharedValue(0);
   const pendingAction = useRef<(() => void) | null>(null);
+  const [mounted, setMounted] = useState(open);
+  const [sheetHeight, setSheetHeight] = useState(0);
 
   useEffect(() => {
     progress.value = withTiming(open ? 1 : 0, {
-      duration: reduceMotion ? 0 : open ? 260 : 200,
+      duration: reduceMotion ? 0 : open ? OPEN_MS : CLOSE_MS,
       easing: open ? Easing.out(Easing.cubic) : Easing.in(Easing.cubic),
     });
   }, [open, reduceMotion, progress]);
+
+  // Deferred a tick: setting state synchronously in an effect body cascades
+  // renders (react-hooks/set-state-in-effect).
+  useEffect(() => {
+    const wait = open ? 0 : reduceMotion ? 0 : CLOSE_MS + UNMOUNT_GRACE_MS;
+    const timer = setTimeout(() => setMounted(open), wait);
+    return () => clearTimeout(timer);
+  }, [open, reduceMotion]);
+
+  const travel = sheetHeight > 0 ? sheetHeight + TRAVEL_PAD : windowHeight;
 
   const close = useCallback(() => onOpenChange(false), [onOpenChange]);
 
@@ -84,16 +123,17 @@ export function Sheet({
     fn?.();
   }, []);
 
+  // The sheet travels its own height, not a fixed nudge, so it always clears
+  // the bottom edge whatever its content measures.
   const sheetStyle = useAnimatedStyle(() => ({
-    opacity: progress.value,
-    transform: [{ translateY: (1 - progress.value) * 48 }],
+    transform: [{ translateY: (1 - progress.value) * travel }],
   }));
 
   const scrimStyle = useAnimatedStyle(() => ({ opacity: progress.value }));
 
   return (
     <Modal
-      visible={open}
+      visible={mounted}
       transparent
       animationType="none"
       statusBarTranslucent
@@ -111,6 +151,7 @@ export function Sheet({
 
       <Animated.View
         accessibilityViewIsModal
+        onLayout={(e) => setSheetHeight(e.nativeEvent.layout.height)}
         style={[styles.sheet, { paddingBottom: insets.bottom + 12 }, sheetStyle]}
       >
         <View style={styles.grabber} />
@@ -122,7 +163,19 @@ export function Sheet({
             </Text>
           )}
         </View>
-        <SheetActionContext.Provider value={run}>{children}</SheetActionContext.Provider>
+        <SheetActionContext.Provider value={run}>
+          {scroll ? (
+            <ScrollView
+              style={styles.scroll}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}
+            >
+              {children}
+            </ScrollView>
+          ) : (
+            children
+          )}
+        </SheetActionContext.Provider>
       </Animated.View>
     </Modal>
   );
@@ -202,6 +255,15 @@ const styles = StyleSheet.create((theme) => ({
   },
   header: { gap: 2 },
   caption: { marginTop: 2 },
+  // 92% of the screen, like the concept's sheet, so a tall body scrolls
+  // instead of pushing the header off the top.
+  scroll: {
+    maxHeight: '92%',
+  },
+  scrollContent: {
+    gap: theme.spacing.three,
+    paddingBottom: theme.spacing.four,
+  },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
