@@ -13,6 +13,7 @@ import { PendingConnection } from '@/components/pending-connection';
 import { Screen } from '@/components/screen';
 import { createConnection, joinConnection } from '@/lib/pairing';
 import { useAuth } from '@/hooks/use-auth';
+import { useConnection } from '@/hooks/use-connection';
 export default function StartScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -36,7 +37,13 @@ export default function StartScreen() {
     return typeof raw === 'string' && raw ? raw : null;
   })();
   const [code, setCode] = useState(initialCode);
-  const [mine, setMine] = useState<string | null>(null);
+  // An invite already sent is the only way in, so re-entering this screen must
+  // show THAT code rather than minting another one — a second code would leave
+  // whoever was sent the first one with no way in, and leave the person who
+  // generated it with nothing to share.
+  const existing = useConnection().data;
+  const pendingCode = existing?.status === 'pending' ? existing.invite_code : null;
+  const [mine, setMine] = useState<string | null>(pendingCode);
   const [relationship, setRelationship] = useState<'partner'>('partner');
   const [err, setErr] = useState<string | null>(null);
   const needAuth = isAnonymous;
@@ -51,9 +58,12 @@ export default function StartScreen() {
         </Text>
       ) : null}
       {needAuth ? <Button label="Create account to continue" onPress={() => router.push('/auth')} /> : null}
-      <Button label="Generate my invite code" disabled={needAuth} onPress={async () => {
+      {/* Hidden once a code exists: the share block below IS the action, and
+          leaving the generator on screen would invite a second code that
+          quietly replaces the one you already sent. */}
+      {!mine ? <Button label="Generate my invite code" disabled={needAuth} onPress={async () => {
         try { setErr(null); const c = await createConnection(deckId); setMine(c.invite_code); } catch (e) { setErr((e as Error).message); }
-      }} />
+      }} /> : null}
       {mine ? (
         <>
           <RelationshipPicker value={relationship} onChange={setRelationship} />
