@@ -4,7 +4,23 @@ import { StyleSheet } from 'react-native-unistyles';
 import { LucideIcon, type ShowcaseIconName } from './icon';
 import { Text } from './text';
 
-type Variant = 'primary' | 'secondary' | 'accent' | 'ghost' | 'outline' | 'destructive';
+/** Fixed ink and paper, for the variants that must not change with the theme. */
+const INK = '#2B1A0F';
+const PAPER = '#FBF3DF';
+
+type Variant =
+  | 'primary'
+  | 'secondary'
+  | 'accent'
+  | 'ghost'
+  | 'outline'
+  | 'destructive'
+  /** Ink fill, paper label — for a control sitting on a gold or paper surface. */
+  | 'inverse'
+  /** Transparent with an ink border — the quiet half of the pair above. */
+  | 'inverseOutline'
+  /** Paper fill, ink label — for a control sitting on an ink surface. */
+  | 'paper';
 type Size = 'sm' | 'md' | 'lg';
 
 type Props = Omit<PressableProps, 'style' | 'disabled'> & {
@@ -124,6 +140,25 @@ const styles = StyleSheet.create((theme) => ({
           backgroundColor: 'transparent',
           borderColor: theme.colors.border,
         };
+      // The ink family, pinned rather than themed. These two exist to sit on a
+      // light surface — a gold or paper card — so their contrast must not
+      // change when the app does.
+      case 'inverse':
+        return {
+          backgroundColor: INK,
+          borderColor: INK,
+        };
+      case 'inverseOutline':
+        return {
+          backgroundColor: 'transparent',
+          borderColor: INK,
+          borderWidth: 1.5,
+        };
+      case 'paper':
+        return {
+          backgroundColor: PAPER,
+          borderColor: PAPER,
+        };
     }
   },
   // The ladder steps in 8pt increments (44 / 52 / 60) and the content steps
@@ -157,6 +192,9 @@ const styles = StyleSheet.create((theme) => ({
     // keep the label fixed dark ink so it never flips to cream in dark mode.
     if (v === 'primary') return { color: '#2B1A0F' };
     if (v === 'destructive') return { color: '#D85A30' };
+    if (v === 'inverse') return { color: '#FBF3DF' };
+    if (v === 'inverseOutline') return { color: '#2B1A0F' };
+    if (v === 'paper') return { color: '#2B1A0F' };
     if (v === 'ghost' || v === 'outline' || v === 'secondary')
       return { color: theme.colors.ink };
     if (v === 'accent') return { color: theme.relationship.partner.accentText };
