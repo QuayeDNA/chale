@@ -1,7 +1,8 @@
-import { TextInput as RNTextInput, View } from 'react-native';
+import { View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { LucideIcon } from '@/components/ui/icon';
+import { TextInput } from '@/components/ui/text-input';
 
 type Props = {
   value: string;
@@ -10,20 +11,28 @@ type Props = {
 };
 
 /**
- * Compact search field — a 42px surface bar with a search glyph. The form
- * TextInput is a 56px labelled field; this is the filter-bar sibling for
- * catalogue-style screens.
+ * Compact search field for catalogue-style screens — the deck switcher's filter
+ * row, where a full labelled form field would be too tall to sit beside the
+ * view switcher.
+ *
+ * It is the same `TextInput` the rest of the app types into, so the field gets
+ * the board's focus ring, error colour and placeholder tone for free rather
+ * than a second, subtly different input living one screen away. Only the
+ * height, radius and the room the glyph needs are overridden; the glyph is a
+ * sibling laid over the field, which is why the input reserves left padding.
  */
 export function SearchBar({ value, onChange, placeholder = 'Search' }: Props) {
   const { theme } = useUnistyles();
+
   return (
-    <View style={styles.bar}>
-      <LucideIcon name="search" size={16} color={theme.colors.muted} />
-      <RNTextInput
+    <View style={styles.wrap}>
+      <View style={styles.glyph} pointerEvents="none">
+        <LucideIcon name="search" size={16} color={theme.colors.muted} />
+      </View>
+      <TextInput
         value={value}
         onChangeText={onChange}
         placeholder={placeholder}
-        placeholderTextColor={theme.colors.muted}
         accessibilityRole="search"
         accessibilityLabel={placeholder}
         style={styles.input}
@@ -33,24 +42,20 @@ export function SearchBar({ value, onChange, placeholder = 'Search' }: Props) {
 }
 
 const styles = StyleSheet.create((theme) => ({
-  bar: {
+  wrap: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    minHeight: 42,
-    paddingHorizontal: 12,
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: 14,
+  },
+  glyph: {
+    position: 'absolute',
+    left: 12,
+    // 42pt field, 16pt glyph: the optical centre is a shade below the middle.
+    top: 13,
+    zIndex: 1,
   },
   input: {
-    flex: 1,
-    fontFamily: 'SplineSans_400Regular',
-    fontSize: 16,
-    lineHeight: 24,
-    color: theme.colors.ink,
+    minHeight: 42,
+    borderRadius: 14,
+    paddingLeft: 34,
     paddingVertical: 8,
   },
 }));

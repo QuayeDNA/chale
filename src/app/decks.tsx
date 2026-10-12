@@ -5,6 +5,8 @@ import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { DeckSheet } from '@/components/deck-sheet';
+import { DecksSkeleton } from '@/components/decks-skeleton';
+import { ErrorCard } from '@/components/error-card';
 import { Screen } from '@/components/screen';
 import { StorefrontGridView } from '@/components/storefront-grid-view';
 import { StorefrontListView } from '@/components/storefront-list-view';
@@ -99,7 +101,21 @@ export default function DecksScreen() {
         <SegmentedControl options={VIEW_OPTIONS} value={view} onChange={setView} />
       </View>
       <FilterChips options={FILTER_OPTIONS} value={filter} onChange={setFilter} bleed />
-      {view === 'flow' ? (
+      {/*
+        Nothing to draw means a skeleton, never an empty catalogue. `isPending`
+        covers the first load and a hard cache miss; the refetch cases keep the
+        cards on screen rather than blanking a page the shopper can already read.
+      */}
+      {decks.isPending ? (
+        <DecksSkeleton view={view} />
+      ) : decks.isError ? (
+        <ErrorCard
+          icon="palette"
+          title="Couldn't reach the catalogue"
+          body="Every deck lives on the server, so there is nothing to browse until it answers."
+          onRetry={() => void decks.refetch()}
+        />
+      ) : view === 'flow' ? (
         <StorefrontFlowView
           decks={visible}
           active={safeActive}
@@ -111,7 +127,12 @@ export default function DecksScreen() {
       ) : view === 'list' ? (
         <StorefrontListView decks={visible} onOpenDeck={openDeck} />
       ) : null}
-      {visible.length === 0 ? (
+      {/*
+        The no-match line is a judgement about the shopper's own filters, so it
+        must not appear while the list is still on its way — an empty `visible`
+        is also what a pending or failed query looks like.
+      */}
+      {!decks.isPending && !decks.isError && visible.length === 0 ? (
         <Text variant="body" muted style={styles.empty}>
           No decks match that. Try another word.
         </Text>
@@ -122,14 +143,22 @@ export default function DecksScreen() {
       {!query.trim() && (filter === 'all' || filter === 'store') ? (
         <StorefrontShop />
       ) : null}
-      <DeckSheet
-        deck={peeked}
-        samples={samples.data ?? []}
-        onPlay={playDeck}
-        onOpenChange={(open) => {
-          if (!open) setPeeked(null);
-        }}
-      />
+      {/*
+        Mounted only once a deck is picked. Closed, it is still a component that
+        reads AsyncStorage for the remembered play mode and measures the window,
+        and that work lands in the middle of the navigation transition — on the
+        exact frame the screen is trying to get on screen.
+      */}
+      {peeked ? (
+        <DeckSheet
+          deck={peeked}
+          samples={samples.data ?? []}
+          onPlay={playDeck}
+          onOpenChange={(open) => {
+            if (!open) setPeeked(null);
+          }}
+        />
+      ) : null}
     </Screen>
   );
 }
