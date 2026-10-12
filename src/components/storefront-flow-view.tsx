@@ -53,10 +53,21 @@ export function StorefrontFlowView({ decks, active, onActiveChange, onOpenDeck }
       <View style={styles.actions}>
         {/* Button takes no style prop, so the 1:2 split lives on wrappers. */}
         <View style={styles.peek}>
-          <Button label="Peek" variant="outline" onPress={() => onOpenDeck(selected)} />
+          <Button
+            label="Peek"
+            icon="layers"
+            variant="secondary"
+            size="md"
+            onPress={() => onOpenDeck(selected)}
+          />
         </View>
         <View style={styles.play}>
-          <Button label="Play deck" onPress={() => onOpenDeck(selected)} />
+          <Button
+            label="Play deck"
+            icon="play"
+            size="md"
+            onPress={() => onOpenDeck(selected)}
+          />
         </View>
       </View>
     </View>

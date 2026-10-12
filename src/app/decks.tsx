@@ -4,7 +4,11 @@ import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { DeckSheet } from '@/components/deck-sheet';
 import { Screen } from '@/components/screen';
+import { StorefrontGridView } from '@/components/storefront-grid-view';
+import { StorefrontListView } from '@/components/storefront-list-view';
+import { StorefrontShop } from '@/components/storefront-shop';
 import { StorefrontFlowView } from '@/components/storefront-flow-view';
 import { StorefrontHeader } from '@/components/storefront-header';
 import { FilterChips, type ChipOption } from '@/components/ui/filter-chips';
@@ -13,8 +17,9 @@ import {
   SegmentedControl,
   type SegmentOption,
 } from '@/components/ui/segmented-control';
+import { Text } from '@/components/ui/text';
 import { PREMIUM_DECKS } from '@/decks/storefront';
-import { listDecks, type DeckSummary } from '@/lib/decks';
+import { drawSessionQuestions, listDecks, type DeckSummary } from '@/lib/decks';
 
 export type StorefrontView = 'flow' | 'grid' | 'list';
 export type StorefrontFilter = 'all' | 'partner' | 'family' | 'friend' | 'store';
@@ -44,7 +49,17 @@ export default function DecksScreen() {
   const [view, setView] = useState<StorefrontView>('flow');
   const [filter, setFilter] = useState<StorefrontFilter>('all');
   const [active, setActive] = useState(0);
+  const [peeked, setPeeked] = useState<DeckSummary | null>(null);
   const decks = useQuery({ queryKey: ['decks'], queryFn: listDecks });
+
+  // A peek, not a session: three questions drawn the same way a session draws
+  // them, so the sheet shows the real content rather than mock copy. Keyed by
+  // deck so switching decks swaps the samples.
+  const samples = useQuery({
+    queryKey: ['decks', peeked?.id, 'samples'],
+    queryFn: () => drawSessionQuestions(peeked!.id, 3),
+    enabled: !!peeked,
+  });
 
   // Search and the relationship chips narrow one list; the carousel reads from
   // the same list, so a filtered rail only holds the decks that match.
@@ -61,7 +76,17 @@ export default function DecksScreen() {
 
   // The rail must never point past its own list when filtering narrows it.
   const safeActive = visible.length === 0 ? 0 : Math.min(active, visible.length - 1);
-  const openDeck = (deck: DeckSummary) => router.push(`/deck/${deck.id}`);
+  // Interacting with a deck opens the sheet rather than pushing the deck
+  // route: the sheet is where the shopper decides HOW to play, so a push
+  // would only ask the same question one screen later.
+  const openDeck = (deck: DeckSummary) => setPeeked(deck);
+  const playDeck = (deck: DeckSummary, mode: 'inperson' | 'remote') => {
+    if (mode === 'remote') {
+      router.push({ pathname: '/start', params: { deck: deck.id, deckTitle: deck.title } });
+      return;
+    }
+    router.push(`/session?pack=${deck.id}`);
+  };
 
   return (
     <Screen align="start">
@@ -81,7 +106,30 @@ export default function DecksScreen() {
           onActiveChange={setActive}
           onOpenDeck={openDeck}
         />
+      ) : view === 'grid' ? (
+        <StorefrontGridView decks={visible} onOpenDeck={openDeck} />
+      ) : view === 'list' ? (
+        <StorefrontListView decks={visible} onOpenDeck={openDeck} />
       ) : null}
+      {visible.length === 0 ? (
+        <Text variant="body" muted style={styles.empty}>
+          No decks match that. Try another word.
+        </Text>
+      ) : null}
+      {/* The shelf is only browsable when the shopper has not narrowed to a
+          relationship or a search — a filtered grid should not quietly gain a
+          shelf of packs that were filtered out of it. */}
+      {!query.trim() && (filter === 'all' || filter === 'store') ? (
+        <StorefrontShop />
+      ) : null}
+      <DeckSheet
+        deck={peeked}
+        samples={samples.data ?? []}
+        onPlay={playDeck}
+        onOpenChange={(open) => {
+          if (!open) setPeeked(null);
+        }}
+      />
     </Screen>
   );
 }
@@ -91,5 +139,10 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.two,
+  },
+  empty: {
+    textAlign: 'center',
+    paddingVertical: theme.spacing.six,
+    paddingHorizontal: theme.spacing.five,
   },
 }));
