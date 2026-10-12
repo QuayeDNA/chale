@@ -225,6 +225,50 @@ styles.card,
   );
 }
 
+/**
+ * A tappable-row placeholder.
+ *
+ * Home and the catalogue both stand up full-width rows as their navigation
+ * affordances, so the loading state has to be the same shape — a row that
+ * collapses to text, or floats as bare bars, is a visible jump the moment the
+ * data lands.
+ */
+export function SkeletonRow({
+  height = 74,
+  radius,
+  leading,
+}: {
+  height?: number;
+  radius?: number;
+  /** Size of the leading tile. Omit for a plain two-line row. */
+  leading?: number;
+}) {
+  const { theme } = useUnistyles();
+  return (
+    <View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={[
+        styles.row,
+        {
+          height,
+          borderRadius: radius ?? theme.radii.card,
+          borderColor: theme.colors.border,
+          backgroundColor: theme.colors.surface,
+        },
+      ]}
+    >
+      {leading ? (
+        <Skeleton width={leading} height={leading} radius={theme.radii.chip} />
+      ) : null}
+      <View style={styles.rowCopy}>
+        <Skeleton width="62%" height={13} radius={7} />
+        <Skeleton width="38%" height={10} radius={5} />
+      </View>
+    </View>
+  );
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Styles                                                                    */
 /* -------------------------------------------------------------------------- */
@@ -246,6 +290,17 @@ const styles = StyleSheet.create((theme) => ({
     elevation: 3,
   },
   slot: {
+    gap: theme.spacing.two,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.three,
+    paddingHorizontal: theme.spacing.three,
+    borderWidth: 1,
+  },
+  rowCopy: {
+    flex: 1,
     gap: theme.spacing.two,
   },
 }));
