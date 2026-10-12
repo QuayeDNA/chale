@@ -40,7 +40,7 @@ export function Button({
       ? accentTextColor
       : (styles.label(variant).color as string);
   const iconElement = icon ? (
-    <LucideIcon name={icon} size={size === 'sm' ? 16 : 20} color={iconColor} />
+    <LucideIcon name={icon} size={size === 'sm' ? 16 : size === 'md' ? 20 : 22} color={iconColor} />
   ) : null;
   return (
     <Pressable
@@ -70,6 +70,7 @@ export function Button({
         variant={size === 'sm' ? 'label' : 'bodyStrong'}
         style={[
           styles.label(variant),
+          size === 'lg' ? styles.labelLarge : undefined,
           variant === 'accent' && accentTextColor ? { color: accentTextColor } : undefined,
           isDisabled ? styles.labelDisabled : undefined,
         ]}>
@@ -125,12 +126,18 @@ const styles = StyleSheet.create((theme) => ({
         };
     }
   },
+  // The ladder steps in 8pt increments (44 / 52 / 60) and the content steps
+  // with the shell: 13px label + 16px icon, 16px semibold + 20px icon, 18px
+  // semibold + 22px icon. A size that only changes padding is not a size —
+  // the old md/lg pair was 4pt apart with identical content and read as one
+  // button. `title` (Archivo Black 22) is deliberately NOT the lg label: the
+  // display face on a control reads as a heading, not an action.
   size: (s: Size) => {
     switch (s) {
       case 'sm':
         return { minHeight: 44, paddingVertical: 10, paddingHorizontal: 16 };
       case 'md':
-        return { minHeight: 56, paddingVertical: 14, paddingHorizontal: 22 };
+        return { minHeight: 52, paddingVertical: 14, paddingHorizontal: 22 };
       case 'lg':
         return { minHeight: 60, paddingVertical: 16, paddingHorizontal: 28 };
     }
@@ -157,5 +164,14 @@ const styles = StyleSheet.create((theme) => ({
   },
   labelDisabled: {
     opacity: 0.75,
+  },
+  // Large buttons get their own label step rather than borrowing `title`: the
+  // shared type scale has nothing between 16px semibold and 22px display, and
+  // the button should not grow a one-off public text variant for this. Layers
+  // over bodyStrong, so the family and weight come along and only the metrics
+  // change.
+  labelLarge: {
+    fontSize: 18,
+    lineHeight: 26,
   },
 }));
