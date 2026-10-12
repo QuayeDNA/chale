@@ -1,4 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import { useEffect } from 'react';
 import { Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -124,9 +125,13 @@ export function StorefrontCard({
  */
 function useLift(selected: boolean): SharedValue<number> {
   const lift = useSharedValue(selected ? 1 : 0);
-  if (lift.value !== (selected ? 1 : 0)) {
+  // The write is deferred to an effect on purpose. Comparing and assigning
+  // inline ran on every render, which is a shared-value read during render —
+  // React warns about it, and on the catalogue's grid that is a warning per
+  // card per frame. An effect only fires when `selected` actually flips.
+  useEffect(() => {
     lift.value = withSpring(selected ? 1 : 0, SELECT_SPRING);
-  }
+  }, [lift, selected]);
   return lift;
 }
 

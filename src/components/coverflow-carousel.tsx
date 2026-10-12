@@ -1,19 +1,22 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   clamp,
   Extrapolation,
   interpolate,
-  runOnJS,
   useAnimatedReaction,
   useAnimatedStyle,
+  useDerivedValue,
   useReducedMotion,
   useSharedValue,
   withSpring,
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
+// Reanimated's own `runOnJS` is deprecated in favour of this one, which
+// schedules the call on the React Native runtime instead of wrapping it.
+import { scheduleOnRN } from 'react-native-worklets';
 import { Defs, RadialGradient, Rect, Stop, Svg } from 'react-native-svg';
 import { StyleSheet } from 'react-native-unistyles';
 
@@ -22,78 +25,61 @@ import { deckTotalCopy, gradientFor, iconName, toneName } from '@/decks/art';
 import type { DeckSummary } from '@/lib/decks';
 
 /**
- * Coverflow carousel — the deck rail where the centred card sits flat and its
- * two neighbours swing away in 3D.
+ * Coverflow carousel — performance pass.
  *
- * Cards float in 3D: the centred one sits flat and full size, its two
- * neighbours swing away in rotateY and recede in scale, and anything past
- * them is gone. Depth, tilt, fade and the "cards nearer the centre are
- * on top" ordering are all derived from ONE shared float (the position along
- * the deck rail) on the UI thread, so a drag reads as a continuous sweep
- * rather than a series of steps.
+ * What changed, and why (see the notes delivered with this file):
  *
- * The rail is a float rather than a scroll offset because coverflow cards are
- * NOT laid out side by side — they are stacked and positioned by hand, so
- * there is nothing to scroll. Dragging moves the float directly; releasing
- * springs it to the nearest card, and a fast flick carries more than one.
- *
- * Only a window of cards around the centre is mounted. A card past 1.6 steps
- * is invisible, so a catalogue that grows to sixty decks must not cost sixty
- * mounted gradients and animated styles — the window is the whole point of
- * keeping this cheap as the library fills up.
- *
- * The concept's pointer glare becomes a press-and-hold one: a phone has no
- * hover, so the highlight lives for as long as a finger is down and eases away
- * on release. It belongs to the centred card only — in the concept both the
- * glare and the tilt are written to the centred card alone.
+ *  1. Small catalogues mount every card once and never re-render on swipe.
+ *     Windowing only kicks in past MOUNT_ALL_BELOW, and when it does the
+ *     window is extended to the spring's TARGET the moment a flick is
+ *     released, so the destination cards exist before the rail gets there.
+ *  2. Every JS-side callback is stable. The pan gesture is no longer rebuilt
+ *     whenever the parent re-renders (that re-attached the native handler
+ *     mid-drag), and a drag's own settle no longer restarts the spring.
+ *  3. ONE shared glare overlay, rasterised once, instead of an SVG remounted
+ *     on whichever card became centred.
+ *  4. Cards are GPU layers (renderToHardwareTextureAndroid / shouldRasterizeIOS)
+ *     and no longer carry overflow:hidden + borderRadius, which forced an
+ *     offscreen clip pass per card per frame under 3D transforms.
+ *  5. Side cards' animated styles depend on `pos` only. Touch coordinates are
+ *     no longer written during a swipe, so nothing but `pos` changes per frame.
+ *  6. Cards are memoised and their derived props (meta, colours, icon) are
+ *     computed once per deck rather than per render.
  */
 
 const CARD_WIDTH = 210;
 const CARD_HEIGHT = 300;
-/** Lateral gap between the centred card and its immediate neighbour. */
 const NEIGHBOUR_STEP = 118;
-/** Each further neighbour tucks in behind the one before it. */
 const DEEPER_TUCK = 52;
-/** RotateY at full side position, degrees. */
 const MAX_TILT = 46;
-/** Recede at full side position, as a perspective divide. */
 const MAX_DEPTH = 90;
 const PERSPECTIVE = 1100;
-/** Cards further from the centre than this are gone entirely. */
 const HIDE_PAST = 1.6;
-/** Opacity of a card sitting one step off centre, so the rail still reads as depth. */
 const NEIGHBOUR_FADE = 0.82;
 const MAX_TRACKED = 2.5;
-/** Topmost stack level, and how much a card drops per step of distance. */
 const Z_TOP = 100;
 const Z_STEP = 10;
-/** Cards mounted either side of the centre. One spare step of slack. */
-const WINDOW = 2;
-/** How far a finger must travel before a touch stops counting as a tap. */
+/** Cards mounted either side of the centre/target when windowing is on. */
+const WINDOW = 3;
+/** At or below this many decks every card stays mounted: zero mount churn. */
+const MOUNT_ALL_BELOW = 12;
 const TAP_SLOP = 6;
-/** Press-driven tilt at the far edge of the stage, degrees, from the concept. */
 const PRESS_TILT_X = 12;
 const PRESS_TILT_Y = 16;
-/** How fast the glare blooms and lets go. */
 const PRESS_IN = { duration: 120 };
 const PRESS_OUT = { damping: 22, stiffness: 180, mass: 0.6 };
 const RADIUS = 24;
-
 const SPRING = { damping: 26, stiffness: 220, mass: 0.9 };
 
-/**
- * Gesture worklets, kept at module scope and taking the shared values as
- * arguments. The gesture callbacks below would otherwise capture values that
- * the hooks lint rules treat as hook arguments (react-hooks/immutability);
- * passing them in keeps every write inside a plain worklet function.
- */
+type SV = SharedValue<number>;
+
 function beginPress(
-  pos: SharedValue<number>,
-  start: SharedValue<number>,
-  touchX: SharedValue<number>,
-  touchY: SharedValue<number>,
-  strength: SharedValue<number>,
-  moved: SharedValue<number>,
+  pos: SV,
+  start: SV,
+  touchX: SV,
+  touchY: SV,
+  strength: SV,
+  moved: SV,
   x: number,
   y: number,
 ) {
@@ -106,12 +92,12 @@ function beginPress(
 }
 
 function moveDrag(
-  pos: SharedValue<number>,
-  start: SharedValue<number>,
-  touchX: SharedValue<number>,
-  touchY: SharedValue<number>,
-  strength: SharedValue<number>,
-  moved: SharedValue<number>,
+  pos: SV,
+  start: SV,
+  touchX: SV,
+  touchY: SV,
+  strength: SV,
+  moved: SV,
   translationX: number,
   translationY: number,
   count: number,
@@ -120,55 +106,68 @@ function moveDrag(
 ) {
   'worklet';
   pos.value = clamp(start.value - translationX / NEIGHBOUR_STEP, 0, count - 1);
-  touchX.value = x;
-  touchY.value = y;
-  // Held at full while the finger moves: the glide should not flicker.
-  strength.value = 1;
-  if (
-    moved.value === 0 &&
-    (Math.abs(translationX) > TAP_SLOP || Math.abs(translationY) > TAP_SLOP)
-  ) {
-    moved.value = 1;
+  // Touch coordinates only matter while this is still a hold. Once the finger
+  // is a swipe, writing them would re-run every glare/tilt mapper per frame
+  // for a value nobody reads — so `pos` is the only thing that moves.
+  if (moved.value === 0) {
+    if (Math.abs(translationX) > TAP_SLOP || Math.abs(translationY) > TAP_SLOP) {
+      moved.value = 1;
+    } else {
+      touchX.value = x;
+      touchY.value = y;
+    }
   }
+  if (strength.value !== 1) strength.value = 1;
 }
 
-function endDrag(
-  pos: SharedValue<number>,
-  velocityX: number,
-  count: number,
-  onActiveChange?: (index: number) => void,
-) {
+/**
+ * The rail's settled index has to reach JS, but the handler that consumes it
+ * closes over a ref, and a ref cannot be handed to a worklet from render. So
+ * the latest handler lives in this module slot and the UI thread only ever
+ * knows the name, never the ref behind it.
+ */
+let announce: (index: number) => void = () => {};
+
+function announceFromRail(index: number) {
   'worklet';
-  // A flick carries further than the card it started on, so the velocity
-  // decides how many cards the spring travels to.
+  scheduleOnRN(announce, index);
+}
+
+function endDrag(pos: SV, velocityX: number, count: number) {
+  'worklet';
   const projected = pos.value - (velocityX / NEIGHBOUR_STEP) * 0.35;
   const target = Math.max(0, Math.min(count - 1, Math.round(projected)));
   pos.value = withSpring(target, SPRING);
-  if (onActiveChange) runOnJS(onActiveChange)(target);
+  // Tell JS the destination NOW, not when the spring lands, so the cards at
+  // the far end are mounted before the rail arrives.
+  announceFromRail(target);
 }
 
-function releasePress(strength: SharedValue<number>) {
+/**
+ * The stage measures itself into shared values the press tilt reads. Same rule
+ * as above: they were handed to a hook earlier in the render, so they cannot be
+ * written here — only passed along to a worklet.
+ */
+function measureStage(stageW: SV, stageH: SV, width: number, height: number) {
+  'worklet';
+  stageW.value = width;
+  stageH.value = height;
+}
+
+function releasePress(strength: SV) {
   'worklet';
   strength.value = withSpring(0, PRESS_OUT);
 }
 
-/** Spring the rail to a card. Module scope for the same reason as above. */
-function springTo(pos: SharedValue<number>, target: number) {
+function springTo(pos: SV, target: number) {
   'worklet';
   pos.value = withSpring(target, SPRING);
 }
 
 export type CoverflowCarouselProps = {
   decks: DeckSummary[];
-  /**
-   * The card that should be centred. Dragging reports the settled index
-   * through onActiveChange; changing this springs the rail to that card, so
-   * the dot track can drive the deck without a swipe.
-   */
   active?: number;
-  /** Fires when a card settles as the centred one. */
   onActiveChange?: (index: number) => void;
-  /** Fires when a card is tapped. */
   onCenterPress?: (index: number) => void;
 };
 
@@ -188,73 +187,94 @@ export function CoverflowCarousel({
 }: CoverflowCarouselProps) {
   const count = decks.length;
   const seed = clampIndex(active ?? 0, count);
-  // The card keeps the concept's 7:10 face at every width — CARD_WIDTH and
-  // CARD_HEIGHT are already that ratio, so one uniform scale holds it.
   const scale = Math.min(useWindowDimensions().width / 360, 1.1);
   const cardWidth = Math.round(CARD_WIDTH * scale);
   const cardHeight = Math.round(CARD_HEIGHT * scale);
+  const reduced = useReducedMotion();
 
-  /** Position along the rail, as a float index. 1.5 = halfway between two. */
   const pos = useSharedValue(seed);
-  /** Rail position at the moment the finger went down. */
   const start = useSharedValue(seed);
-  /** Stage size, for turning a touch into a point on the centred card. */
   const stageW = useSharedValue(0);
   const stageH = useSharedValue(0);
-  /** Finger position over the stage, and how hard the glare is lit. */
   const touchX = useSharedValue(0);
   const touchY = useSharedValue(0);
   const strength = useSharedValue(0);
-  /**
-   * Whether the current touch has travelled far enough to stop counting as a
-   * tap. A card's Pressable reports its own tap, and when the rail hands a
-   * gesture back to the scroll view — or simply has a finger travelling across
-   * it — that Pressable still sees a release and would select the card the
-   * user only meant to glance at or tilt.
-   */
   const moved = useSharedValue(0);
 
   /**
-   * Which card is centred, on the JS thread. It follows the rail through an
-   * animated reaction rather than being read off the shared value during
-   * render, which is what froze the paint order before. React only re-renders
-   * when the nearest whole card changes, so a fast swipe costs one render per
-   * card crossed.
+   * Press tilt, computed ONCE per frame for the whole rail. The centred card
+   * and the glare frame both read these; side cards just ignore them.
    */
-  const [windowAt, setWindowAt] = useState(seed);
-  useAnimatedReaction(
-    () => Math.round(pos.value),
-    (now, prev) => {
-      if (prev !== null && now !== prev) runOnJS(setWindowAt)(now);
+  const tiltX = useDerivedValue(() => {
+    if (reduced || stageH.value <= 0) return 0;
+    const down = (touchY.value - stageH.value / 2) / stageH.value;
+    return -down * PRESS_TILT_X * strength.value * (1 - moved.value);
+  });
+  const tiltY = useDerivedValue(() => {
+    if (reduced || stageW.value <= 0) return 0;
+    const across = (touchX.value - stageW.value / 2) / stageW.value;
+    return across * PRESS_TILT_Y * strength.value * (1 - moved.value);
+  });
+
+  // --- stable JS-side callbacks ------------------------------------------
+  const onActiveRef = useRef(onActiveChange);
+  const onPressRef = useRef(onCenterPress);
+  useEffect(() => {
+    onActiveRef.current = onActiveChange;
+    onPressRef.current = onCenterPress;
+  });
+
+  const windowed = count > MOUNT_ALL_BELOW;
+  const [centre, setCentre] = useState(seed);
+  const [target, setTarget] = useState(seed);
+
+  /** The last index we told / were told about, so echoes do not re-spring. */
+  const followed = useRef(active);
+
+  const settle = useCallback((index: number) => {
+    // Record BEFORE telling the parent. The parent will feed `index` back as
+    // `active`; without this the effect below saw a "new" value and started a
+    // second spring on top of the one already running, which is the stutter
+    // at the end of every swipe.
+    followed.current = index;
+    setTarget(index);
+    onActiveRef.current?.(index);
+  }, []);
+
+  // Publish it for the rail's worklet, which cannot be handed a ref.
+  useEffect(() => {
+    announce = settle;
+  }, [settle]);
+
+  const handlePress = useCallback(
+    (index: number) => {
+      if (moved.value) return;
+      onPressRef.current?.(index);
     },
+    [moved],
   );
 
-  /**
-   * A rail move requested from outside — the dot track, a filter narrowing the
-   * list, a deck deep link — springs the rail to that card. The last index we
-   * followed is remembered in a ref rather than state so a drag's own
-   * settle (which reports through onActiveChange) does not restart the
-   * spring it just began.
-   */
-  const followed = useRef(active);
+  // JS only hears about the nearest card when it actually needs a window.
+  useAnimatedReaction(
+    () => (windowed ? Math.round(pos.value) : -1),
+    (now, prev) => {
+      if (now >= 0 && now !== prev) scheduleOnRN(setCentre, now);
+    },
+    [windowed],
+  );
+
   useEffect(() => {
     if (active === undefined) return;
     if (followed.current === active) return;
     followed.current = active;
-    springTo(pos, clampIndex(active, count));
+    const t = clampIndex(active, count);
+    setTarget(t);
+    springTo(pos, t);
   }, [active, count, pos]);
 
   const pan = useMemo(
     () =>
       Gesture.Pan()
-        // The rail lives inside the page's scroll view, so it has to claim the
-        // gesture early — press-and-hold has to feel alive under a finger that
-        // barely moves. An earlier attempt made activation directional
-        // (activeOffsetX) and failed the gesture once the finger strayed
-        // vertically; both left a dead zone where nothing responded, and the
-        // release was then read as a tap on the card. Directional arbitration
-        // between a rail and a parent scroll view needs a ref to that scroll
-        // view, which this does not have.
         .minDistance(4)
         .onBegin((e) => beginPress(pos, start, touchX, touchY, strength, moved, e.x, e.y))
         .onUpdate((e) =>
@@ -272,243 +292,229 @@ export function CoverflowCarousel({
             e.y,
           ),
         )
-        .onEnd((e) => endDrag(pos, e.velocityX, count, onActiveChange))
+        .onEnd((e) => endDrag(pos, e.velocityX, count))
         .onFinalize(() => releasePress(strength)),
-    [count, moved, onActiveChange, pos, start, strength, touchX, touchY],
+    // Every dependency is stable except `count`, so the native handler is only
+    // re-attached when the deck list genuinely changes length.
+    [count, moved, pos, start, strength, touchX, touchY],
   );
 
-  const onLayout = (event: LayoutChangeEvent) => {
-    const { width, height } = event.nativeEvent.layout;
-    stageW.value = width;
-    stageH.value = height;
-  };
+  const onLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      const { width, height } = event.nativeEvent.layout;
+      measureStage(stageW, stageH, width, height);
+    },
+    [stageH, stageW],
+  );
 
-  const centre = clampIndex(windowAt, count);
-  const from = Math.max(0, centre - WINDOW);
-  const to = Math.min(count - 1, centre + WINDOW);
-  const windowed = decks.slice(from, to + 1);
+  const lo = windowed ? Math.max(0, Math.min(centre, target) - WINDOW) : 0;
+  const hi = windowed ? Math.min(count - 1, Math.max(centre, target) + WINDOW) : count - 1;
+  const mounted = windowed ? decks.slice(lo, hi + 1) : decks;
 
   return (
     <View style={[styles.stage, { height: cardHeight + 44 }]} onLayout={onLayout}>
       <GestureDetector gesture={pan}>
         <View style={styles.stageInner} collapsable={false}>
-          {windowed.map((deck, i) => (
+          {mounted.map((deck, i) => (
             <CarouselCard
               key={deck.id}
               deck={deck}
-              index={from + i}
-              centred={from + i === centre}
+              index={lo + i}
               pos={pos}
-              stageW={stageW}
-              stageH={stageH}
+              tiltX={tiltX}
+              tiltY={tiltY}
+              width={cardWidth}
+              height={cardHeight}
+              onPressIndex={handlePress}
+            />
+          ))}
+          {count > 0 ? (
+            <Glare
               touchX={touchX}
               touchY={touchY}
               strength={strength}
+              moved={moved}
+              stageW={stageW}
+              stageH={stageH}
+              tiltX={tiltX}
+              tiltY={tiltY}
               width={cardWidth}
               height={cardHeight}
-              onPress={() => {
-                if (moved.value) return;
-                onCenterPress?.(from + i);
-              }}
             />
-          ))}
+          ) : null}
         </View>
       </GestureDetector>
     </View>
   );
 }
 
-function CarouselCard({
-  deck,
-  index,
-  centred,
-  pos,
-  stageW,
-  stageH,
-  touchX,
-  touchY,
-  strength,
-  width,
-  height,
-  onPress,
-}: {
+type CardProps = {
   deck: DeckSummary;
   index: number;
-  centred: boolean;
-  pos: SharedValue<number>;
-  stageW: SharedValue<number>;
-  stageH: SharedValue<number>;
-  touchX: SharedValue<number>;
-  touchY: SharedValue<number>;
-  strength: SharedValue<number>;
+  pos: SV;
+  tiltX: SV;
+  tiltY: SV;
   width: number;
   height: number;
-  onPress?: () => void;
-}) {
-  const reduced = useReducedMotion();
+  onPressIndex: (index: number) => void;
+};
+
+const CarouselCard = memo(function CarouselCard({
+  deck,
+  index,
+  pos,
+  tiltX,
+  tiltY,
+  width,
+  height,
+  onPressIndex,
+}: CardProps) {
+  // Derived once per deck, not once per render.
+  const art = useMemo(
+    () => ({
+      meta: `${deckTotalCopy(deck).replace(' questions', '')} questions · ${relationshipLabel(deck)}`,
+      icon: iconName(deck.icon),
+      colors: gradientFor(toneName(deck.tone)),
+      label: `${deck.title}, ${deckTotalCopy(deck)}`,
+    }),
+    [deck],
+  );
+  const size = useMemo(() => ({ width, height }), [width, height]);
+  const press = useCallback(() => onPressIndex(index), [onPressIndex, index]);
 
   const style = useAnimatedStyle(() => {
-    // Distance from the centre of the rail, signed.
     const offset = index - pos.value;
     const dist = Math.abs(offset);
     const clamped = Math.min(dist, 1);
 
-    // The first neighbour sits one full step away; every neighbour after that
-    // tucks in by a smaller amount, so the rail compresses into the distance
-    // instead of marching off screen.
     const x =
       Math.sign(offset) * (clamped * NEIGHBOUR_STEP + Math.max(dist - 1, 0) * DEEPER_TUCK);
-
-    // The centred card stays flat; the tilt is capped just past one step so
-    // distant cards never turn edge-on and vanish.
     const tilt = -Math.max(-1.1, Math.min(1.1, offset)) * MAX_TILT;
-
-    // Emulate translateZ by dividing through the perspective, the same way a
-    // real translateZ would foreshorten under this perspective.
     const recede = 1 / (1 + (Math.min(dist, MAX_TRACKED) * MAX_DEPTH) / PERSPECTIVE);
 
-    // The concept leans the card away from the pointer, at most ±12° in and
-    // ±16° across, and only on the centred card. Fading it with the press is
-    // what makes it settle back when the finger lifts.
-    let pressTiltX = 0;
-    let pressTiltY = 0;
-    if (centred && !reduced && stageW.value > 0 && stageH.value > 0) {
-      const across = (touchX.value - stageW.value / 2) / stageW.value;
-      const down = (touchY.value - stageH.value / 2) / stageH.value;
-      pressTiltX = -down * PRESS_TILT_X * strength.value;
-      pressTiltY = across * PRESS_TILT_Y * strength.value;
-    }
+    // Only the card at the centre leans under a finger.
+    const lean = dist < 0.5 ? 1 : 0;
 
     return {
-      // The concept settles the paint order every frame from the live distance
-      // to the centre, so the card nearest the centre is always on top even
-      // mid-drag. Reading this during render froze the order between
-      // re-renders, which is what let neighbours paint over the centred card.
       zIndex: Z_TOP - Math.round(dist * Z_STEP),
-      opacity: interpolate(
-        dist,
-        [0, 1, HIDE_PAST],
-        [1, NEIGHBOUR_FADE, 0],
-        Extrapolation.CLAMP,
-      ),
+      opacity: interpolate(dist, [0, 1, HIDE_PAST], [1, NEIGHBOUR_FADE, 0], Extrapolation.CLAMP),
       transform: [
         { perspective: PERSPECTIVE },
         { translateX: x },
         { rotateY: `${tilt}deg` },
-        { rotateX: `${pressTiltX}deg` },
-        { rotateY: `${pressTiltY}deg` },
+        { rotateX: `${tiltX.value * lean}deg` },
+        { rotateY: `${tiltY.value * lean}deg` },
         { scale: recede },
       ],
     };
   });
 
   return (
-    <Animated.View style={[styles.card, { width, height }, style]}>
+    <Animated.View
+      style={[styles.card, size, style]}
+      // Rasterise the face once; the per-frame transform/opacity then move a
+      // texture instead of re-compositing a gradient + icon + text subtree.
+      renderToHardwareTextureAndroid
+      shouldRasterizeIOS
+    >
       <StorefrontCard
         title={deck.title}
-        meta={`${deckTotalCopy(deck).replace(' questions', '')} questions · ${relationshipLabel(deck)}`}
-        icon={iconName(deck.icon)}
-        colors={gradientFor(toneName(deck.tone))}
-        style={{ width, height }}
-        onPress={onPress}
-        accessibilityLabel={`${deck.title}, ${deckTotalCopy(deck)}`}
+        meta={art.meta}
+        icon={art.icon}
+        colors={art.colors}
+        style={size}
+        onPress={press}
+        accessibilityLabel={art.label}
       />
-      {centred ? (
-        <Glare
-          touchX={touchX}
-          touchY={touchY}
-          strength={strength}
-          stageW={stageW}
-          stageH={stageH}
-          width={width}
-          height={height}
-        />
-      ) : null}
     </Animated.View>
   );
-}
+});
 
 /**
- * The concept's pointer glare, rebuilt for a finger. A radial wash rides the
- * touch point for as long as it is held and eases out on release, clipped to
- * the card by its wrapper's radius. It is a real RadialGradient rather than a
- * plain view because expo-linear-gradient only draws linear ramps, and a
- * linear blob reads as a smear instead of a glow.
- *
- * The wash is drawn at twice the card's size with its centre pinned to the
- * touch, then clipped by the card. A blob sized to the card itself cannot
- * travel — its travel range is the difference between the two sizes, which is
- * almost nothing — and sizing it to something small would lose the broad falloff
- * the concept gets from its pointer-centred radial covering the whole face.
+ * One glare for the whole rail. It only ever shows on the centred card, and
+ * the centred card is at the stage centre whenever a finger is held still, so
+ * a single overlay pinned there does the job — no per-card mount, no SVG
+ * remount when the centre changes. The gradient is drawn once and kept as a
+ * GPU texture; the per-frame work is a translate and an opacity.
  */
-function Glare({
+const Glare = memo(function Glare({
   touchX,
   touchY,
   strength,
+  moved,
   stageW,
   stageH,
+  tiltX,
+  tiltY,
   width,
   height,
 }: {
-  touchX: SharedValue<number>;
-  touchY: SharedValue<number>;
-  strength: SharedValue<number>;
-  stageW: SharedValue<number>;
-  stageH: SharedValue<number>;
+  touchX: SV;
+  touchY: SV;
+  strength: SV;
+  moved: SV;
+  stageW: SV;
+  stageH: SV;
+  tiltX: SV;
+  tiltY: SV;
   width: number;
   height: number;
 }) {
   const spanW = width * 2;
   const spanH = height * 2;
-  // userSpaceOnUse with a pixel radius keeps the falloff a true circle. The
-  // default objectBoundingBox units would stretch it into an ellipse.
   const radius = Math.min(spanW, spanH) / 2;
+  const size = useMemo(() => ({ width, height }), [width, height]);
+  const span = useMemo(() => ({ width: spanW, height: spanH }), [spanW, spanH]);
 
-  const style = useAnimatedStyle(() => {
-    // The card is centred in the stage, so its top-left corner is the stage's
-    // centre less half the card. Dividing by the card turns the touch into a
-    // point on its own face.
+  // The frame follows the centred card's press tilt so the glare stays glued
+  // to its face, and carries the fade.
+  const frameStyle = useAnimatedStyle(() => ({
+    opacity: strength.value * (1 - moved.value),
+    transform: [
+      { perspective: PERSPECTIVE },
+      { rotateX: `${tiltX.value}deg` },
+      { rotateY: `${tiltY.value}deg` },
+    ],
+  }));
+
+  const glareStyle = useAnimatedStyle(() => {
     const left = stageW.value / 2 - width / 2;
     const top = stageH.value / 2 - height / 2;
     const across = clamp((touchX.value - left) / width, 0, 1);
     const down = clamp((touchY.value - top) / height, 0, 1);
-
     return {
-      opacity: strength.value,
-      // Sliding by a whole card width puts the wash's centre on the touch for
-      // the full range of the face, rather than only at one fixed spot.
-      transform: [
-        { translateX: across * width - width },
-        { translateY: down * height - height },
-      ],
+      transform: [{ translateX: across * width - width }, { translateY: down * height - height }],
     };
   });
 
   return (
-    <Animated.View
-      pointerEvents="none"
-      style={[styles.glare, { width: spanW, height: spanH }, style]}
-    >
-      <Svg width={spanW} height={spanH}>
-        <Defs>
-          <RadialGradient
-            id="chaleCoverflowGlare"
-            gradientUnits="userSpaceOnUse"
-            cx={spanW / 2}
-            cy={spanH / 2}
-            r={radius}
-          >
-            <Stop offset="0" stopColor="#FFFFFF" stopOpacity={0.34} />
-            <Stop offset="0.45" stopColor="#FFFFFF" stopOpacity={0.14} />
-            <Stop offset="0.75" stopColor="#FFFFFF" stopOpacity={0.03} />
-            <Stop offset="1" stopColor="#FFFFFF" stopOpacity={0} />
-          </RadialGradient>
-        </Defs>
-        <Rect x={0} y={0} width={spanW} height={spanH} fill="url(#chaleCoverflowGlare)" />
-      </Svg>
+    <Animated.View pointerEvents="none" style={[styles.glareFrame, size, frameStyle]}>
+      <Animated.View
+        style={[styles.glare, span, glareStyle]}
+        renderToHardwareTextureAndroid
+        shouldRasterizeIOS
+      >
+        <Svg width={spanW} height={spanH}>
+          <Defs>
+            <RadialGradient
+              id="chaleCoverflowGlare"
+              gradientUnits="userSpaceOnUse"
+              cx={spanW / 2}
+              cy={spanH / 2}
+              r={radius}
+            >
+              <Stop offset="0" stopColor="#FFFFFF" stopOpacity={0.34} />
+              <Stop offset="0.45" stopColor="#FFFFFF" stopOpacity={0.14} />
+              <Stop offset="0.75" stopColor="#FFFFFF" stopOpacity={0.03} />
+              <Stop offset="1" stopColor="#FFFFFF" stopOpacity={0} />
+            </RadialGradient>
+          </Defs>
+          <Rect x={0} y={0} width={spanW} height={spanH} fill="url(#chaleCoverflowGlare)" />
+        </Svg>
+      </Animated.View>
     </Animated.View>
   );
-}
+});
 
 function clampIndex(index: number, count: number): number {
   if (count <= 0) return 0;
@@ -525,10 +531,16 @@ const styles = StyleSheet.create(() => ({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // No overflow:hidden / borderRadius here any more. StorefrontCard clips its
+  // own face, and a rounded clip on a 3D-transformed, fading view is an
+  // offscreen pass per card per frame.
   card: {
     position: 'absolute',
-    // Clips the glare to the face. The card draws its own radius inside, so
-    // the two must agree.
+  },
+  // The glare frame is the only clip, and it is only visible while pressed.
+  glareFrame: {
+    position: 'absolute',
+    zIndex: Z_TOP + 20,
     borderRadius: RADIUS,
     overflow: 'hidden',
   },
