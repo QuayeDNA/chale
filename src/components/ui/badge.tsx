@@ -4,24 +4,42 @@ import { StyleSheet } from 'react-native-unistyles';
 import { Icon, type ChaleIconName } from './icon';
 import { Text } from './text';
 
-type Tone = 'street' | 'partner' | 'family' | 'friend' | 'muted';
+export type BadgeTone = 'street' | 'partner' | 'family' | 'friend' | 'muted';
 
 type Props = ViewProps & {
   label: string;
-  tone?: Tone;
+  tone?: BadgeTone;
   icon?: ChaleIconName;
   size?: 'sm' | 'md';
+  /**
+   * Rests on the neutral surface instead of the tone fill, for controls that
+   * carry a tone when active and need a quiet state when they are not. The
+   * label keeps its tone colour so a row of chips still reads color-coded at
+   * rest — only the fill falls away.
+   */
+  unselected?: boolean;
 };
 
-export function Badge({ label, tone = 'street', icon, size = 'sm', style, ...rest }: Props) {
+export function Badge({
+  label,
+  tone = 'street',
+  icon,
+  size = 'sm',
+  unselected = false,
+  style,
+  ...rest
+}: Props) {
   return (
     <View
       accessibilityRole="text"
-      style={[styles.base, styles.tone(tone), styles.size(size), style]}
+      style={[styles.base, styles.tone(tone, unselected), styles.size(size), style]}
       {...rest}
     >
       {icon ? <Icon name={icon} size={size === 'md' ? 16 : 13} /> : null}
-      <Text variant="label" style={[styles.label(tone), size === 'md' && styles.labelMd]}>
+      <Text
+        variant="label"
+        style={[styles.label(tone, unselected), size === 'md' && styles.labelMd]}
+      >
         {label}
       </Text>
     </View>
@@ -43,7 +61,10 @@ const styles = StyleSheet.create((theme) => ({
     if (s === 'md') return { paddingVertical: 7, paddingHorizontal: 14 };
     return {};
   },
-  tone: (t: Tone) => {
+  tone: (t: BadgeTone, unselected: boolean) => {
+    if (unselected) {
+      return { backgroundColor: theme.colors.surface, borderColor: theme.colors.border };
+    }
     switch (t) {
       case 'street':
         return { backgroundColor: theme.colors.street, borderColor: theme.colors.street };
@@ -67,7 +88,10 @@ const styles = StyleSheet.create((theme) => ({
         return { backgroundColor: theme.colors.surface, borderColor: theme.colors.border };
     }
   },
-  label: (t: Tone) => {
+  label: (t: BadgeTone, unselected: boolean) => {
+    // Only the plain tone loses its colour at rest; the relationship tones
+    // stay coloured so a chip row reads as a colour-coded set.
+    if (unselected && t === 'muted') return { color: theme.colors.muted };
     switch (t) {
       case 'street':
         // Street fill is identical in light + dark, so the label stays

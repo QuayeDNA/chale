@@ -14,7 +14,11 @@ import {
   Hourglass,
   House,
   Info,
+  Layers,
+  LayoutGrid,
+  List,
   LoaderCircle,
+  Lock,
   LogOut,
   Mail,
   MessageCircle,
@@ -23,6 +27,7 @@ import {
   Pause,
   Play,
   Send,
+  Search,
   Settings,
   Sparkles,
   Square,
@@ -70,7 +75,12 @@ type ChaleIconName =
   | 'house'
   | 'pause'
   | 'trash-2'
-  | 'send';
+  | 'send'
+  | 'search'
+  | 'lock'
+  | 'layers'
+  | 'grid'
+  | 'list';
 
 const ICON_MAP: Record<ChaleIconName, SymbolViewProps['name']> = {
   heart: { ios: 'heart.fill', android: 'favorite', web: 'favorite' },
@@ -100,6 +110,11 @@ const ICON_MAP: Record<ChaleIconName, SymbolViewProps['name']> = {
   pause: { ios: 'pause.fill', android: 'pause', web: 'pause' },
   'trash-2': { ios: 'trash.fill', android: 'delete', web: 'delete' },
   send: { ios: 'paperplane.fill', android: 'send', web: 'send' },
+  search: { ios: 'magnifyingglass', android: 'search', web: 'search' },
+  lock: { ios: 'lock.fill', android: 'lock', web: 'lock' },
+  layers: { ios: 'square.stack.3d.up.fill', android: 'layers', web: 'layers' },
+  grid: { ios: 'square.grid.2x2.fill', android: 'grid_view', web: 'grid_view' },
+  list: { ios: 'list.bullet', android: 'list', web: 'list' },
 };
 
 type IconProps = {
@@ -182,6 +197,11 @@ const LUCIDE_MAP: Record<ShowcaseIconName, LucideComponent> = {
   pause: Pause,
   'trash-2': Trash2,
   send: Send,
+  search: Search,
+  lock: Lock,
+  layers: Layers,
+  grid: LayoutGrid,
+  list: List,
   hourglass: Hourglass,
   loader: LoaderCircle,
   waves: Waves,
