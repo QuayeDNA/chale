@@ -12,12 +12,13 @@ import { useReducedMotion } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { CardMark } from './card-mark';
 import { artFor, gradientFor, iconName, toneName } from '@/decks/art';
 import type { DeckSummary } from '@/lib/decks';
 import type { SessionMeta } from '@/lib/session-store';
 
 import { Button } from './ui/button';
-import { LucideIcon } from './ui/icon';
+import { LucideIcon, type ShowcaseIconName } from './ui/icon';
 import { Text } from './ui/text';
 
 export type ResumableSession = SessionMeta & { deck: DeckSummary };
@@ -55,6 +56,14 @@ const DISCARD_MS = 220;
  * the tray stops looking like a hand of cards dealt side by side.
  */
 const TITLE_HEIGHT = 40;
+
+/**
+ * The tray card is narrow, so the watermark is smaller than the storefront's and
+ * parked less far out of the corner — at this width a bigger crop would clip it
+ * down to a sliver.
+ */
+const MARK_SIZE = 210;
+const MARK_CROP = 44;
 
 const RELATIONSHIP_CHIP: Record<DeckSummary['relationship_type'], string> = {
   partner: 'Partners',
@@ -195,6 +204,7 @@ function ResumeCard({
     <TrayCard
       width={cardWidth}
       colors={gradientFor(toneName(session.deck.tone))}
+      icon={iconName(session.deck.icon)}
       tilt={tilt}
       onDiscard={() => onDiscard(session.packId)}
     >
@@ -273,12 +283,14 @@ function ResumeCard({
 function TrayCard({
   width,
   colors,
+  icon,
   tilt,
   onDiscard,
   children,
 }: {
   width: number;
   colors: readonly [string, string];
+  icon: ShowcaseIconName;
   tilt: number;
   onDiscard: () => void;
   children: (discard: () => void) => React.ReactNode;
@@ -338,7 +350,13 @@ function TrayCard({
         style={styles.wash}
         pointerEvents="none"
       />
-      <View style={styles.ringWash} pointerEvents="none" />
+      <CardMark
+        icon={icon}
+        tint="rgba(255, 255, 255, 0.13)"
+        size={MARK_SIZE}
+        crop={MARK_CROP}
+        edge="bottom-right"
+      />
       <View style={styles.cardBody}>{children(discard)}</View>
     </Animated.View>
   );
@@ -412,16 +430,6 @@ const styles = StyleSheet.create((theme) => ({
   },
   wash: {
     ...StyleSheet.absoluteFillObject,
-  },
-  ringWash: {
-    position: 'absolute',
-    right: -50,
-    bottom: -60,
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    borderWidth: 20,
-    borderColor: 'rgba(255,255,255,0.11)',
   },
   cardBody: {
     flex: 1,

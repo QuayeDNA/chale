@@ -1,9 +1,9 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { View } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
 import { StyleSheet } from 'react-native-unistyles';
 
-import { LucideIcon } from '@/components/ui/icon';
+import { CardMark } from '@/components/card-mark';
+import { LucideIcon, iconName } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import type { PremiumDeck } from '@/decks/storefront';
 
@@ -13,10 +13,9 @@ import type { PremiumDeck } from '@/decks/storefront';
  * in the far corner.
  *
  * The gradient and the eyebrow tint are the pack's OWN c1/c2 rather than fixed
- * hexes, so swapping `PREMIUM_DECKS[0]` swaps the whole plate with it. The soft
- * ring is the concept's `inset -20px 9px` crescent — a circle whose stroke is
- * drawn for part of the way round and rotated so the arc lands bottom-right,
- * which is the only part of it still inside the banner.
+ * hexes, so swapping `PREMIUM_DECKS[0]` swaps the whole plate with it. The
+ * corner mark is the pack's own icon, the same one every other deck surface
+ * signs itself with.
  *
  * Nothing here is pressable. There is no store, no checkout and no premium
  * content behind it, so a tap target would be a promise the app cannot keep.
@@ -24,11 +23,6 @@ import type { PremiumDeck } from '@/decks/storefront';
  */
 export function PremiumBanner({ deck }: { deck: PremiumDeck }) {
   const [from, to] = [deck.c1, deck.c2];
-  const radius = 55;
-  const circumference = 2 * Math.PI * radius;
-  // A little under half the circle, so the arc reads as a crescent rather than
-  // a full ring peeking out of the corner.
-  const arc = circumference * 0.42;
 
   return (
     <View
@@ -46,17 +40,15 @@ export function PremiumBanner({ deck }: { deck: PremiumDeck }) {
         pointerEvents="none"
       />
 
-      <Svg width={RING} height={RING} style={styles.ring} pointerEvents="none">
-        <Circle
-          cx={radius}
-          cy={radius}
-          r={radius}
-          stroke="rgba(255,255,255,0.15)"
-          strokeWidth={22}
-          strokeDasharray={`${arc} ${circumference}`}
-          transform={`rotate(-32 ${radius} ${radius})`}
-        />
-      </Svg>
+      {/* The pack's own icon as a watermark. This used to be an Svg crescent
+          because the concept draws an inset shadow and RN cannot express one;
+          the glyph does the same job and says which pack it is. */}
+      <CardMark
+        icon={iconName(deck.icon)}
+        tint="rgba(255, 255, 255, 0.14)"
+        size={MARK_SIZE}
+        crop={MARK_CROP}
+      />
 
       <View style={styles.copy}>
         <View style={styles.eyebrow}>
@@ -82,7 +74,9 @@ export function PremiumBanner({ deck }: { deck: PremiumDeck }) {
   );
 }
 
-const RING = 110;
+const MARK_SIZE = 190;
+/** The concept parked its arc 30pt past the corner. */
+const MARK_CROP = 26;
 /**
  * The concept's #CFC6FF, a pale lavender that only reads against a violet
  * plate. It is pinned rather than derived because every premium gradient is
@@ -108,11 +102,6 @@ const styles = StyleSheet.create((theme) => ({
     right: 0,
     bottom: 0,
     left: 0,
-  },
-  ring: {
-    position: 'absolute',
-    right: -24,
-    top: -30,
   },
   copy: {
     flex: 1,

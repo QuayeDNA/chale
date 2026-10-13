@@ -9,6 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { CardMark } from '@/components/card-mark';
 import { LucideIcon, type ShowcaseIconName } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 
@@ -39,6 +40,15 @@ type Props = {
 /** Lift distance while selected, matching the concept's translateY(-4px). */
 const LIFT = 4;
 const SELECT_SPRING = { damping: 18, stiffness: 260, mass: 0.7 };
+
+/**
+ * The watermark is drawn larger than the card is wide, so most of it is
+ * cropped and only a sweeping curve of the glyph survives — the concept's arc,
+ * arrived at by a route that also tells you which deck it is.
+ */
+const MARK_SIZE = 300;
+/** The concept parked its arc 60pt past the corner; the mark does the same. */
+const MARK_CROP = 62;
 
 /**
  * Storefront deck card — the gradient face shared by the coverflow, the grid
@@ -90,8 +100,17 @@ export function StorefrontCard({
           style={styles.wash}
           pointerEvents="none"
         />
-        {/* Soft ring detail, bottom-right, echoing the concept's arc. */}
-        <View style={styles.ring} pointerEvents="none" />
+        {/* The deck's own icon as a watermark, bottom-right, clipped by the radius.
+            The concept puts an arc here; drawing the same glyph that the tile
+            up top already shows, only far larger and washed out, is what makes
+            six decks read as six decks instead of one product six times. */}
+        <CardMark
+          icon={icon}
+          tint="rgba(255, 255, 255, 0.13)"
+          size={MARK_SIZE}
+          crop={MARK_CROP}
+          edge="bottom-right"
+        />
         <View style={styles.iconTile} pointerEvents="none">
           <LucideIcon name={icon} size={24} color={ink} />
         </View>
@@ -153,16 +172,6 @@ const styles = StyleSheet.create((theme) => ({
   },
   wash: {
     ...StyleSheet.absoluteFillObject,
-  },
-  ring: {
-    position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    borderWidth: 22,
-    borderColor: 'rgba(255,255,255,0.10)',
-    right: -60,
-    bottom: -60,
   },
   iconTile: {
     width: 46,
