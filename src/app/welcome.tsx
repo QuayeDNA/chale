@@ -1,11 +1,12 @@
-import { Pressable, View, useWindowDimensions } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StyleSheet } from 'react-native-unistyles';
+import Animated, { FadeIn, FadeInDown, FadeInUp, useReducedMotion } from 'react-native-reanimated';
 
 import { Screen } from '@/components/screen';
 import { BrandLockup } from '@/components/ui/brand-lockup';
 import { Button } from '@/components/ui/button';
-import { Text } from '@/components/ui/text';
+import { LegalFoot } from '@/components/ui/legal-foot';
 import { useAuth } from '@/hooks/use-auth';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -13,8 +14,9 @@ export default function WelcomeScreen() {
   const router = useRouter();
   const { isAnonymous } = useAuth();
   const scheme = useColorScheme();
+  const reduceMotion = useReducedMotion();
   const { width: windowWidth } = useWindowDimensions();
-  const lockupWidth = Math.min(windowWidth * 0.52, 220);
+  const lockupWidth = Math.min(windowWidth * 0.56, 240);
   // Cream artwork on dark theme, ink artwork on light theme.
   const lockupVariant = scheme === 'dark' ? 'light' : 'dark';
 
@@ -29,31 +31,38 @@ export default function WelcomeScreen() {
   return (
     <Screen>
       <View style={styles.hero}>
-        <BrandLockup variant={lockupVariant} width={lockupWidth} testID="welcome-lockup" />
-      </View>
-      {/* Placeholder holding the future welcome illustration's size and position. */}
-      <View style={styles.artPlaceholder} accessibilityLabel="Welcome illustration placeholder">
-        <Text variant="caption" style={styles.artPlaceholderLabel}>
-          Welcome illustration
-        </Text>
+        <Animated.View entering={reduceMotion ? undefined : FadeInDown.duration(300)}>
+          <BrandLockup variant={lockupVariant} width={lockupWidth} testID="welcome-lockup" />
+        </Animated.View>
       </View>
       <View style={styles.actions}>
-        <Button label="Get started" onPress={handleGetStarted} testID="welcome-get-started" />
-        <Text variant="caption" muted style={styles.accountNote}>
-          Create your free account
-        </Text>
-        <Pressable
-          onPress={() => router.replace('/home')}
-          accessibilityRole="link"
-          accessibilityLabel="Browse as guest"
-          style={styles.guestHitArea}
-          testID="welcome-guest"
-        >
-          <Text variant="small" style={styles.guestLabel}>
-            Browse as guest instead
-          </Text>
-        </Pressable>
+        <Animated.View entering={reduceMotion ? undefined : FadeInUp.duration(280).delay(320)}>
+          <Button
+            label="Get started"
+            variant="primary"
+            size="lg"
+            fullWidth
+            onPress={handleGetStarted}
+            testID="welcome-get-started"
+          />
+        </Animated.View>
+        <Animated.View entering={reduceMotion ? undefined : FadeInUp.duration(280).delay(380)}>
+          <Button
+            label="Browse decks as guest"
+            variant="outline"
+            size="md"
+            fullWidth
+            onPress={() => router.replace('/home')}
+            accessibilityLabel="Browse decks as guest"
+            testID="welcome-guest"
+          />
+        </Animated.View>
       </View>
+      <Animated.View
+        style={styles.footer}
+        entering={reduceMotion ? undefined : FadeIn.duration(280).delay(460)}>
+        <LegalFoot />
+      </Animated.View>
     </Screen>
   );
 }
@@ -62,32 +71,13 @@ const styles = StyleSheet.create((theme) => ({
   hero: {
     alignItems: 'center',
     paddingTop: theme.spacing.five,
-  },
-  artPlaceholder: {
-    height: 220,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
-    borderColor: theme.colors.border,
-    borderRadius: 24,
-    marginVertical: theme.spacing.four,
-  },
-  artPlaceholderLabel: {
-    color: theme.colors.muted,
+    gap: theme.spacing.three,
   },
   actions: {
+    marginTop: theme.spacing.four,
     gap: theme.spacing.two,
   },
-  accountNote: {
-    textAlign: 'center',
-  },
-  guestHitArea: {
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  guestLabel: {
-    textDecorationLine: 'underline',
+  footer: {
+    marginTop: theme.spacing.five,
   },
 }));

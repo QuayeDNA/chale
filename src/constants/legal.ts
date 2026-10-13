@@ -1,0 +1,14 @@
+/** Studio identity shown on the opening screens. */
+export const STUDIO_NAME = 'Ananse';
+
+/** Studio site, once one exists. Null = the credit stays plain text. */
+export const STUDIO_URL: string | null = null;
+
+/**
+ * Legal links. Each becomes visible on both opening screens the moment its URL
+ * is set here — no UI comes back to life, nothing dead ships.
+ */
+export const LEGAL_LINKS: { label: string; url: string | null }[] = [
+  { label: 'Terms', url: null },
+  { label: 'Privacy', url: null },
+];
