@@ -23,7 +23,7 @@
 **Needed:**
 - Auth + user accounts
 - Realtime or near-realtime updates (so "your partner just answered" / reveal moments feel instant, not refresh-dependent)
-- ~~Push notification delivery (daily question, partner answered, reveal ready)~~ — **not implemented**; `expo-notifications` is not a dependency. Currently the only wake-up is opening the app.
+- ~~Push notification delivery (new card ready, partner answered, reveal ready)~~ — **not implemented**; `expo-notifications` is not a dependency. Currently the only wake-up is opening the app.
 - Object storage for voice clips with TTL/expiry support
 - A scheduled job runner (for expiring unsaved voice clips) — the SQL expiry predicate is in place (0005/0012); no scheduler (pg_cron or otherwise) is wired yet, so expiry relies on the read path checking `expires_at`.
 
@@ -67,7 +67,7 @@ Rendered as SQL in `supabase/migrations/` — keep this doc and the SQL in sync 
 | relationship_type | enum | partner / friend / family — MVP only exposes "partner" |
 | invite_code | text | unique, not null; **stable while pending** — one live invite per connection |
 | status | enum | pending / linked |
-| active_deck_id | uuid | FK -> question_packs (0009) — the deck the daily prompt draws from; set by the creator of the invite |
+| active_deck_id | uuid | FK -> question_packs (0009) — the deck the remote card draw pulls from; set by the creator of the invite |
 | streak_count / longest_streak | int | (v1.1, unused) |
 | created_at / updated_at | timestamptz | |
 
@@ -193,4 +193,4 @@ Realtime is on `answers` (the reveal flip) and `question_packs` (0010, deck iden
 
 ## 8. Notifications
 
-**Spec'd, not shipped.** The 2026-10-02 integration spec deliberately deferred them; they were also absent from the code as of this refresh. `users.push_token` exists but is never written. When built (roadmap Phase 4): Expo push service + a scheduler for the daily question — the DB side (one prompt per connection per day) is already the cadence source.
+**Spec'd, not shipped.** The 2026-10-02 integration spec deliberately deferred them; they were also absent from the code as of this refresh. `users.push_token` exists but is never written. When built (roadmap Phase 4): Expo push service + a scheduler for the "new card ready" ping — the DB side (one prompt per connection per day) is already the cadence source.

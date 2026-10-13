@@ -3,7 +3,7 @@
 
 This document maps the key journeys through the app at a behavioral level — screens and decisions, not visuals (see `05-design-system.md` for that). Each flow is the spec for that feature; if implementation needs to deviate, update this doc first.
 
-> **This doc was rewritten 2026-10-13 from the shipped code** (screen-by-screen audit; route-by-route notes in `question-page-brief.md`). It supersedes the earlier version, which described a single global mode of play. The shipped product has two: **remote** (a question a day, async) and **in-person** (a two-people-one-phone session). Push notifications are not shipped and are marked as such below; plan work lives in `03-roadmap.md`.
+> **This doc was rewritten 2026-10-13 from the shipped code** (screen-by-screen audit; route-by-route notes in `question-page-brief.md`). It supersedes the earlier version, which described a single global mode of play. The shipped product has two: **remote** (the same deck of question cards, apart — answers passed as text or voice, paced one card per connection per day) and **in-person** (a two-people-one-phone session through a deck, no answering). Remote is not a separate "question a day" product — it is the in-person card experience for people who are apart. Push notifications are not shipped and are marked as such below; plan work lives in `03-roadmap.md`.
 
 ---
 
@@ -14,10 +14,9 @@ flowchart TD
     A[Open app] --> B[Splash: brand lockup + indeterminate loading bar]
     B --> C[Welcome screen]
     C -->|Get started| D{Anonymous?}
-    C -->|Browse as guest instead| E[Tabs: Home as guest]
-    D -->|Yes| F[Auth: email + one-time code]
+    C -->|Browse decks as guest| E[Tabs: Home as guest]
+    D -->|Yes| F[Auth: email + consent checkbox → one-time code]
     D -->|No| E2[Tabs: Home, signed in]
-    F --> G[Verify code + optional name]
     G --> E2
     E --> H[Browse decks, start in-person sessions]
 ```
@@ -27,6 +26,7 @@ Notes:
 - Guests can browse the whole catalogue (`/decks`, `/deck/[id]`) and play in-person sessions without an account. Toggling a favourite routes them to `/auth` — favourites, answers and connections are account-only.
 - Account creation is **email one-time code only**. There is no phone auth, no password, no social login. Name is collected after verification and is optional; it feeds the greeting on Home.
 - Claiming an account keeps the anonymous user id, so favourites saved while browsing survive the upgrade.
+- The account boundary carries an age consent: "Send code" stays disabled until the user checks "I'm 13 or older / a parent or guardian agrees if you're under 16" — the same rule as the Terms. Guests never see this gate; it only exists on the account-creation path.
 - After verifying, the user lands back where they were (`/auth` is a push, dismissed on success).
 
 ## 2. In-person session ("together" mode)
@@ -76,7 +76,7 @@ Notes:
 - **The inviter's deck is pinned to the connection** (`connections.active_deck_id`), so the remote draw comes from the deck that was being browsed — not from whatever the relationship type happens to match. Joining with a code adopts the inviter's deck.
 - Pending invites block nothing else: Home shows the daily card as "invite-pending" rather than "no partner", and remote questions only exist for `linked` connections.
 
-## 4. Daily question — answering
+## 4. Remote card — answering
 
 ```mermaid
 flowchart TD
@@ -96,7 +96,7 @@ flowchart TD
 ```
 
 Notes:
-- One question per connection per calendar day (`get_or_create_today_prompt`). Home only ever *peeks* (`read_today_prompt`) — browsing the dashboard never spends a day's question; the prompt is created when the remote flow actually opens.
+- The server paces remote play at one card per connection per calendar day (`get_or_create_today_prompt`). Home only ever *peeks* (`read_today_prompt`) — browsing the dashboard never spends the day's card; the prompt is created when the remote flow actually opens. Pacing is the mechanism, not the product: the experience is a deck of question cards worked through apart, exactly as the in-person mode is a deck worked through together.
 - **Answers stay editable until the reveal.** Re-submitting replaces the current answer (and resets any save flag on it). The instant the second person submits, `reveal_state` flips to `revealed` — server-side, non-negotiable — and both answers lock. This supersedes the old "own answer is never editable" note; the integrity guarantee is the reveal, not immutability.
 - The WaitingState confirms *you* answered and reveals nothing about the other person's progress.
 - Home flips to the reveal state in realtime (answers subscription) — the moment both have answered. It also re-checks on focus, because tabs don't unmount.
@@ -144,7 +144,7 @@ Notes:
 
 | Trigger | Status |
 |---|---|
-| New daily question available | Not shipped — opening the app is the trigger |
+| New card ready | Not shipped — opening the app is the trigger |
 | Partner submitted their answer | Not shipped |
 | Reveal ready | Not shipped (realtime only works while the app is open) |
 | Connection invite accepted | Not shipped |

@@ -7,9 +7,9 @@
 
 ## 1. Vision
 
-A mobile app for any two people who want to stay close — partners, friends, siblings, parent and child — to deepen connection through daily questions answered independently, then revealed together. Where most question-card apps (Flamingo Cards, etc.) are built for two people sitting side-by-side with one phone, this app is built for people who are apart as often as they're together: the question comes to both of you, you each answer on your own time, and the reveal is a shared moment even across distance.
+A mobile app for any two people who want to stay close — partners, friends, siblings, parent and child — to deepen connection through question cards. Players work through decks of question cards and answer them as they go. There are two ways to play: **together in person**, on one device passed around the room; or **remotely**, when you're apart — each person answers on their own time and the answers reach each other as text or voice. Where most question-card apps (Flamingo Cards, etc.) are built only for two people sitting side-by-side with one phone, this app treats "apart" and "together" as equal postures over the same cards.
 
-The relationship context (romantic partner, friend, family) changes the question content and tone, but the core mechanic — async reveal + optional ephemeral voice — stays the same across every connection type. This is a relationship-agnostic mechanic, not a couples-only feature.
+The relationship context (romantic partner, friend, family) changes the question content and tone, but the core mechanic — answer independently, reveal together — stays the same across every connection type. This is a relationship-agnostic mechanic, not a couples-only feature.
 
 **Shipped scope note (2026-10-13):** the product now also ships an **in-person mode** — two people, one phone, a resumable session of questions with no answering at all. It is the opposite posture to the async loop, it shares the deck catalogue and favourites with it, and it has become a first-class mode alongside remote rather than an extension of it. Both modes exist; the async loop remains the spine and the reason the app exists.
 
@@ -32,12 +32,12 @@ In-app microcopy should carry the same voice where it fits naturally: e.g. "Say 
 ## 3. Target users
 
 - Any 1-on-1 relationship where staying connected matters: romantic partners, close friends, siblings, parent/child — particularly pairs who spend meaningful time apart (distance, busy schedules, travel).
-- People looking for a low-effort daily ritual rather than a one-off activity.
+- People looking for a low-effort ritual with their person rather than a one-off activity.
 - **MVP beta audience:** couples specifically, to validate the core mechanic with the highest emotional-intent use case before opening up other relationship types. Broadening to friends/family is a content and onboarding change once the mechanic proves out — not a rebuild, since the underlying model is relationship-agnostic from day one.
 
 ## 4. Core differentiator
 
-**Async reveal mechanic:** A question is pushed to both partners. Each answers independently; answers are locked and hidden until *both* have submitted. Once both are in, a reveal moment triggers for both partners at once.
+**Async reveal mechanic:** In remote play a question card comes to both of you. Each answers independently; answers are locked and hidden until *both* have submitted. Once both are in, a reveal moment triggers for both partners at once — card by card, through the deck.
 
 **Walkie-talkie mode:** Voice answers as an alternative to text. Voice clips are short-lived / ephemeral by default (ordinary intimacy shouldn't feel archived), but either person can choose to save their *own* clip. Saved clips are the seed for a future "presentation layer" (visualized, searchable memory of saved answers over time).
 
@@ -47,7 +47,7 @@ In-app microcopy should carry the same voice where it fits naturally: e.g. "Say 
 
 1. Anonymous-first onboarding: the app is browsable with no account (deck catalogue and previews via Supabase anonymous sign-in). **Shipped.** An account is created exactly when the user initiates creating or joining a connection, or saves a favourite — email one-time code; claiming from a guest session keeps the same user id, so early favourites carry over. Relationship type is tagged on the connection (MVP ships "partner" as the only selectable type; the data model supports more from day one). **Shipped.**
 2. **In-person sessions** *(not in the original MVP; shipped)*: a resumable, shared-device session drawing `session_length` (default 20) questions from a deck — no answers, no server state, guests allowed. Lives on Home as a resume tray.
-3. ~~One question per day, pushed to both people via notification.~~ **Half shipped:** one question per calendar day per connection, drawn from the connection's active deck — shipped (server-side, `get_or_create_today_prompt`); **push notification — not shipped.** The question arrives when the app is opened. Notifications are the top of the roadmap (`03-roadmap.md` Phase 4).
+3. ~~One question per day, pushed to both people via notification.~~ **Remote play — the card deck, apart: shipped, notification not.** One card per connection per calendar day, drawn from the connection's active deck, is generated server-side (`get_or_create_today_prompt`) — shipped. Answers are passed as **text or voice**, locked until both people answer, then revealed per card. **Push notification — not shipped:** the card arrives when the app is opened. Notifications are the top of the roadmap (`03-roadmap.md` Phase 4). Note what this is *not*: remote play is not a separate "question a day" product — it is the same deck-and-card experience as the in-person mode, paced for people who are apart.
 4. Text answers, locked until both people submit. **Shipped**, with one behavioural change: an answer stays **editable until the reveal** (`submit_answer` replaces-in-place, then refuses after `reveal_state = revealed`). Locking at reveal is what protects the mechanic; pre-reveal immutability was dropped.
 5. Reveal screen once both answers are in. **Shipped** — side-by-side, server-enforced flips, realtime on answers.
 6. Voice answers (walkie-talkie mode): record, send, auto-expire after both people have listened once; optional save toggle shown *after* listening. **Shipped** with the rule resolved: expiry is a hard 7-day backstop from submission; a listen is a row in `voice_listens` (first play per person); the save prompt appears to the speaker only once listens ≥ 2 (both people). Saved clips are exempt from expiry.
@@ -60,7 +60,7 @@ In-app microcopy should carry the same voice where it fits naturally: e.g. "Say 
 - No additional relationship types (friends, family) at launch — the model supports them, but MVP ships with "partner" content only to keep validation focused. Adding a pack + relationship type later is a content change, not a rebuild. *(The storefront's friend/family filter chips render already, with nothing behind them.)*
 - No group connections (3+ people) — explicitly far-future. MVP and near-term roadmap are 1-on-1 only.
 - No iOS build in the very first release — Android-only beta to validate the core loop before investing in the Apple Developer account and cross-platform testing.
-- No push notifications in the beta — a deliberate skip during the build, now the roadmap's highest-leverage gap. Everything the notification table promised (daily question, partner answered, reveal ready) works only while the app is open.
+- No push notifications in the beta — a deliberate skip during the build, now the roadmap's highest-leverage gap. Everything the notification table promised (new card ready, partner answered, reveal ready) works only while the app is open.
 - No multiple question packs / premium content tiers yet. *(Historical: the catalogue shipped in beta by design choice — the deck system, not the monetisation, which remains v2. The non-goal that still stands is "premium/paywall", not "more than one pack".)*
 
 ## 7. Near-term roadmap after MVP validation

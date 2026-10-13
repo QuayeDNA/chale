@@ -5,7 +5,7 @@ Doc set for the Chale app. As of **2026-10-13** every numbered doc has been re-a
 ## Read in this order
 
 1. **01-prd.md** — What we're building and why. Vision, differentiator, MVP scope, non-goals. *Updated 2026-10-13: scope notes reflect shipped behaviour (in-person mode + async remote loop).*
-2. **04-user-flows.md** — The step-by-step journeys through the app (onboarding, in-person session, pairing, daily answer, reveal, voice lifecycle). *Updated 2026-10-13: describes the app as built, including what is **not** shipped (notifications). This is the behavior spec — read before touching UI or backend logic.*
+2. **04-user-flows.md** — The step-by-step journeys through the app (onboarding, in-person session, pairing, remote answer, reveal, voice lifecycle). *Updated 2026-10-13: describes the app as built, including what is **not** shipped (notifications). This is the behavior spec — read before touching UI or backend logic.*
 3. **05-design-system.md** — Visual direction: mood, color, type. *Foundation locked and implemented; §1a-1 semantic tokens and §2 runtime relationship theming are marked planned, not built.*
 4. **02-technical-architecture.md** — Stack decision, data model, RPC surface, reveal logic, voice mode, client architecture. *Rewritten 2026-10-13: full data-model refresh (decks, favourites, voice_listens), notifications marked spec'd-not-shipped.*
 5. **06-development-workflow.md** — Git workflow, folder structure, environment setup, testing, build/release. *Corrected 2026-10-13: `src/` tree, dev-build iteration (not Expo Go), CI is a recommendation (none exists).*

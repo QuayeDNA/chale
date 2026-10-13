@@ -11,7 +11,7 @@
 
 ## Phase 1 — MVP remote loop (Android-only beta) — **Built, live e2e unverified**
 - Pairing via 6-character invite code / share link.
-- One question per calendar day per connection, text or voice answers, locked until both answer, reveal screen.
+- Remote card play: one card per connection per calendar day drawn from the active deck, answers passed as text or voice, locked until both answer, per-card reveal screen.
 - Voice: record, send, listen tracking, speaker-only save after both have listened, 7-day backstop expiry.
 - Anonymous guest browsing with the account boundary at pairing (email one-time code).
 - **Still open:** notification delivery (see Phase 4) and a two-device e2e pass through the whole loop.
@@ -25,7 +25,7 @@
 - A premium shelf and a Home premium banner exist as **surfaces only** — no paywall, no purchases. Monetisation remains v2 work.
 
 ## Phase 4 — iOS + push notifications — **Not started (the real gap)**
-- Push notifications were spec'd into the MVP and never built: daily question, partner answered, reveal ready, invite accepted. Without them the "async" loop depends entirely on users remembering to open the app. This is the highest-leverage next build.
+- Push notifications were spec'd into the MVP and never built: new card ready, partner answered, reveal ready, invite accepted. Without them the remote loop depends entirely on users remembering to open the app. This is the highest-leverage next build.
 - iOS port: EAS cloud build, TestFlight beta, then dual-platform public launch.
 
 ## Phase 5 — v1.1 refinements (post-launch, driven by beta data)

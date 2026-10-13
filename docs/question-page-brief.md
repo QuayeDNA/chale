@@ -14,7 +14,7 @@ pages** wearing the same card:
 |---|---|---|
 | Who is looking | two people, one phone | one person, alone |
 | Do you answer it | **never** | **always** |
-| Is it a list | yes — question N of 20 | no — one question a day |
+| Is it a list | yes — question N of 20 | no — one card at a time |
 | Can you go back | yes — Previous | no |
 | Needs a connection | no | yes |
 | Needs an account | no (guests work) | effectively yes |
@@ -73,7 +73,7 @@ Routes: `src/app/(tabs)/remote.tsx` (the day) and `src/app/prompt/[id].tsx` (the
 
 | # | State | Page |
 |---|---|---|
-| 1 | no connection | "A question a day with your person" + one primary button → `/start` |
+| 1 | no connection | "Question cards with your person" + one primary button → `/start` |
 | 2 | invite pending (connection exists, not linked) | the same panel, reworded to "waiting for them" + your code |
 | 3 | nothing drawn yet | an empty band, no card. Zero rows from the read-only peek RPC is a real answer, not a failure. |
 | 4 | unanswered, question is **voice** | card + recorder only. No toggle. |
