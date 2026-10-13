@@ -1,0 +1,332 @@
+/* Chale web pages — docs/05-design-system.md translated to CSS.
+   Tokens mirror src/unistyles.ts exactly; keep the two in sync. */
+
+:root {
+  --paper: #fbf3df;
+  --ink: #2b1a0f;
+  --surface: #fff9e8;
+  --border: #ede0be;
+  --muted: #8a7562;
+  --street: #f5b400;
+  --shadow: rgba(43, 26, 15, 0.12);
+
+  --space-half: 2px;
+  --space-one: 4px;
+  --space-two: 8px;
+  --space-three: 16px;
+  --space-four: 24px;
+  --space-five: 32px;
+  --space-six: 64px;
+
+  --radius-hero: 24px;
+  --radius-card: 20px;
+  --radius-chip: 12px;
+  --radius-pill: 999px;
+
+  --measure: 720px; /* legal reading column */
+
+  --font-display: 'Archivo Black', system-ui, sans-serif;
+  --font-body: 'Spline Sans', system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #231408;
+    --ink: #fbf3df;
+    --surface: #2e1e10;
+    --border: #3d2a18;
+    --muted: #c4a991;
+    --street: #f5b400; /* the one pop that passes on both grounds */
+    --shadow: rgba(0, 0, 0, 0.45);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 24px;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--street);
+  outline-offset: 2px;
+  border-radius: var(--radius-chip);
+}
+
+.page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-four);
+  padding: var(--space-four);
+}
+
+/* ---------------------------------------------------------------- brand ---- */
+
+.brand-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-three);
+  padding-top: var(--space-five);
+  text-align: center;
+}
+
+.brand-lockup {
+  width: min(56vw, 240px);
+}
+
+.brand-lockup img {
+  width: 100%;
+  height: auto;
+}
+
+/* The class names describe the artwork, not the theme: `-light` is the cream
+   lockup file, `-dark` the ink one. A theme shows the artwork whose ink has
+   contrast against it — light paper gets the ink (dark) lockup, dark paper
+   gets the cream (light) lockup. */
+.brand-lockup img.brand-light {
+  display: none;
+}
+
+.brand-lockup img.brand-dark {
+  display: block;
+}
+
+@media (prefers-color-scheme: dark) {
+  .brand-lockup img.brand-light {
+    display: block;
+  }
+  .brand-lockup img.brand-dark {
+    display: none;
+  }
+}
+
+/* -------------------------------------------------------------- surfaces ---- */
+
+.card {
+  width: 100%;
+  max-width: var(--measure);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--space-four);
+}
+
+.panel {
+  width: 100%;
+  max-width: 420px;
+  margin: auto;
+  text-align: center;
+}
+
+.panel .card {
+  max-width: none;
+}
+
+.panel-title {
+  margin: 0 0 var(--space-two);
+  font-family: var(--font-display);
+  font-size: 22px;
+  line-height: 28px;
+}
+
+/* --------------------------------------------------------------- buttons ---- */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 14px 22px;
+  border: 1px solid var(--street);
+  border-radius: var(--radius-pill);
+  background: var(--street);
+  color: #2b1a0f;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.button:active {
+  opacity: 0.88;
+}
+
+.button-outline {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--border);
+}
+
+.button-block {
+  display: flex;
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-two);
+  width: 100%;
+  max-width: var(--measure);
+}
+
+/* ------------------------------------------------------------- legal doc ---- */
+
+.doc h1 {
+  margin: 0 0 var(--space-one);
+  font-family: var(--font-display);
+  font-size: 22px;
+  line-height: 28px;
+}
+
+.doc .effective {
+  margin: 0 0 var(--space-four);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.doc h2 {
+  margin: var(--space-four) 0 var(--space-two);
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 22px;
+}
+
+.doc h2:first-of-type {
+  margin-top: 0;
+}
+
+.doc p {
+  margin: 0 0 var(--space-three);
+}
+
+.doc ul {
+  margin: 0 0 var(--space-three);
+  padding-left: var(--space-four);
+}
+
+.doc li {
+  margin-bottom: var(--space-one);
+}
+
+.doc strong {
+  font-weight: 600;
+}
+
+.doc-tag {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: var(--space-three);
+  padding: var(--space-half) var(--space-three);
+  border-radius: var(--radius-pill);
+  background: var(--street);
+  color: #2b1a0f;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+/* ----------------------------------------------------------- bridge page ---- */
+
+/* The same indeterminate travel as the app's LoadingBar: a 35% pill crossing
+   the track in 1300ms, easing in and out. */
+.bar-track {
+  width: 160px;
+  height: 10px;
+  margin: var(--space-four) auto;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--ink) 20%, transparent);
+  overflow: hidden;
+}
+
+.bar-fill {
+  width: 35%;
+  height: 100%;
+  border-radius: 5px;
+  background: var(--street);
+  animation: bar-loop 1300ms cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+@keyframes bar-loop {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(286%);
+  }
+}
+
+.state {
+  display: none;
+}
+
+.state.is-active {
+  display: block;
+}
+
+.state p {
+  margin: 0 0 var(--space-two);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.state .button {
+  margin-top: var(--space-two);
+}
+
+.state code {
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+/* ---------------------------------------------------------------- footer ---- */
+
+.foot {
+  margin-top: auto;
+  padding-top: var(--space-four);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+}
+
+.foot a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: underline;
+}
+
+/* --------------------------------------------------------- reduced motion ---- */
+
+@media (prefers-reduced-motion: reduce) {
+  .bar-fill {
+    width: 40%;
+    animation: none;
+  }
+}
