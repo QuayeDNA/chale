@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { TextInput } from '@/components/ui/text-input';
 import { Text } from '@/components/ui/text';
 import { Card } from '@/components/ui/card';
@@ -16,6 +17,7 @@ export default function AuthScreen() {
   const [code, setCode] = useState('');
   const [sent, setSent] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [consented, setConsented] = useState(false);
 
   // A guest keeps their user id on sign-up, so the favourites they saved while
   // browsing are already theirs when the code lands. A returning user has no
@@ -37,9 +39,33 @@ export default function AuthScreen() {
             Your favourites and progress come with you — nothing is lost by signing up.
           </Text>
         ) : null}
-        <TextInput placeholder="you@example.com" autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} />
         {!sent ? (
-          <Button label="Send code" onPress={async () => { try { await sendCode(); } catch (e) { setErr((e as Error).message); } }} />
+          <>
+            <Checkbox
+              checked={consented}
+              onChange={setConsented}
+              label="I'm 13 or older"
+              hint="If you're under 16, a parent or guardian agrees for you."
+            />
+            <TextInput
+              placeholder="you@example.com"
+              autoCapitalize="none"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
+            />
+            <Button
+              label="Send code"
+              disabled={!consented}
+              onPress={async () => {
+                try {
+                  await sendCode();
+                } catch (e) {
+                  setErr((e as Error).message);
+                }
+              }}
+            />
+          </>
         ) : (
           <>
             <TextInput placeholder="Your name" autoCapitalize="words" value={name} onChangeText={setName} />
