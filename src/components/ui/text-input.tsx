@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { TextInput as RNTextInput, View, type TextInputProps } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
@@ -7,18 +7,37 @@ type Props = TextInputProps & {
   label?: string;
   hint?: string;
   error?: string;
+  /**
+   * Sits at the right of the label row, on the label's baseline. A character
+   * counter belongs to the label, not below the field where the hint lives, and
+   * the row is already there.
+   */
+  trailing?: ReactNode;
 };
 
 /**
  * Board text field — surface fill, thin border, street focus ring.
  * Single-line defaults to 56px; multiline grows to a 96px minimum.
  */
-export function TextInput({ label, hint, error, style, multiline, ...rest }: Props) {
+export function TextInput({
+  label,
+  hint,
+  error,
+  trailing,
+  style,
+  multiline,
+  ...rest
+}: Props) {
   const [focused, setFocused] = useState(false);
   const message = error?.trim() ? error : undefined;
   return (
     <View style={styles.wrapper}>
-      {label ? <Text variant="smallBold">{label}</Text> : null}
+      {label ? (
+        <View style={styles.labelRow}>
+          <Text variant="smallBold">{label}</Text>
+          {trailing}
+        </View>
+      ) : null}
       <RNTextInput
         placeholderTextColor={styles.placeholder.color}
         multiline={multiline}
@@ -57,6 +76,12 @@ export function TextInput({ label, hint, error, style, multiline, ...rest }: Pro
 
 const styles = StyleSheet.create((theme) => ({
   wrapper: {
+    gap: theme.spacing.two,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     gap: theme.spacing.two,
   },
   base: {

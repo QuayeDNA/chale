@@ -24,6 +24,7 @@ import {
   Mail,
   MessageCircle,
   Mic,
+  Pencil,
   Moon,
   Palette,
   Pause,
@@ -56,6 +57,7 @@ type ChaleIconName =
   | 'heart'
   | 'message'
   | 'mic'
+  | 'pen'
   | 'sparkles'
   | 'settings'
   | 'clock'
@@ -94,6 +96,7 @@ const ICON_MAP: Record<ChaleIconName, SymbolViewProps['name']> = {
   heart: { ios: 'heart.fill', android: 'favorite', web: 'favorite' },
   message: { ios: 'message.fill', android: 'chat_bubble', web: 'chat_bubble' },
   mic: { ios: 'mic.fill', android: 'mic', web: 'mic' },
+  pen: { ios: 'square.and.pencil', android: 'edit', web: 'edit' },
   sparkles: { ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' },
   settings: { ios: 'gearshape.fill', android: 'settings', web: 'settings' },
   clock: { ios: 'clock.fill', android: 'schedule', web: 'schedule' },
@@ -184,6 +187,7 @@ const LUCIDE_MAP: Record<ShowcaseIconName, LucideComponent> = {
   heart: Heart,
   message: MessageCircle,
   mic: Mic,
+  pen: Pencil,
   sparkles: Sparkles,
   settings: Settings,
   clock: Clock,

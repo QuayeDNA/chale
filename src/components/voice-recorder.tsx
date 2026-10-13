@@ -70,6 +70,24 @@ type Props = {
   /** Called when the user taps send. May be async — the pill waits for it. */
   onSend?: (recording: VoiceRecording) => void | Promise<void>;
   onDiscard?: () => void;
+  /**
+   * Reports the clip as it becomes ready, and null when it is discarded.
+   *
+   * This is how a parent owns the send button. The answer panel needs its send
+   * to sit under the whole panel with a label that explains why it is disabled,
+   * which the pill's own button cannot do — so the panel passes
+   * `showSend={false}` and keeps the clip itself.
+   */
+  onRecorded?: (recording: VoiceRecording | null) => void;
+  /** Set false when a parent renders the send control itself. */
+  showSend?: boolean;
+  /**
+   * Which half of the pill is showing. The answer panel needs this for the line
+   * above the recorder, which reads "Recording…" or "Ready to send" while the
+   * clip itself is still being taken — neither of which `onRecorded` can tell
+   * it, because that only fires once a clip exists.
+   */
+  onPhaseChange?: (phase: Phase) => void;
   onPermissionDenied?: () => void;
   maxDurationMs?: number;
   align?: 'start' | 'end';
@@ -83,6 +101,9 @@ type Props = {
 export function VoiceRecorder({
   onSend,
   onDiscard,
+  onRecorded,
+  showSend = true,
+  onPhaseChange,
   onPermissionDenied,
   maxDurationMs = 120_000,
   align = 'end',
@@ -209,6 +230,28 @@ export function VoiceRecorder({
     onDiscard?.();
   }, [reset, onDiscard]);
 
+  // Mirror the callback into a ref so the notify effect below cannot be
+  // re-triggered by a parent passing a fresh closure every render. Declared
+  // first so it has already been written by the time the effect below runs.
+  const onRecordedRef = useRef(onRecorded);
+  useEffect(() => {
+    onRecordedRef.current = onRecorded;
+  });
+  useEffect(() => {
+    onRecordedRef.current?.(result ?? null);
+  }, [result]);
+
+  // Same mirror-and-notify shape for the phase. The recorder is the only thing
+  // that knows whether it is mid-clip, and a parent that renders its own send
+  // control needs to say so out loud.
+  const onPhaseRef = useRef(onPhaseChange);
+  useEffect(() => {
+    onPhaseRef.current = onPhaseChange;
+  });
+  useEffect(() => {
+    onPhaseRef.current?.(phase);
+  }, [phase]);
+
   return (
     <View
       style={[styles.wrap, { alignItems: align === 'end' ? 'flex-end' : 'flex-start' }, style]}
@@ -239,6 +282,7 @@ export function VoiceRecorder({
             sending={phase === 'sending'}
             onDiscard={handleDiscard}
             onSend={handleSend}
+            showSend={showSend}
           />
         )}
       </Animated.View>
@@ -317,12 +361,14 @@ const PlaybackView = memo(function PlaybackView({
   sending,
   onDiscard,
   onSend,
+  showSend,
 }: {
   result: VoiceRecording;
   width: number;
   sending: boolean;
   onDiscard: () => void;
   onSend: () => void;
+  showSend: boolean;
 }) {
   const { theme } = useUnistyles();
   const player = useAudioPlayer(result.uri, { updateInterval: 80 });
@@ -403,7 +449,7 @@ const PlaybackView = memo(function PlaybackView({
         <View style={[styles.circle, { backgroundColor: theme.colors.ink }]}>
           <AnimatedIcon name="loader" size={18} color={theme.colors.surface} />
         </View>
-      ) : (
+      ) : showSend ? (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Send voice message"
@@ -412,7 +458,7 @@ const PlaybackView = memo(function PlaybackView({
         >
           <LucideIcon name="send" size={18} color={theme.colors.surface} />
         </Pressable>
-      )}
+      ) : null}
     </Animated.View>
   );
 });
