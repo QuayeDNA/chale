@@ -72,6 +72,14 @@ const styles = StyleSheet.create((theme) => ({
   },
   header: {
     backgroundColor: theme.colors.paper,
+    // The pinned bar sits in its own band, so it needs breathing room above
+    // and below or it reads as content butted against the status bar. The
+    // gutter is the same value all the way round: a 24pt page margin with only
+    // 8pt above it reads as a squeezed bar rather than a band, and the title
+    // stops lining up with the content beneath it.
+    paddingTop: theme.spacing.four,
+    paddingBottom: theme.spacing.three,
+    paddingHorizontal: theme.spacing.four,
   },
   content: {
     flexGrow: 1,

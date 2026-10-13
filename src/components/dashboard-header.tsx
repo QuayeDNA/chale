@@ -79,9 +79,10 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 12,
+    // No padding here. Screen's header band already owns it, and this header
+    // used to add its own on top — which pushed the wordmark 44pt from the
+    // screen edge while every section under it sat at 24, so the header read
+    // as indented rather than aligned with the page.
   },
   actions: {
     flexDirection: 'row',

@@ -4,10 +4,15 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
-import { Card } from '@/components/ui/card';
+import { ErrorCard } from '@/components/error-card';
+import { LoadingBar } from '@/components/ui/loading-bar';
 import { Text } from '@/components/ui/text';
 import { Screen } from '@/components/screen';
 import { QuestionCard } from '@/components/question-card';
+import { QuestionCardSkeleton } from '@/components/question-card-skeleton';
+import { SessionHint, SessionProgress } from '@/components/session-progress';
+import { SessionHeader } from '@/components/session-header';
+import { DECK_INKS, gradientFor, iconName, toneName } from '@/decks/art';
 import { drawSessionQuestions, getDeck } from '@/lib/decks';
 import { isFavourite, toggleFavourite } from '@/lib/favourites';
 import { clearSession, loadSession, saveSession } from '@/lib/session-store';
@@ -90,21 +95,49 @@ export default function SessionScreen() {
   }, [pack, queryClient]);
 
   return (
-    <Screen>
-      {!current ? (
-        <Card>
-          <Text variant="body">
-            {session.error
-              ? 'Couldn\u2019t load questions.'
-              : 'Loading questions\u2026'}
-          </Text>
-        </Card>
+    <Screen
+      align="start"
+      header={
+        <SessionHeader
+          title={deck.data?.title ?? 'Session'}
+          onBack={() => router.back()}
+          {...(deck.data
+            ? {
+                icon: iconName(deck.data.icon),
+                colors: gradientFor(toneName(deck.data.tone)),
+                ink: DECK_INKS[toneName(deck.data.tone)],
+              }
+            : {})}
+        />
+      }
+    >
+      {session.isPending ? (
+        <View style={styles.loading}>
+          <LoadingBar size="sm" progress={0} fill="#2B1A0F" track="#EDE0BE" />
+          <QuestionCardSkeleton inPerson />
+        </View>
+      ) : session.isError ? (
+        <ErrorCard
+          icon="info"
+          title="Couldn't draw questions"
+          body="The deck loaded, but drawing your questions failed."
+          onRetry={() => void session.refetch()}
+        />
+      ) : !current ? (
+        <ErrorCard
+          icon="info"
+          title="No questions in this deck"
+          body="Nothing came back to play, so there is nothing to show."
+          onRetry={() => void session.refetch()}
+        />
       ) : (
         <>
+          <SessionProgress index={index + 1} total={list.length} />
           <QuestionCard
             question={current.text}
             deckLabel={deck.data?.title}
             deckTone={deck.data?.relationship_type}
+            deckIcon={deck.data ? iconName(deck.data.icon) : undefined}
             index={index + 1}
             total={list.length}
             isFavourite={!!fav.data}
@@ -122,12 +155,19 @@ export default function SessionScreen() {
             onPrevious={() => void goTo(Math.max(0, index - 1))}
             onNext={last ? () => void finish() : () => void goTo(index + 1)}
             prevDisabled={index === 0}
-            nextLabel={last ? 'Finish — back home' : 'Next'}
+            prevLabel={last ? '' : 'Previous'}
+            nextLabel={last ? 'Finish' : 'Next'}
+            nextIcon={last ? 'home' : 'chevron'}
+            inPerson
           />
 
+          <SessionHint />
+
           {/* Without this, resuming is a trap: you are locked into the draw you
-              abandoned halfway through. */}
-          {index > 0 && (
+              abandoned halfway through. It is hidden on the last card, where
+              finishing is the only sensible way out and a second exit just
+              offers a wrong one. */}
+          {index > 0 && !last && (
             <View style={styles.restart}>
               <Pressable
                 accessibilityRole="button"
@@ -148,6 +188,9 @@ export default function SessionScreen() {
 }
 
 const styles = StyleSheet.create((theme) => ({
+  loading: {
+    gap: theme.spacing.three,
+  },
   restart: {
     alignItems: 'center',
   },
