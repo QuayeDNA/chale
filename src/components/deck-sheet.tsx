@@ -6,7 +6,7 @@ import { StyleSheet } from 'react-native-unistyles';
 import { usePlayMode, type PlayMode } from '@/hooks/use-play-mode';
 
 import { Button } from '@/components/ui/button';
-import { LucideIcon } from '@/components/ui/icon';
+import { LucideIcon, type ChaleIconName } from '@/components/ui/icon';
 import { Sheet, useSheetAction } from '@/components/ui/sheet';
 import { Text } from '@/components/ui/text';
 import { DECK_INKS, gradientFor } from '@/decks/art';
@@ -48,7 +48,6 @@ const MODES: { mode: PlayMode; icon: 'people' | 'mic'; label: string; hint: stri
  * view — the route would throw the spread away to ask the same question.
  */
 export function DeckSheet({ deck, samples, onPlay, price, onOpenChange }: Props) {
-  const run = useSheetAction();
   const { mode: remembered } = usePlayMode();
   const { width } = useWindowDimensions();
 
@@ -165,14 +164,39 @@ export function DeckSheet({ deck, samples, onPlay, price, onOpenChange }: Props)
         </View>
       </View>
 
-      <View style={styles.cta}>
-        <Button
-          label={price ? `Unlock for ${price}` : 'Start questions'}
-          icon={price ? 'lock' : 'play'}
-          onPress={() => run(() => onPlay(shown, mode))}
-        />
-      </View>
+      <PlayAction
+        label={price ? `Unlock for ${price}` : 'Start questions'}
+        icon={price ? 'lock' : 'play'}
+        onPlay={() => onPlay(shown, mode)}
+      />
     </Sheet>
+  );
+}
+
+/**
+ * The call to action, mounted INSIDE the sheet.
+ *
+ * `useSheetAction` is a context, and `Sheet` provides it to its own children
+ * only. A sheet component that consumed it from its own body was reading the
+ * context's default value — an empty function — so the button was wired to
+ * nothing at all and pressing it did nothing. Anything inside the sheet that
+ * needs to navigate after the sheet has finished dismissing has to be a child
+ * like this one, not a hook call in the parent.
+ */
+function PlayAction({
+  label,
+  icon,
+  onPlay,
+}: {
+  label: string;
+  icon: ChaleIconName;
+  onPlay: () => void;
+}) {
+  const run = useSheetAction();
+  return (
+    <View style={styles.cta}>
+      <Button label={label} icon={icon} onPress={() => run(onPlay)} />
+    </View>
   );
 }
 

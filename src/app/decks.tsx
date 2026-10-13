@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
@@ -52,6 +52,7 @@ export default function DecksScreen() {
   const [filter, setFilter] = useState<StorefrontFilter>('all');
   const [active, setActive] = useState(0);
   const [peeked, setPeeked] = useState<DeckSummary | null>(null);
+  const closingFor = useRef<ReturnType<typeof setTimeout> | null>(null);
   const decks = useQuery({ queryKey: ['decks'], queryFn: listDecks });
 
   // A peek, not a session: three questions drawn the same way a session draws
@@ -81,7 +82,46 @@ export default function DecksScreen() {
   // Interacting with a deck opens the sheet rather than pushing the deck
   // route: the sheet is where the shopper decides HOW to play, so a push
   // would only ask the same question one screen later.
-  const openDeck = (deck: DeckSummary) => setPeeked(deck);
+  const openDeck = (deck: DeckSummary) => {
+    // A close is already in flight (the shopper tapped a neighbour fast enough
+    // to reopen before the sheet finished sliding); it must not steal this deck.
+    if (closingFor.current) {
+      clearTimeout(closingFor.current);
+      closingFor.current = null;
+    }
+    setPeeked(deck);
+  };
+
+  /**
+   * Closing is deferred, on purpose.
+   *
+   * On iOS the sheet stashes the pending action and only runs it once the
+   * Modal reports it has finished dismissing, because starting a navigation
+   * while a modal is still on screen drops it silently. That deferral lives in
+   * the sheet, so whatever opened it has to outlive the dismissal too —
+   * clearing `peeked` on the same frame `open` flips unmounts the sheet
+   * mid-slide, `onDismiss` never fires, and tapping Start questions does
+   * nothing at all. The wait is longer than the 220ms slide so the modal has
+   * always reported back first.
+   */
+  const closeSheet = (open: boolean) => {
+    if (open) return;
+    if (closingFor.current) clearTimeout(closingFor.current);
+    closingFor.current = setTimeout(() => {
+      closingFor.current = null;
+      setPeeked(null);
+    }, 280);
+  };
+
+  // A sheet still on its way out when the screen goes away would otherwise set
+  // state on an unmounted component.
+  useEffect(
+    () => () => {
+      if (closingFor.current) clearTimeout(closingFor.current);
+    },
+    [],
+  );
+
   const playDeck = (deck: DeckSummary, mode: 'inperson' | 'remote') => {
     if (mode === 'remote') {
       router.push({ pathname: '/start', params: { deck: deck.id, deckTitle: deck.title } });
@@ -154,9 +194,7 @@ export default function DecksScreen() {
           deck={peeked}
           samples={samples.data ?? []}
           onPlay={playDeck}
-          onOpenChange={(open) => {
-            if (!open) setPeeked(null);
-          }}
+          onOpenChange={closeSheet}
         />
       ) : null}
     </Screen>

@@ -82,22 +82,46 @@ export function Button({
         />
       ) : null}
       {icon && iconPosition === 'left' ? iconElement : null}
-      <Text
-        variant={size === 'sm' ? 'label' : 'bodyStrong'}
-        style={[
-          styles.label(variant),
-          size === 'lg' ? styles.labelLarge : undefined,
-          variant === 'accent' && accentTextColor ? { color: accentTextColor } : undefined,
-          isDisabled ? styles.labelDisabled : undefined,
-        ]}>
-        {loading ? 'Loading…' : label}
-      </Text>
+      {/* An empty label renders the icon alone. Icon-only controls are a real
+          need on a narrow button row, and the accessible name comes from
+          `accessibilityLabel` so the button never loses its voice. */}
+      {loading || label ? (
+        <Text
+          variant={size === 'sm' ? 'label' : 'bodyStrong'}
+          // A control's label must never wrap: a two-line button changes its
+          // own height, which breaks the row it sits in. Where the text is
+          // genuinely too long for the space it shrinks to fit instead, which
+          // keeps the button the size its neighbours are.
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.8}
+          style={[
+            styles.label(variant),
+            // `adjustsFontSizeToFit` only ever shrinks text that already has a
+            // bounded width. Inside a row with an icon the Text is measured
+            // against its content instead, so it happily overflows its button
+            // and paints over whatever sits next to it. Bounding it first is
+            // what makes the shrink-to-fit do anything at all.
+            styles.labelFits,
+            size === 'lg' ? styles.labelLarge : undefined,
+            variant === 'accent' && accentTextColor ? { color: accentTextColor } : undefined,
+            isDisabled ? styles.labelDisabled : undefined,
+          ]}>
+          {loading ? 'Loading…' : label}
+        </Text>
+      ) : null}
       {icon && iconPosition === 'right' ? iconElement : null}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create((theme) => ({
+  labelFits: {
+    flexShrink: 1,
+    // A row item's automatic minimum is its content width, which is exactly
+    // the thing being shrunk. Zero lets the Text actually be narrower.
+    minWidth: 0,
+  },
   base: {
     alignItems: 'center',
     justifyContent: 'center',
