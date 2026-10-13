@@ -41,8 +41,6 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
         <Stack.Screen name="start" />
         <Stack.Screen name="prompt/[id]" />
         <Stack.Screen name="auth" />
-        <Stack.Screen name="design" />
-        <Stack.Screen name="showcase" />
       </Stack>
     </View>
   );

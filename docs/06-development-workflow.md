@@ -3,6 +3,8 @@
 
 Practical setup and process for building this — how the repo is organized, how to work day to day, and how code gets from your machine to a real device.
 
+**Status (2026-10-13):** sections below reflect the repo as it exists. Where early planning text disagreed with reality (Expo Go iteration, root-level folders, a CI workflow that was never added), it has been corrected to match what's actually built.
+
 ---
 
 ## 1. Environment setup
@@ -10,7 +12,7 @@ Practical setup and process for building this — how the repo is organized, how
 **Frontend (Expo / React Native):**
 - Node.js (LTS version)
 - Expo CLI (`npx expo` — no global install needed with modern Expo)
-- Expo Go app on your Android device/emulator for fast iteration during development
+- **EAS development build on your Android device/emulator for iteration.** An early plan to use Expo Go was dropped: Unistyles 3.3 ships a native module and requires a dev build (see `07-library-research.md`). Expo Go also doesn't support this config, so `npx expo run:android` or `eas build --profile development` is the loop.
 - EAS CLI (`npm install -g eas-cli`) for cloud builds later (both Android APK/AAB and, eventually, iOS)
 
 **Backend:**
@@ -22,28 +24,32 @@ Practical setup and process for building this — how the repo is organized, how
 ## 2. Suggested folder structure
 
 ```
-chale/
-├── app/                     # Expo Router screens (or /src/screens if using React Navigation)
-│   ├── (onboarding)/
-│   ├── (main)/
-│   │   ├── home.tsx         # today's question
-│   │   ├── reveal.tsx
-│   │   └── connection.tsx   # pairing/invite screen
-│   └── _layout.tsx
-├── components/              # shared UI components
-├── lib/
-│   ├── supabase.ts          # or firebase.ts — backend client setup
-│   ├── notifications.ts     # push notification handling
-│   └── audio.ts             # voice recording/playback helpers
-├── types/                   # shared TypeScript types (mirrors the data model doc)
-├── constants/
-│   └── theme.ts             # colors, type scale — once 05-design-system.md is finalized
-├── docs/                    # this doc set lives here in the repo
+chale/                         # local folder is still named twogether — cosmetic only
+├── src/
+│   ├── app/                   # Expo Router screens — the whole route tree
+│   │   ├── index.tsx          # → /splash redirect
+│   │   ├── splash.tsx / welcome.tsx
+│   │   ├── (tabs)/            # home / favourites / remote / profile (FloatingTabBar)
+│   │   ├── auth.tsx start.tsx decks.tsx settings.tsx session.tsx
+│   │   ├── deck/[id].tsx prompt/[id].tsx
+│   │   └── _layout.tsx
+│   ├── components/            # shared UI components
+│   ├── hooks/                 # React Query hooks (use-auth, use-prompts, …)
+│   ├── lib/                   # supabase client, queries/mutations, session store,
+│   │                          # database.types.ts (generated — mirrors the schema)
+│   ├── constants/
+│   │   └── theme.ts           # relationship accent hexes
+│   ├── decks/                 # deck catalogue data
+│   ├── dev/                   # dev-only showcases (design.tsx, showcase.tsx) — not routes
+│   ├── types/
+│   └── unistyles.ts           # light/dark themes, spacing, radii, breakpoints
+├── docs/                      # this doc set lives here in the repo
+├── supabase/migrations/       # SQL migrations 0001+
 ├── .env.example
-└── app.json / eas.json      # Expo config, EAS build profiles
+└── app.json / eas.json        # Expo config, EAS build profiles
 ```
 
-Keep the data model types in `/types` in sync with `02-technical-architecture.md` — when one changes, update the other in the same commit.
+Keep `src/lib/database.types.ts` and `src/types/` in sync with the schema (`supabase/migrations/`) and `02-technical-architecture.md` — when one changes, update the others in the same commit.
 
 ## 3. Git workflow
 
@@ -70,15 +76,15 @@ Given this is an MVP with two genuinely fragile pieces of logic (reveal state, v
 
 ## 5. Build & release process
 
-- **Local development:** Expo Go on your Android device, or an Android emulator, for fast iteration.
+- **Local development:** EAS dev build (or `npx expo run:android`) on your Android device or an emulator — an Expo Go workflow was dropped because Unistyles 3 needs a dev build.
 - **Beta builds:** EAS Build for a signed Android APK/AAB, distributed directly or via Google Play's internal testing track.
-- **iOS (once ready):** EAS Build cloud-compiles the iOS binary — no Mac required for the build step itself. Distribute via TestFlight to a few iPhone-owning testers (see `03-roadmap.md`, Phase 2).
-- **CI:** even a lightweight GitHub Actions workflow that runs unit tests + type-checking (`tsc --noEmit`) on every PR catches a lot before it reaches a device. EAS Build itself can also be triggered from CI once builds are routine.
+- **iOS (once ready):** EAS Build cloud-compiles the iOS binary — no Mac required for the build step itself. Distribute via TestFlight to a few iPhone-owning testers (see `03-roadmap.md`, Phase 4 — iOS is not built yet).
+- **CI:** no CI exists today (an early GitHub Actions plan was never wired up). A lightweight workflow that runs `npx tsc --noEmit` on every PR is still the recommended first step — cheap, catches the type regressions that otherwise only surface on device. EAS Build itself can also be triggered from CI once builds are routine.
 
 ## 6. Code review checklist (for yourself or collaborators)
 
 Quick sanity list before merging a feature branch, tied to what tends to break in this specific app:
 - [ ] Reveal state changes are computed server-side, not inferred on the client.
 - [ ] Voice save action is scoped to the speaker's own clip only.
-- [ ] New question/answer types update the shared `/types` definitions.
+- [ ] New question/answer types update `src/lib/database.types.ts` and `src/types/`.
 - [ ] Any new screen matches the corresponding flow in `04-user-flows.md` (or that doc is updated alongside the code).

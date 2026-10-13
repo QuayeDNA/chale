@@ -3,7 +3,9 @@
 
 ## Status
 
-**Locked — Playful Street Energy (2026-09-15).** Foundational palette, type pairing, and token shape are settled. The contextual theming architecture in §2 was already settled and is unchanged — accent shifts per `connections.relationship_type` are applied on top of this foundation.
+**Locked — Playful Street Energy (2026-09-15).** Foundational palette, type pairing, and token shape are settled.
+
+**Implemented status (2026-10-13):** the foundation ships in `src/unistyles.ts` (light/dark themes, spacing, radii incl. chip 12, `sm` breakpoint at 768) and `src/constants/theme.ts` (relationship accent hexes). Two things in this doc are **planned, not implemented**: the semantic interaction token layer (§1a-1) — components read foundation colors directly — and runtime relationship-theme switching by `connections.relationship_type` (§2) — the app pairs partner-only and components import `RelationshipThemes` from `src/constants/theme.ts` ad hoc (e.g. `src/app/(tabs)/profile.tsx`, `src/app/settings.tsx`).
 
 **Product-behavior direction locked (2026-09-16, per `REVIEW.md`).** The system is a **behavioral system built around `question → answer → wait → reveal`**, not a component-library showcase. Interactions, lifecycle states (voice, reveal, pairing), and accessibility are first-class residents of this doc, not future toppings. P0 build order is defined in §9. Light theme is the documented default; dark is first-class.
 
@@ -44,13 +46,13 @@ Grounded in Accra street culture (trotro yellow, hand-painted sign warmth). The 
 | `muted` | `#C4A991` | Secondary text on dark |
 | `street` | `#F5B400` | Same pop — passes on both themes |
 
-Derived tokens: `shadow` is a warm shadow (`rgba(43,26,15,0.12)` light / `rgba(0,0,0,0.45)` dark), `overlay` for modals. Radii are varied by hierarchy (hero 24, card 20, chip 999), not uniform.
+Derived tokens: `shadow` is a warm shadow (`rgba(43,26,15,0.12)` light / `rgba(0,0,0,0.45)` dark), `overlay` for modals. Radii are varied by hierarchy (hero 24, card 20, chip 12, pill 999), not uniform.
 
 Street yellow `#F5B400` is a **signal, not a wash** — it is the app's single high-signal color. Use it for: primary action, focus ring, active answer mode indicator, small product signals. Do **not** use it for: every icon, every border, every card, large page backgrounds, decorative gradients.
 
 ### 1a-1. Semantic interaction tokens
 
-Components never reach for arbitrary hex values; they read semantic roles from the theme. These live beside the foundation colors in `src/unistyles.ts`:
+Components never reach for arbitrary hex values; they read semantic roles from the theme. **Status: planned — not yet implemented**; components currently read foundation colors directly. When built, these live beside the foundation colors in `src/unistyles.ts`:
 
 ```ts
 text.primary          // primary content (ink)
@@ -113,7 +115,7 @@ const themes: Record<RelationshipType, { accent: string; accentSoft: string; acc
 };
 ```
 
-The active theme is looked up by the current connection's `relationship_type` and applied to accent-only surfaces (buttons, tags, highlights) — never to the foundational elements in section 1.
+The active theme is looked up by the current connection's `relationship_type` and applied to accent-only surfaces (buttons, tags, highlights) — never to the foundational elements in section 1. **Status: planned.** The accent values exist (`src/constants/theme.ts`) and are used ad hoc in a few screens; runtime switching driven by the active connection is not implemented, and pairing is partner-only today.
 
 ## 3. Scope for MVP
 
@@ -126,3 +128,4 @@ Individual question packs *within* a relationship type could eventually carry th
 ## 5. Decision log
 
 - **2026-09-15 — Playful Street Energy locked.** Foundation (§1a–1c) settled: paper `#FBF3DF` / `#231408`, ink `#2B1A0F`, street `#F5B400`, type Archivo Black + Spline Sans. Prior candidates (Warm Terracotta, Quiet Dusk) archived.
+- **2026-10-13 — Implementation status recorded.** Foundation confirmed shipped in `src/unistyles.ts` + `src/constants/theme.ts` (chip radius 12 added to match code). Semantic interaction tokens (§1a-1) and runtime relationship theming (§2) marked planned — both are declared here but do not exist in code yet.
