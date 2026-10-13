@@ -5,9 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Text } from '@/components/ui/text';
 import { QuestionCard } from '@/components/question-card';
-import { AnswerComposer } from '@/components/answer-composer';
-import { AnswerModeToggle } from '@/components/answer-mode-toggle';
-import { VoiceRecorder, type VoiceRecording } from '@/components/voice-recorder';
+import { AnswerPanel } from '@/components/answer-panel';
+import type { VoiceRecording } from '@/components/voice-recorder';
 import { WaitingState } from '@/components/waiting-state';
 import { Screen } from '@/components/screen';
 import { useAuth } from '@/hooks/use-auth';
@@ -42,23 +41,50 @@ export default function RemoteScreen() {
       )}
     </Screen>
   );
-  return (<Screen><QuestionCard question={prompt.data.text} hideNavigation /><AnswerWithMode promptId={prompt.data.promptId} kind={prompt.data.kind} /></Screen>);
+  return (<Screen><QuestionCard question={prompt.data.text} hideNavigation /><AnswerSection promptId={prompt.data.promptId} kind={prompt.data.kind} /></Screen>);
 }
 
-function AnswerWithMode({ promptId, kind }: { promptId: string; kind: string }) {
-  const [mode, setMode] = useState<'text' | 'voice'>(kind === 'voice' ? 'voice' : 'text');
+/**
+ * The answer half of today's prompt. It owns the network and the failure copy
+ * and hands the panel two plain callbacks, so the panel never has to know that
+ * a voice answer is an upload followed by a submit.
+ *
+ * The recorded clip is kept when a send fails, which is the one rule that
+ * matters here: losing someone's answer to a dropped connection is the worst
+ * thing this screen can do.
+ */
+function AnswerSection({ promptId, kind }: { promptId: string; kind: string }) {
+  const [sendError, setSendError] = useState<string | null>(null);
   const queryClient = useQueryClient();
-  const handleSubmit = async (t: string) => {
-    await submitTextAnswer(promptId, t);
-    await queryClient.invalidateQueries({ queryKey: ['answers', 'mine', promptId] });
+
+  const handleSubmit = async (text: string) => {
+    setSendError(null);
+    try {
+      await submitTextAnswer(promptId, text);
+      await queryClient.invalidateQueries({ queryKey: ['answers', 'mine', promptId] });
+    } catch (error) {
+      setSendError(error instanceof Error ? error.message : 'That did not send. Try again.');
+    }
   };
+
   const handleVoiceSend = async ({ uri }: VoiceRecording) => {
-    const key = `${promptId}-${Date.now()}`;
-    const url = await uploadVoiceAsync(uri, key);
-    await submitVoiceAnswer(promptId, url);
-    await queryClient.invalidateQueries({ queryKey: ['answers', 'mine', promptId] });
+    setSendError(null);
+    try {
+      const key = `${promptId}-${Date.now()}`;
+      const url = await uploadVoiceAsync(uri, key);
+      await submitVoiceAnswer(promptId, url);
+      await queryClient.invalidateQueries({ queryKey: ['answers', 'mine', promptId] });
+    } catch (error) {
+      setSendError(error instanceof Error ? error.message : 'That clip did not send. Try again.');
+    }
   };
-  if (kind === 'voice') return <VoiceRecorder onSend={handleVoiceSend} />;
-  if (kind === 'text') return <AnswerComposer onSubmit={handleSubmit} />;
-  return (<><AnswerModeToggle mode={mode} onChange={setMode} />{mode === 'text' ? <AnswerComposer onSubmit={handleSubmit} /> : <VoiceRecorder onSend={handleVoiceSend} />}</>);
+
+  return (
+    <AnswerPanel
+      kind={kind === 'text' || kind === 'voice' ? kind : 'either'}
+      onSubmitText={handleSubmit}
+      onSubmitVoice={handleVoiceSend}
+      sendError={sendError ?? undefined}
+    />
+  );
 }
