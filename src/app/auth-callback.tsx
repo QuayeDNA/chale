@@ -24,6 +24,7 @@ export default function AuthCallbackScreen() {
     error_description?: string;
   }>();
   const [err, setErr] = useState<string | null>(null);
+  const [outcome, setOutcome] = useState<CallbackOutcome>('working');
   // Bumped by the error card's retry: re-runs the exchange once.
   const [attempt, setAttempt] = useState(0);
 
@@ -42,9 +43,15 @@ export default function AuthCallbackScreen() {
           if (active) router.back();
           return;
         }
-        if (active) router.replace('/home');
+        if (active) {
+          setOutcome('done');
+          router.replace('/home');
+        }
       } catch (e) {
-        if (active) setErr((e as Error).message);
+        if (active) {
+          setErr((e as Error).message);
+          setOutcome('failed');
+        }
       }
     })();
     return () => {
@@ -52,14 +59,15 @@ export default function AuthCallbackScreen() {
     };
   }, [router, verifyOtpLink, params.code, params.token_hash, params.type, params.error, params.error_description, attempt]);
 
-  if (err) {
+  if (outcome === 'failed') {
     return (
       <Screen>
         <ErrorCard
           title="That link didn't sign you in"
-          body={err}
+          body={err ?? undefined}
           onRetry={() => {
             setErr(null);
+            setOutcome('working');
             setAttempt((n) => n + 1);
           }}
         />
