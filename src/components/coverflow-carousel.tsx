@@ -5,6 +5,7 @@ import Animated, {
   clamp,
   Extrapolation,
   interpolate,
+  runOnJS,
   useAnimatedReaction,
   useAnimatedStyle,
   useDerivedValue,
@@ -120,27 +121,15 @@ function moveDrag(
   if (strength.value !== 1) strength.value = 1;
 }
 
-/**
- * The rail's settled index has to reach JS, but the handler that consumes it
- * closes over a ref, and a ref cannot be handed to a worklet from render. So
- * the latest handler lives in this module slot and the UI thread only ever
- * knows the name, never the ref behind it.
- */
-let announce: (index: number) => void = () => {};
-
-function announceFromRail(index: number) {
-  'worklet';
-  scheduleOnRN(announce, index);
-}
-
-function endDrag(pos: SV, velocityX: number, count: number) {
+function endDrag(pos: SV, velocityX: number, count: number): number {
   'worklet';
   const projected = pos.value - (velocityX / NEIGHBOUR_STEP) * 0.35;
   const target = Math.max(0, Math.min(count - 1, Math.round(projected)));
   pos.value = withSpring(target, SPRING);
-  // Tell JS the destination NOW, not when the spring lands, so the cards at
-  // the far end are mounted before the rail arrives.
-  announceFromRail(target);
+  // The destination rides back with the return value (see reportTarget):
+  // tell JS NOW, not when the spring lands, so the cards at the far end are
+  // mounted before the rail arrives.
+  return target;
 }
 
 /**
@@ -229,7 +218,7 @@ export function CoverflowCarousel({
   const [target, setTarget] = useState(seed);
 
   /** The last index we told / were told about, so echoes do not re-spring. */
-  const followed = useRef(active);
+  const followed = useRef(seed);
 
   const settle = useCallback((index: number) => {
     // Record BEFORE telling the parent. The parent will feed `index` back as
@@ -241,10 +230,25 @@ export function CoverflowCarousel({
     onActiveRef.current?.(index);
   }, []);
 
-  // Publish it for the rail's worklet, which cannot be handed a ref.
+  /**
+   * The rail's settled index, handed straight to the gesture through runOnJS.
+   * The old module-slot bridge is gone on purpose: the UI runtime keeps its
+   * own copy of module state, so a callback published from an effect never
+   * updated there and every swipe settled into a no-op. Ref-free on purpose
+   * too — this runs in worklet position, so it only sets state; the effect
+   * below performs the ref-touching remainder on the JS side.
+   */
+  const reportTarget = useCallback((index: number) => {
+    setTarget(index);
+  }, []);
+
+  // The JS-side remainder of a swipe settle. Skips when the target already
+  // matches (mount, or the parent echoing a swipe back as `active`), so a
+  // swipe notifies the parent exactly once and never on mount.
   useEffect(() => {
-    announce = settle;
-  }, [settle]);
+    if (followed.current === target) return;
+    settle(target);
+  }, [target, settle]);
 
   const handlePress = useCallback(
     (index: number) => {
@@ -292,11 +296,14 @@ export function CoverflowCarousel({
             e.y,
           ),
         )
-        .onEnd((e) => endDrag(pos, e.velocityX, count))
+        .onEnd((e) => {
+          const next = endDrag(pos, e.velocityX, count);
+          runOnJS(reportTarget)(next);
+        })
         .onFinalize(() => releasePress(strength)),
     // Every dependency is stable except `count`, so the native handler is only
     // re-attached when the deck list genuinely changes length.
-    [count, moved, pos, start, strength, touchX, touchY],
+    [count, moved, pos, reportTarget, start, strength, touchX, touchY],
   );
 
   const onLayout = useCallback(
