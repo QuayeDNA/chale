@@ -12,7 +12,7 @@ User decisions locked in:
 - Google: browser OAuth via expo-web-browser (already installed), no native SDK
 - Screen: one /auth method ladder, no separate signup/signin
 - Linking: linkIdentity in place on the anonymous session; fall back to plain sign-in with an explanatory note when the provider account already exists separately
-- Google glyph: lucide `chrome` icon (default; revisit if it reads wrong)
+- Google glyph: lucide `globe` icon (the `chrome` draft pick does not exist in the installed lucide version — brand icons were removed; globe was already registered, revisit if it reads wrong)
 
 ## 2. Architecture
 
@@ -24,13 +24,13 @@ Auth provider additions (src/hooks/use-auth.tsx):
 - Email path unchanged (claimAccount promotion, 13+ consent gate, code-in-app verify), plus `emailRedirectTo` (hosted bridge URL) on both `signInWithOtp` and `updateUser` so emailed links land in-app via the bridge.
 
 Routes:
-- `/auth` rework: Apple button (official `AppleAuthenticationButton`, black, pill) → Google `Button` (secondary, chrome icon) → `Divider` "or" (shipped 4e836de) → email section (consent + input + send, existing) → verify step (existing) → `LegalFoot` (existing).
+- `/auth` rework: Apple button (official `AppleAuthenticationButton`, black, pill) → Google `Button` (secondary, globe icon) → `Divider` "or" (shipped 4e836de) → email section (consent + input + send, existing) → verify step (existing) → `LegalFoot` (existing).
 - NEW `src/app/auth-callback.tsx` (registered in _layout): `?code=` → `exchangeCodeForSession`; `?token_hash&?type=` → existing `verifyOtpLink`; empty params → back (OAuth-link return, session never left); error → `ErrorCard`. Spinner at most.
 
 ## 3. Components
 
 - `AppleAuthButton` (thin wrapper or inline): official button, iOS-only render.
-- Google row: existing `Button` secondary + chrome icon + `onPress` → `signInWithGoogle`, loading state while the browser session is open.
+- Google row: existing `Button` secondary + globe icon + `onPress` → `signInWithGoogle`, loading state while the browser session is open.
 - `Divider` label="or" between social and email sections.
 - auth-callback: param parsing + three branches + `ErrorCard` on failure; no new UI kit.
 

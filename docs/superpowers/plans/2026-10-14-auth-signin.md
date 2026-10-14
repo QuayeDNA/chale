@@ -18,13 +18,13 @@
 
 ---
 
-### Task 1: Deps, iOS capability, chrome icon
+### Task 1: Deps and iOS capability
 
 **Files:**
 - Modify: `package.json` (via expo install), `app.json`, `src/components/ui/icon.tsx`
 
 **Interfaces:**
-- Produces: `expo-apple-authentication` importable; `ShowcaseIconName` accepts `'chrome'`.
+- Produces: `expo-apple-authentication` importable. (The Google row uses the already-registered `'globe'` icon — no icon work needed.)
 
 - [ ] **Step 1: Install the Apple package**
 
@@ -41,12 +41,9 @@ In `app.json`, inside the existing `"ios"` object (which already holds `icon`), 
 
 If the EAS build warns the entitlement is missing, follow the `expo-apple-authentication` README's iOS setup section verbatim — it is the source of truth, this plan does not guess past it.
 
-- [ ] **Step 3: Register the chrome icon**
+- [ ] **Step 3: Confirm the globe icon (no registration needed)**
 
-In `src/components/ui/icon.tsx`, three insertions following the existing pattern (used before for `audiolines`):
-1. Add `Chrome` to the alphabetical `lucide-react-native` import list.
-2. Add `'chrome'` to the `ExtraIconName` union (near line 169).
-3. Add `chrome: Chrome,` to `LUCIDE_MAP` (near line 230).
+The Google row uses the existing `'globe'` icon, already registered in `src/components/ui/icon.tsx` (import, `ExtraIconName` union, both maps). The `chrome` icon from the original draft does not exist in the installed lucide version (no `Chrome` export — brand icons were removed), so no icon file changes are required. Verify with: `Select-String -Path src/components/ui/icon.tsx -Pattern "globe"` — expect the import, union, and map hits.
 
 - [ ] **Step 4: Verify**
 
@@ -56,8 +53,8 @@ Expected: clean.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add package.json app.json src/components/ui/icon.tsx
-git commit -m "chore(auth): apple sign-in dep, ios capability, chrome icon"
+git add package.json package-lock.json app.json
+git commit -m "chore(auth): apple sign-in dep and ios capability"
 ```
 
 ---
@@ -471,7 +468,7 @@ Inside the existing `<Card>`, above the `{!sent ? (` email block (after the anon
 <Button
   label="Continue with Google"
   variant="secondary"
-  icon="chrome"
+  icon="globe"
   fullWidth
   loading={busy === 'google'}
   onPress={() => void runSocial('google', signInWithGoogle)}
@@ -497,7 +494,7 @@ At the bottom of the existing `<Card>`, after the `{err ? ...}` line, append:
 - [ ] **Step 6: Verify**
 
 Run: `npx tsc --noEmit && npx eslint src/app/auth.tsx`
-Expected: clean. Behavioral check: on Android the Apple button never renders; on iOS without Apple capability it never renders; Google row shows the chrome glyph; the divider reads "or"; the email section is byte-identical in behavior (consent gate still disables Send code).
+Expected: clean. Behavioral check: on Android the Apple button never renders; on iOS without Apple capability it never renders; Google row shows the globe glyph; the divider reads "or"; the email section is byte-identical in behavior (consent gate still disables Send code).
 
 - [ ] **Step 7: Commit**
 
@@ -524,7 +521,7 @@ Walk these edges and fix anything found (each fix gets its own commit, same veri
 2. Dark mode on `/auth` and `auth-callback`: no hardcoded colors in the new UI (the Apple button is black by design on both modes — that is Apple's asset, not ours).
 3. Small screens (320pt): ladder + email section scrolls inside `Screen` without overlap.
 4. Apple button absent off-iOS and where `isAvailableAsync()` is false.
-5. Chrome glyph renders on the Google row (Task 1 registration).
+5. Globe glyph renders on the Google row (pre-registered; no icon changes).
 6. Sentence case on all new copy; `LegalFoot` shows nothing dead (null URLs stay hidden).
 
 - [ ] **Step 2: Flow doc**
