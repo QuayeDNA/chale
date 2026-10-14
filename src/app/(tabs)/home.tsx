@@ -17,6 +17,7 @@ import {
 } from '@/components/home-skeleton';
 import { NextUpCard } from '@/components/next-up-card';
 import { ResumeCarousel, type ResumableSession } from '@/components/resume-carousel';
+import { SpotlightCarousel, type SpotlightPage } from '@/components/spotlight-carousel';
 import { PremiumBanner } from '@/components/premium-banner';
 import { Text } from '@/components/ui/text';
 import { Screen } from '@/components/screen';
@@ -63,8 +64,9 @@ export default function HomeScreen() {
   const sessions = useQuery({ queryKey: ['sessions', 'active'], queryFn: listActiveSessions });
 
   /**
-   * The invite card holds the top slot until it is dismissed once — then the
-   * slot never shows it again and belongs to the recommendation below.
+   * Hide is a starting preference, not a deletion. The invite stays one swipe
+   * away in the spotlight pager; this flag only decides whether a returning
+   * screen opens on the invite or on the recommendations.
    */
   const inviteDismissed = useQuery({
     queryKey: ['flags', 'invite-dismissed'],
@@ -154,7 +156,7 @@ export default function HomeScreen() {
       ? freshLeft(deck.question_count, shuffle.data.cursor, deck.session_length)
       : deck.question_count;
 
-  /** One-time. The invite stays reachable at /start, this only clears the slot. */
+  /** One-time preference. The invite stays reachable at /start and in the pager; this only moves the opening page. */
   const dismissInvite = useCallback(async () => {
     await saveFlag('invite-dismissed', true);
     await queryClient.invalidateQueries({ queryKey: ['flags'] });
@@ -245,6 +247,63 @@ export default function HomeScreen() {
   // broke, and those want opposite reactions.
   const dailyError = !dailyLoading && (peek.isError || conn.isError);
 
+  /**
+   * The top slot is a pager, not a swap. The invite and the recommendation sit
+   * side by side so hiding one never deletes the other — including while an
+   * invite is pending, when the code and the decks both deserve to be seen.
+   * More recommendation pages can join this list later without changing it.
+   */
+  const spotlightPages: SpotlightPage[] = [];
+  if (
+    !connectionId &&
+    dailyReady &&
+    (dailyState === 'no-connection' || dailyState === 'invite-pending')
+  ) {
+    spotlightPages.push({
+      key: `invite-${dailyState}`,
+      label: dailyState === 'invite-pending' ? 'Invite pending' : 'Invite partner',
+      render: (style) => (
+        <DailyPromptCard
+          state={dailyState}
+          question={peek.data?.text}
+          onAction={openDaily}
+          style={style}
+          /*
+           * Only the nothing-happened state can be sent to the back of the
+           * pager: a pending invite must keep saying so, and the code is one
+           * tap away at /start rather than lost. The chip lives in the card's
+           * top row, so the card keeps its single action and this stays a
+           * quiet exit.
+           */
+          onHide={dailyState === 'no-connection' ? () => void dismissInvite() : undefined}
+        />
+      ),
+    });
+  }
+  if (!connectionId && nextUp) {
+    spotlightPages.push({
+      key: `next-up-${nextUp.id}-${completedDeck ? 'continuing' : 'default'}`,
+      label: completedDeck ? `Continue ${nextUp.title}` : `Start with ${nextUp.title}`,
+      render: (style) => (
+        <NextUpCard
+          deck={nextUp}
+          freshLeft={freshLeftFor(nextUp)}
+          continuing={!!completedDeck}
+          style={style}
+          onPress={() =>
+            router.push({ pathname: '/session', params: { pack: nextUp.id } })
+          }
+        />
+      ),
+    });
+  }
+  const recommendationIndex = spotlightPages.findIndex((page) =>
+    page.key.startsWith('next-up-'),
+  );
+  const spotlightStart =
+    inviteDismissed.data && recommendationIndex >= 0 ? recommendationIndex : 0;
+  const spotlightKey = `${spotlightPages.map((page) => page.key).join('|')}|start:${spotlightStart}`;
+
   return (
     <Screen
       align="start"
@@ -298,39 +357,20 @@ export default function HomeScreen() {
             question={peek.data?.text}
             onAction={openDaily}
           />
-        ) : inviteDismissed.data ? (
+        ) : spotlightPages.length > 0 ? (
           /*
-           * The invite card was dismissed once, so the slot now recommends
-           * play: the deck just finished via "Back home", or the default
-           * starting deck. Same position, same geometry — the top of the
-           * screen does not move when the slot changes tenant.
+           * Invite and recommendation share one swipeable slot. Hiding moves
+           * the opening page to the recommendations; it never removes the
+           * invite, so the card the user hid is still one swipe away.
            */
-          nextUp ? (
-            <NextUpCard
-              deck={nextUp}
-              freshLeft={freshLeftFor(nextUp)}
-              continuing={!!completedDeck}
-              onPress={() =>
-                router.push({ pathname: '/session', params: { pack: nextUp.id } })
-              }
-            />
-          ) : decks.isPending ? (
-            <DailyCardSkeleton />
-          ) : null
-        ) : (
-          <DailyPromptCard
-            state={dailyState}
-            question={peek.data?.text}
-            onAction={openDaily}
-            /*
-             * Only the nothing-happened state can be dismissed: a pending
-             * invite must keep saying so, and the code is one tap away at
-             * /start rather than lost. The chip lives in the card's top row,
-             * so the card keeps its single action and this stays a quiet exit.
-             */
-            onHide={dailyState === 'no-connection' ? () => void dismissInvite() : undefined}
+          <SpotlightCarousel
+            key={spotlightKey}
+            pages={spotlightPages}
+            startIndex={spotlightStart}
           />
-        )
+        ) : decks.isPending ? (
+          <DailyCardSkeleton />
+        ) : null
       ) : null}
 
       {/* The tray only exists when there is something half-finished, so while

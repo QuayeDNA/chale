@@ -1,4 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import type { ViewStyle } from 'react-native';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
@@ -31,6 +32,7 @@ export function NextUpCard({
   freshLeft,
   continuing,
   onPress,
+  style,
 }: {
   deck: DeckSummary;
   /** Unheard questions left in the deck's current shuffle. */
@@ -38,6 +40,8 @@ export function NextUpCard({
   /** True when a completed deck is being continued, false for the default pick. */
   continuing: boolean;
   onPress: () => void;
+  /** Pager fill, so tenants of one slot share a height. */
+  style?: ViewStyle;
 }) {
   const art = artFor({
     slug: deck.slug,
@@ -57,7 +61,7 @@ export function NextUpCard({
       : `${freshLeft} fresh question${freshLeft === 1 ? '' : 's'} left in this shuffle.`;
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, style]}>
       <LinearGradient
         colors={[...colors]}
         start={{ x: 0.15, y: 0 }}

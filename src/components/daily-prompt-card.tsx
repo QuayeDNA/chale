@@ -127,6 +127,7 @@ export function DailyPromptCard({
   question,
   onAction,
   onHide,
+  style,
 }: {
   state: DailyPromptState;
   /** Only used by `unanswered`, where the question is the headline. */
@@ -137,12 +138,14 @@ export function DailyPromptCard({
    * to dismiss a state without losing the card's single real action.
    */
   onHide?: () => void;
+  /** Pager fill, so tenants of one slot share a height. */
+  style?: ViewStyle;
 }) {
   const copy = COPY[state];
   const filled = copy.tone === 'ink' || copy.tone === 'gold';
 
   return (
-    <View style={[styles.card, tone(copy.tone)]}>
+    <View style={[styles.card, tone(copy.tone), style]}>
       <View style={styles.body}>
         <View style={styles.topRow}>
           <View style={styles.eyebrowRow}>
