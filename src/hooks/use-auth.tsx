@@ -13,6 +13,9 @@ import {
 
 import type { Tables } from '@/lib/database.types';
 import { supabase } from '@/lib/supabase';
+import { AUTH_BRIDGE_URL } from '@/constants/legal';
+import * as WebBrowser from 'expo-web-browser';
+import * as AppleAuthentication from 'expo-apple-authentication';
 
 type AuthStatus = 'loading' | 'signedIn';
 
@@ -33,6 +36,8 @@ type AuthContextValue = {
    * through the hosted auth bridge (web/auth-bridge.html) into the app.
    */
   verifyOtpLink: (tokenHash: string, type: LinkVerifyType) => Promise<void>;
+  signInWithGoogle: () => Promise<LinkResult>;
+  signInWithApple: () => Promise<LinkResult>;
   updateDisplayName: (name: string) => Promise<void>;
 };
 
@@ -42,6 +47,8 @@ const ANONYMOUS_DISPLAY_NAME = 'New friend';
 
 /** The verifyOtp types a magic link can carry. */
 export type LinkVerifyType = 'signup' | 'invite' | 'magiclink' | 'recovery' | 'email_change' | 'email';
+
+const bridgeRedirect = () => (AUTH_BRIDGE_URL ? { emailRedirectTo: AUTH_BRIDGE_URL } : {});
 
 async function ensureProfileRow(user: User): Promise<Tables<'users'> | null> {
   const { data: existing } = await supabase
@@ -61,6 +68,40 @@ async function ensureProfileRow(user: User): Promise<Tables<'users'> | null> {
 
   return created;
 }
+
+// Completes web auth sessions. No-op on native, required on web.
+WebBrowser.maybeCompleteAuthSession();
+
+const CALLBACK = 'chale://auth-callback';
+
+const linkConflict = (message: string) => /already|linked|exists|conflict/i.test(message);
+
+/** What a social method reports: linked in place, signed in separately, or stood down. */
+export type LinkResult = { linked: boolean; note?: string; cancelled?: boolean };
+
+/** Pulls `?code=` out of a redirect URL without relying on the URL constructor. */
+const codeFromUrl = (url: string) => {
+  const m = /[?&]code=([^&]+)/.exec(url);
+  return m ? decodeURIComponent(m[1]) : null;
+};
+
+/**
+ * Opens the provider URL and exchanges the PKCE code the browser hands back.
+ * Returns true when a code was exchanged. A dismissed browser (cancel /
+ * dismiss result, or no code) returns false — the caller reports `cancelled`
+ * and the screen stays put, silently. Without this exchange the session is
+ * never established and the app just returns to a signed-out screen.
+ */
+const openProviderUrl = async (url: string | null | undefined): Promise<boolean> => {
+  if (!url) return false;
+  const result = await WebBrowser.openAuthSessionAsync(url, CALLBACK);
+  if (result.type !== 'success') return false;
+  const code = codeFromUrl(result.url);
+  if (!code) return false;
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  if (error) throw error;
+  return true;
+};
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [status, setStatus] = useState<AuthStatus>('loading');
@@ -123,7 +164,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   const signInWithOtpEmail = useCallback(async (email: string) => {
-    const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true } });
+    const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true, ...bridgeRedirect() } });
     if (error) throw error;
   }, []);
 
@@ -143,12 +184,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const { data: current } = await supabase.auth.getUser();
     if (!current.user) throw new Error('Not signed in');
     if (!current.user.is_anonymous) {
-      const { error } = await supabase.auth.signInWithOtp({ email: clean, options: { shouldCreateUser: true } });
+      const { error } = await supabase.auth.signInWithOtp({ email: clean, options: { shouldCreateUser: true, ...bridgeRedirect() } });
       if (error) throw error;
       return;
     }
 
-    const { error } = await supabase.auth.updateUser({ email: clean });
+    const { error } = await supabase.auth.updateUser(
+      { email: clean },
+      ...(AUTH_BRIDGE_URL ? [{ emailRedirectTo: AUTH_BRIDGE_URL }] : []),
+    );
     if (!error) {
       // The anon user keeps its id, so the existing users row still matches.
       await refreshProfile();
@@ -161,12 +205,85 @@ export function AuthProvider({ children }: PropsWithChildren) {
     if (/already|registered|exists|conflict/i.test(error.message)) {
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email: clean,
-        options: { shouldCreateUser: true },
+        options: { shouldCreateUser: true, ...bridgeRedirect() },
       });
       if (otpError) throw otpError;
       return;
     }
     throw error;
+  }, [refreshProfile]);
+
+  const signInWithGoogle = useCallback(async (): Promise<LinkResult> => {
+    const { data: current } = await supabase.auth.getUser();
+    const anon = !!current.user?.is_anonymous;
+    const call = anon
+      ? () =>
+          supabase.auth.linkIdentity({
+            provider: 'google',
+            options: { redirectTo: CALLBACK, skipBrowserRedirect: true },
+          })
+      : () =>
+          supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: { redirectTo: CALLBACK, skipBrowserRedirect: true },
+          });
+    try {
+      const { data, error } = await call();
+      if (error) throw error;
+      const exchanged = await openProviderUrl(data.url);
+      await refreshProfile();
+      if (!exchanged) return { linked: anon, cancelled: true };
+      return { linked: anon };
+    } catch (e) {
+      if (anon && linkConflict((e as Error).message)) {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: CALLBACK, skipBrowserRedirect: true },
+        });
+        if (error) throw error;
+        const exchanged = await openProviderUrl(data.url);
+        await refreshProfile();
+        if (!exchanged) return { linked: false, cancelled: true };
+        return { linked: false, note: 'Signed in as your Google account. Guest favourites stayed on this device.' };
+      }
+      throw e;
+    }
+  }, [refreshProfile]);
+
+  const signInWithApple = useCallback(async () => {
+    let identityToken: string | null;
+    try {
+      const cred = await AppleAuthentication.signInAsync({
+        requestedScopes: [AppleAuthentication.AppleAuthenticationScope.EMAIL],
+      });
+      identityToken = cred.identityToken ?? null;
+    } catch (e) {
+      // Cancellation is not failure — return silently, no error text.
+      if ((e as { code?: string }).code === 'ERR_REQUEST_CANCELED') return { linked: true };
+      throw e;
+    }
+    if (!identityToken) throw new Error('Apple sign-in returned no token');
+    const { data: current } = await supabase.auth.getUser();
+    const anon = !!current.user?.is_anonymous;
+    try {
+      if (anon) {
+        const { error } = await supabase.auth.linkIdentity({ provider: 'apple', token: identityToken });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.auth.signInWithIdToken({ provider: 'apple', token: identityToken });
+        if (error) throw error;
+      }
+      await refreshProfile();
+      return { linked: anon };
+    } catch (e) {
+      if (anon && linkConflict((e as Error).message)) {
+        const { error } = await supabase.auth.signInWithIdToken({ provider: 'apple', token: identityToken });
+        if (error) throw error;
+        await refreshProfile();
+        return { linked: false, note: 'Signed in with your Apple ID. Guest favourites stayed on this device.' };
+      }
+      throw e;
+    }
   }, [refreshProfile]);
 
   const verifyOtp = useCallback(async (email: string, token: string) => {
@@ -210,6 +327,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
       claimAccount,
       verifyOtp,
       verifyOtpLink,
+      signInWithGoogle,
+      signInWithApple,
       updateDisplayName,
     }),
     [
@@ -223,6 +342,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
       claimAccount,
       verifyOtp,
       verifyOtpLink,
+      signInWithGoogle,
+      signInWithApple,
       updateDisplayName,
     ],
   );

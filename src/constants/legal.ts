@@ -12,3 +12,9 @@ export const LEGAL_LINKS: { label: string; url: string | null }[] = [
   { label: 'Terms', url: null },
   { label: 'Privacy', url: null },
 ];
+
+/**
+ * Hosted auth bridge (web/auth-bridge.html). Null = emailed links are not
+ * redirected yet, so emailRedirectTo is omitted until hosting is done.
+ */
+export const AUTH_BRIDGE_URL: string | null = null;
