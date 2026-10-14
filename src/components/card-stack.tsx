@@ -13,7 +13,6 @@ import Animated, {
   type EasingFunctionFactory,
   type SharedValue,
 } from 'react-native-reanimated';
-import { scheduleOnRN } from 'react-native-worklets';
 import { StyleSheet } from 'react-native-unistyles';
 
 /**
@@ -157,20 +156,6 @@ function rubber(raw: number, max: number) {
 
 type EasePts = readonly [number, number, number, number];
 
-/**
- * The swipe's settled index has to reach JS, but the handler that consumes it
- * closes over refs, and a ref cannot be handed to a worklet from render. So
- * the latest handler lives in this module slot and the UI thread only ever
- * knows the name, never the ref behind it. (Same arrangement as the coverflow
- * rail's `announce` slot.)
- */
-let settleCard: (index: number) => void = () => {};
-
-function announceSettle(index: number) {
-  'worklet';
-  scheduleOnRN(settleCard, index);
-}
-
 function beginStackDrag(
   dragging: SharedValue<boolean>,
   p: SharedValue<number>,
@@ -204,7 +189,7 @@ function endStackDrag(
   max: number,
   durationMs: number,
   easePts: EasePts,
-) {
+): number {
   'worklet';
   dragging.value = false;
   const from = Math.round(base.value);
@@ -219,9 +204,11 @@ function endStackDrag(
     duration: Math.max(220, durationMs * Math.min(1, travel + 0.15)),
     easing: Easing.bezier(easePts[0], easePts[1], easePts[2], easePts[3]),
   });
-  // Tell JS the destination NOW, not when the timing lands, so the target
-  // card is mounted before the stack arrives.
-  announceSettle(target);
+  // The destination returns to the gesture, which hands it to JS. Announcing
+  // from in here through a module slot cannot work: the UI runtime keeps its
+  // own copy of module state, so it would forever call the initial no-op
+  // published before any effect ran.
+  return target;
 }
 
 function finalizeStackDrag(
@@ -229,7 +216,7 @@ function finalizeStackDrag(
   dragging: SharedValue<boolean>,
   max: number,
   easePts: EasePts,
-) {
+): number {
   'worklet';
   // The system took the touch away mid-drag: settle on the nearest card.
   if (dragging.value) {
@@ -239,8 +226,10 @@ function finalizeStackDrag(
       duration: 260,
       easing: Easing.bezier(easePts[0], easePts[1], easePts[2], easePts[3]),
     });
-    announceSettle(target);
+    return target;
   }
+  // onEnd already reported: nothing new to tell JS.
+  return -1;
 }
 
 export function CardStack({
@@ -295,26 +284,24 @@ export function CardStack({
     glideTo(p, index, duration, ease, setShown);
   }, [index, duration, ease, p]);
 
-  // A swipe has chosen its card. Record it BEFORE telling the parent: the
-  // parent feeds the same index back, and the effect above must see that it
-  // is already on its way rather than start a second move on top. Published
-  // to the module slot for the gesture worklets, which cannot be handed it
-  // (or the refs behind it) from render.
-  const settle = useCallback(
-    (target: number) => {
-      const changed = target !== aimed.current;
-      aimed.current = target;
-      if (changed) onStepRef.current?.(target);
-      onIndexRef.current?.(target);
-      // Mount the destination now: the timing lands a moment later.
-      setShown(target);
-    },
-    [],
-  );
+  // A swipe has chosen its card. This closes over nothing but the state
+  // dispatcher, so the gesture below can hold it in its closure and hand the
+  // destination to JS with runOnJS — the same crossing glideTo uses for its
+  // `done`. Mount the destination now: the timing lands a moment later.
+  const reportSettle = useCallback((target: number) => {
+    setShown(target);
+  }, []);
 
+  // `shown` moved without `index` moving yet: a swipe has landed. Do the rest
+  // of the settle here on the JS thread — record it BEFORE telling the
+  // parent, so the echoed `index` reads as already on its way rather than
+  // starting a second move on top.
   useEffect(() => {
-    settleCard = settle;
-  }, [settle]);
+    if (shown === aimed.current) return;
+    aimed.current = shown;
+    onStepRef.current?.(shown);
+    onIndexRef.current?.(shown);
+  }, [shown]);
 
   const pan = useMemo(
     () =>
@@ -326,8 +313,8 @@ export function CardStack({
         .failOffsetY([-18, 18])
         .onStart(() => beginStackDrag(dragging, p, base))
         .onUpdate((e) => moveStackDrag(p, base, e.translationX, width * cfg.shift, count - 1))
-        .onEnd((e) =>
-          endStackDrag(
+        .onEnd((e) => {
+          const target = endStackDrag(
             p,
             base,
             dragging,
@@ -336,13 +323,17 @@ export function CardStack({
             count - 1,
             duration,
             cfg.ease,
-          ),
-        )
-        .onFinalize(() => finalizeStackDrag(p, dragging, count - 1, cfg.ease)),
-    // Shared values are stable and every other argument is a number or plain
-    // data, so the native handler re-attaches only when the layout or the
-    // deck itself changes.
-    [base, count, cfg.ease, cfg.shift, dragging, duration, p, reduced, width],
+          );
+          runOnJS(reportSettle)(target);
+        })
+        .onFinalize(() => {
+          const target = finalizeStackDrag(p, dragging, count - 1, cfg.ease);
+          if (target >= 0) runOnJS(reportSettle)(target);
+        }),
+    // Shared values are stable, the settle reporter never changes identity,
+    // and every other argument is a number or plain data, so the native
+    // handler re-attaches only when the layout or the deck itself changes.
+    [base, count, cfg.ease, cfg.shift, dragging, duration, p, reduced, reportSettle, width],
   );
 
   const onFrontLayout = useCallback((e: LayoutChangeEvent) => {
