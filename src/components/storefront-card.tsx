@@ -46,7 +46,7 @@ const SELECT_SPRING = { damping: 18, stiffness: 260, mass: 0.7 };
  * cropped and only a sweeping curve of the glyph survives — the concept's arc,
  * arrived at by a route that also tells you which deck it is.
  */
-const MARK_SIZE = 300;
+const MARK_SIZE = 200;
 /** The concept parked its arc 60pt past the corner; the mark does the same. */
 const MARK_CROP = 62;
 
@@ -122,7 +122,19 @@ export function StorefrontCard({
           </View>
         ) : null}
         <View style={styles.copy} pointerEvents="none">
-          <Text variant="title" numberOfLines={2} style={{ color: ink }}>
+          {/*
+            The title shrinks to fit instead of truncating: Android ellipsizes
+            at the character where space runs out (mid-word, "Rela…") while iOS
+            backs up to the word boundary, so a fixed-size 22px Archivo Black
+            title on a narrow grid tile cuts words on Android. Shrinking keeps
+            every deck name whole on every surface, coverflow to grid.
+          */}
+          <Text
+            variant="title"
+            numberOfLines={2}
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}
+            style={{ color: ink }}>
             {title}
           </Text>
           {meta ? (
@@ -167,7 +179,7 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
     borderRadius: 24,
     overflow: 'hidden',
-    padding: 18,
+    padding: 12,
     justifyContent: 'space-between',
   },
   wash: {
