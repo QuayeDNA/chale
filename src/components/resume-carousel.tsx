@@ -427,6 +427,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: 22,
     padding: 14,
     overflow: 'hidden',
+    marginVertical: 6
   },
   wash: {
     ...StyleSheet.absoluteFillObject,
