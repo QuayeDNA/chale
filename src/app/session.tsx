@@ -1,17 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
-import type { ReactNode } from 'react';
+import { memo, useCallback, useEffect, useRef, type ComponentProps } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import { Pressable, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { CardStack } from '@/components/card-stack';
 import { ErrorCard } from '@/components/error-card';
 import { LoadingBar } from '@/components/ui/loading-bar';
 import { Button } from '@/components/ui/button';
@@ -36,23 +30,24 @@ import {
 
 const SESSION_KEY = 'session';
 
+type SessionQuestion = Awaited<ReturnType<typeof loadPoolQuestions>>[number];
+type CardProps = ComponentProps<typeof QuestionCard>;
+
 /**
  * An in-person session, resumable.
  *
- * The draw lives in the query cache and is mirrored to AsyncStorage, so backing
- * out of the screen no longer throws the session away — coming back lands on
- * the same question. *Which* questions come is deterministic: the device-local
- * seed shuffles the deck once and each session consumes the next slice of that
- * shuffle (see `src/lib/shuffle-store.ts`), so sessions never repeat inside a
- * cycle and no id ledger is needed.
+ * The draw lives in the query cache and is mirrored to AsyncStorage. Which
+ * questions come is deterministic (see `src/lib/shuffle-store.ts`).
+ *
+ * Navigation animation lives in <CardStack>: the position is still read from
+ * the query, and the stack animates between positions. Nothing here holds a
+ * direction any more — the stack works it out from where the card is going.
  */
 export default function SessionScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { theme } = useUnistyles();
   const { pack } = useLocalSearchParams<{ pack: string }>();
-  /** +1 = moving forward, -1 = back, 0 = first paint. Drives the slide. */
-  const [dir, setDir] = useState<0 | 1 | -1>(0);
 
   const deck = useQuery({
     queryKey: ['decks', pack],
@@ -60,8 +55,6 @@ export default function SessionScreen() {
     enabled: !!pack,
   });
 
-  // The deck's own session_length decides the draw size, so the board's "20 a
-  // session" copy and the actual number of questions can never drift apart.
   const sessionLength = deck.data?.session_length ?? 20;
 
   const session = useQuery({
@@ -89,37 +82,34 @@ export default function SessionScreen() {
   });
 
   const list = session.data?.questions ?? [];
-  // The position is read, not held: the query is the single source of truth, so
-  // a restored session needs no effect to sync a local index up to it.
   const index = session.data?.index ?? 0;
   const current = list[index];
   const last = index >= list.length - 1;
 
-  const fav = useQuery({
-    queryKey: ['favourites', 'is', current?.id],
-    queryFn: () => isFavourite(current!.id),
-    enabled: !!current,
-  });
+  /**
+   * Latest session, for the navigation handler below. Keeping it in a ref is
+   * what lets `goTo` have a stable identity: if it changed on every move, every
+   * card in the stack would re-render at the exact moment the animation starts.
+   */
+  const sessionRef = useRef(session.data);
+  useEffect(() => {
+    sessionRef.current = session.data;
+  }, [session.data]);
 
-  /** Moves the position, keeping the cache and storage in step. */
   const goTo = useCallback(
     async (next: number) => {
-      const prev = session.data;
-      if (!prev) return;
-      setDir(next > prev.index ? 1 : -1);
+      const prev = sessionRef.current;
+      if (!prev || next < 0 || next >= prev.questions.length || next === prev.index) return;
       const updated = { ...prev, index: next };
+      // Updated immediately, so a second quick tap reads the new position
+      // instead of the one from before the first.
+      sessionRef.current = updated;
       queryClient.setQueryData([SESSION_KEY, pack], updated);
       await saveSession(updated);
     },
-    [pack, queryClient, session.data],
+    [pack, queryClient],
   );
 
-  /**
-   * "Back home" — the quiet ending. Consumes this slice of the shuffle, marks
-   * the pack completed (the Home recommendation card's signal), and clears
-   * resumption: replace, not push, so Back can't return to a finished session.
-   * Next entry into this pack starts at the next slice.
-   */
   const goHome = useCallback(async () => {
     await advanceCursor(pack!, sessionLength);
     await markCompleted(pack!);
@@ -128,29 +118,28 @@ export default function SessionScreen() {
     router.replace('/home');
   }, [pack, sessionLength, queryClient, router]);
 
-  /**
-   * "Draw the next 20" — the momentum ending. Same consumption, but the next
-   * slice is dealt in place and the round continues on screen.
-   */
+  const finish = useCallback(() => {
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    void goHome();
+  }, [goHome]);
+
+  /** One soft tick per card, whether it was a swipe or a button. */
+  const tick = useCallback(() => void Haptics.selectionAsync(), []);
+
   const drawNext = useCallback(async () => {
-    setDir(1);
     await advanceCursor(pack!, sessionLength);
-    // Clearing the slot is what keeps the fresh draw from resuming instead.
     await clearSession(pack!);
-    // resetQueries, not remove: it drops the cached draw AND refetches the
-    // mounted query, so the next card appears instead of an empty screen.
     await queryClient.resetQueries({ queryKey: [SESSION_KEY, pack] });
   }, [pack, sessionLength, queryClient]);
 
-  /**
-   * Abandons the round without ending the visit: the cursor is untouched, so
-   * the refetch draws the SAME slice of the shuffle again.
-   */
   const restart = useCallback(async () => {
-    setDir(0);
     await clearSession(pack!);
     await queryClient.resetQueries({ queryKey: [SESSION_KEY, pack] });
   }, [pack, queryClient]);
+
+  const deckLabel = deck.data?.title;
+  const deckTone = deck.data?.relationship_type;
+  const deckIcon = deck.data ? iconName(deck.data.icon) : undefined;
 
   return (
     <Screen
@@ -171,12 +160,7 @@ export default function SessionScreen() {
     >
       {session.isPending ? (
         <View style={styles.loading}>
-          <LoadingBar
-            size="sm"
-            indeterminate
-            fill={theme.colors.ink}
-            track={theme.colors.border}
-          />
+          <LoadingBar size="sm" indeterminate fill={theme.colors.ink} track={theme.colors.border} />
           <QuestionCardSkeleton inPerson />
         </View>
       ) : session.isError ? (
@@ -196,42 +180,31 @@ export default function SessionScreen() {
       ) : (
         <>
           <SessionProgress index={index + 1} total={list.length} />
-          {/* A new card is dealt in the direction of travel: the slide is the
-              pass-the-phone gesture made visible. Keyed by question so every
-              card mounts fresh with its own entry offset. */}
-          <CardSlide key={current.id} direction={dir}>
-            <QuestionCard
-              question={current.text}
-              deckLabel={deck.data?.title}
-              deckTone={deck.data?.relationship_type}
-              deckIcon={deck.data ? iconName(deck.data.icon) : undefined}
-              index={index + 1}
-              total={list.length}
-              isFavourite={!!fav.data}
-              onToggleFavourite={async () => {
-                try {
-                  await toggleFavourite(current.id);
-                  await queryClient.invalidateQueries({
-                    queryKey: ['favourites'],
-                  });
-                  await fav.refetch();
-                } catch {
-                  await router.push('/auth');
-                }
-              }}
-              onPrevious={() => void goTo(Math.max(0, index - 1))}
-              onNext={last ? () => void goHome() : () => void goTo(index + 1)}
-              prevDisabled={index === 0}
-              prevLabel={last ? '' : 'Previous'}
-              nextLabel={last ? 'Back home' : 'Next'}
-              nextIcon={last ? 'home' : 'chevron'}
-              inPerson
-            />
-          </CardSlide>
+          {/* Keyed by the draw, so a fresh draw is a fresh stack rather than a
+              long glide back to card one. */}
+          <CardStack
+            key={session.data?.startedAt}
+            index={index}
+            count={list.length}
+            preset="deal"
+            onIndexChange={goTo}
+            onStep={tick}
+            keyFor={(i) => String(list[i]!.id)}
+            renderCard={(i) => (
+              <SessionCard
+                question={list[i]!}
+                position={i + 1}
+                total={list.length}
+                deckLabel={deckLabel}
+                deckTone={deckTone}
+                deckIcon={deckIcon}
+                goTo={goTo}
+                onFinish={finish}
+              />
+            )}
+          />
           <SessionHint />
 
-          {/* Honest one-liners: the tail names the last unseen cards; the
-              reshuffle eyebrow appears exactly once per cycle. */}
           {session.data?.isTail ? (
             <Text variant="caption" muted style={styles.eyebrow}>
               The last {list.length} you haven&apos;t heard — a fresh shuffle comes next.
@@ -242,13 +215,9 @@ export default function SessionScreen() {
             </Text>
           ) : null}
 
-          {/* The last card's loud option. Full width below the card so the two
-              endings rank instead of squeezing three buttons into one row. */}
           {last ? (
             <Button
-              label={
-                session.data?.freshAfter ? 'Draw the next 20' : 'Draw a fresh shuffle'
-              }
+              label={session.data?.freshAfter ? 'Draw the next 20' : 'Draw a fresh shuffle'}
               variant="inverse"
               size="lg"
               fullWidth
@@ -256,10 +225,6 @@ export default function SessionScreen() {
             />
           ) : null}
 
-          {/* Without this, resuming is a trap: you are locked into the draw you
-              abandoned halfway through. It is hidden on the last card, where
-              finishing is the only sensible way out and a second exit just
-              offers a wrong one. */}
           {index > 0 && !last && (
             <View style={styles.restart}>
               <Pressable
@@ -281,37 +246,79 @@ export default function SessionScreen() {
 }
 
 /**
- * The card's entrance. A keyed wrapper so each question mounts fresh: the
- * shared values are re-initialised per mount from the direction of travel,
- * which is why a ref in the parent works where state would race the render.
- * `direction` 0 (first paint, restart) means the card simply appears.
+ * One card of the stack, self-contained.
+ *
+ * Each card owns its favourite query, so the neighbours already know their
+ * heart state before they arrive and nothing flickers on the way in. All of
+ * its props are stable between moves — it depends on its own position, not on
+ * which card is current — so the memo means a move re-renders nothing here.
  */
-function CardSlide({
-  direction,
-  children,
+const SessionCard = memo(function SessionCard({
+  question,
+  position,
+  total,
+  deckLabel,
+  deckTone,
+  deckIcon,
+  goTo,
+  onFinish,
 }: {
-  direction: 0 | 1 | -1;
-  children: ReactNode;
+  question: SessionQuestion;
+  /** 1-based. */
+  position: number;
+  total: number;
+  deckLabel: string | undefined;
+  deckTone: CardProps['deckTone'];
+  deckIcon: CardProps['deckIcon'];
+  goTo: (index: number) => Promise<void>;
+  onFinish: () => void;
 }) {
-  const reduceMotion = useReducedMotion();
-  const still = reduceMotion || direction === 0;
-  const offset = direction * 44;
-  const x = useSharedValue(still ? 0 : offset);
-  const opacity = useSharedValue(still ? 1 : 0);
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const last = position === total;
 
-  useEffect(() => {
-    if (still) return;
-    x.value = withTiming(0, { duration: 240, easing: Easing.out(Easing.cubic) });
-    opacity.value = withTiming(1, { duration: 180 });
-  }, [still, x, opacity]);
+  const fav = useQuery({
+    queryKey: ['favourites', 'is', question.id],
+    queryFn: () => isFavourite(question.id),
+  });
 
-  const style = useAnimatedStyle(() => ({
-    transform: [{ translateX: x.value }],
-    opacity: opacity.value,
-  }));
+  const onToggleFavourite = useCallback(async () => {
+    try {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      await toggleFavourite(question.id);
+      // Refetches every mounted favourite query, this one included.
+      await queryClient.invalidateQueries({ queryKey: ['favourites'] });
+    } catch {
+      router.push('/auth');
+    }
+  }, [question.id, queryClient, router]);
 
-  return <Animated.View style={style}>{children}</Animated.View>;
-}
+  const onPrevious = useCallback(() => void goTo(position - 2), [goTo, position]);
+  const onNext = useCallback(
+    () => (last ? onFinish() : void goTo(position)),
+    [goTo, last, onFinish, position],
+  );
+
+  return (
+    <QuestionCard
+      question={question.text}
+      deckLabel={deckLabel}
+      deckTone={deckTone}
+      deckIcon={deckIcon}
+      index={position}
+      total={total}
+      isFavourite={!!fav.data}
+      onToggleFavourite={onToggleFavourite}
+      onPrevious={onPrevious}
+      onNext={onNext}
+      prevDisabled={position === 1}
+      prevLabel={last ? '' : 'Previous'}
+      nextLabel={last ? 'Back home' : 'Next'}
+      nextIcon={last ? 'home' : 'chevron'}
+      inPerson
+    />
+  );
+});
 
 const styles = StyleSheet.create((theme) => ({
   loading: {
