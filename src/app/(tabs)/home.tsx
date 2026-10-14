@@ -15,6 +15,7 @@ import {
   FavouritesRowSkeleton,
   ResumeTraySkeleton,
 } from '@/components/home-skeleton';
+import { NextUpCard } from '@/components/next-up-card';
 import { ResumeCarousel, type ResumableSession } from '@/components/resume-carousel';
 import { PremiumBanner } from '@/components/premium-banner';
 import { Text } from '@/components/ui/text';
@@ -28,6 +29,8 @@ import { useTodayPromptPeek } from '@/hooks/use-today-prompt';
 import { listDecks } from '@/lib/decks';
 import { listFavourites } from '@/lib/favourites';
 import { clearSession, listActiveSessions } from '@/lib/session-store';
+import { loadFlag, saveFlag } from '@/lib/flags-store';
+import { freshLeft, loadSlot, mostRecentCompletion } from '@/lib/shuffle-store';
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -60,6 +63,24 @@ export default function HomeScreen() {
   const sessions = useQuery({ queryKey: ['sessions', 'active'], queryFn: listActiveSessions });
 
   /**
+   * The invite card holds the top slot until it is dismissed once — then the
+   * slot never shows it again and belongs to the recommendation below.
+   */
+  const inviteDismissed = useQuery({
+    queryKey: ['flags', 'invite-dismissed'],
+    queryFn: () => loadFlag('invite-dismissed'),
+  });
+
+  /**
+   * The last deck finished through "Back home" (never "Draw the next 20" —
+   * that is a continuation, not a completion). Null until the first one.
+   */
+  const completion = useQuery({
+    queryKey: ['packs', 'most-recent-completion'],
+    queryFn: mostRecentCompletion,
+  });
+
+  /**
    * Today's remote question, reported rather than assigned. `peek` never
    * creates a prompt — opening the dashboard must not spend the day — so it can
    * honestly say "nothing drawn yet" when nothing has been.
@@ -86,6 +107,11 @@ export default function HomeScreen() {
     void queryClient.invalidateQueries({ queryKey: ['decks'] });
     void queryClient.invalidateQueries({ queryKey: ['prompt'] });
     void queryClient.invalidateQueries({ queryKey: ['answers', 'mine'] });
+    // The recommendation reads device storage, so a Back-home finish elsewhere
+    // in the app has to be re-read on focus too.
+    void queryClient.invalidateQueries({ queryKey: ['flags'] });
+    void queryClient.invalidateQueries({ queryKey: ['packs', 'most-recent-completion'] });
+    void queryClient.invalidateQueries({ queryKey: ['shuffle'] });
   }, [queryClient]);
 
   /**
@@ -102,6 +128,37 @@ export default function HomeScreen() {
   const firstName = profile?.display_name?.split(/\s+/)[0];
 
   const all = decks.data ?? [];
+
+  /**
+   * The recommendation slot's tenant. A freshly completed deck first; without
+   * one, the default starting deck (`friends`, from the 0008 seed); with
+   * neither, the slot stays empty rather than guessing.
+   *
+   * A completed deck that no longer resolves (unpublished since) falls back to
+   * the default — the card names a real deck or it does not render.
+   */
+  const completedDeck = completion.data
+    ? all.find((d) => d.id === completion.data?.packId)
+    : undefined;
+  const nextUp = completedDeck ?? all.find((d) => d.slug === 'friends') ?? all[0];
+
+  /** The seed slot's cursor, so "N fresh left" is arithmetic rather than a guess. */
+  const shuffle = useQuery({
+    queryKey: ['shuffle', nextUp?.id],
+    queryFn: () => loadSlot(nextUp!.id),
+    enabled: !!nextUp,
+  });
+
+  const freshLeftFor = (deck: (typeof all)[number]): number =>
+    shuffle.data
+      ? freshLeft(deck.question_count, shuffle.data.cursor, deck.session_length)
+      : deck.question_count;
+
+  /** One-time. The invite stays reachable at /start, this only clears the slot. */
+  const dismissInvite = useCallback(async () => {
+    await saveFlag('invite-dismissed', true);
+    await queryClient.invalidateQueries({ queryKey: ['flags'] });
+  }, [queryClient]);
 
   /**
    * Newest first (listActiveSessions sorts by startedAt). Every session whose
@@ -235,11 +292,45 @@ export default function HomeScreen() {
           onRetry={refresh}
         />
       ) : dailyReady ? (
-        <DailyPromptCard
-          state={dailyState}
-          question={peek.data?.text}
-          onAction={openDaily}
-        />
+        connectionId ? (
+          <DailyPromptCard
+            state={dailyState}
+            question={peek.data?.text}
+            onAction={openDaily}
+          />
+        ) : inviteDismissed.data ? (
+          /*
+           * The invite card was dismissed once, so the slot now recommends
+           * play: the deck just finished via "Back home", or the default
+           * starting deck. Same position, same geometry — the top of the
+           * screen does not move when the slot changes tenant.
+           */
+          nextUp ? (
+            <NextUpCard
+              deck={nextUp}
+              freshLeft={freshLeftFor(nextUp)}
+              continuing={!!completedDeck}
+              onPress={() =>
+                router.push({ pathname: '/session', params: { pack: nextUp.id } })
+              }
+            />
+          ) : decks.isPending ? (
+            <DailyCardSkeleton />
+          ) : null
+        ) : (
+          <DailyPromptCard
+            state={dailyState}
+            question={peek.data?.text}
+            onAction={openDaily}
+            /*
+             * Only the nothing-happened state can be dismissed: a pending
+             * invite must keep saying so, and the code is one tap away at
+             * /start rather than lost. The chip lives in the card's top row,
+             * so the card keeps its single action and this stays a quiet exit.
+             */
+            onHide={dailyState === 'no-connection' ? () => void dismissInvite() : undefined}
+          />
+        )
       ) : null}
 
       {/* The tray only exists when there is something half-finished, so while

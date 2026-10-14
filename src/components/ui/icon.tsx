@@ -8,6 +8,7 @@ import {
   ChevronRight,
   CircleHelp,
   Clock,
+  Eye,
   Globe,
   Heart,
   Home,
@@ -167,7 +168,8 @@ type ExtraIconName =
   | 'waves'
   | 'audiolines'
   | 'chevron-left'
-  | 'chevron-down';
+  | 'chevron-down'
+  | 'eye';
 
 export type ShowcaseIconName = ChaleIconName | ExtraIconName;
 
@@ -226,6 +228,7 @@ const LUCIDE_MAP: Record<ShowcaseIconName, LucideComponent> = {
   loader: LoaderCircle,
   waves: Waves,
   audiolines: AudioLines,
+  eye: Eye,
 };
 
 /**

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import type { ViewStyle } from 'react-native';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -12,6 +12,7 @@ import Animated, {
 import { StyleSheet } from 'react-native-unistyles';
 
 import { Button } from './ui/button';
+import { LucideIcon } from './ui/icon';
 import { Text } from './ui/text';
 
 /**
@@ -119,16 +120,23 @@ const STREET = '#F5B400';
 const SURFACE = '#FFF9E8';
 const BORDER = '#EDE0BE';
 const DASH = '#C9B88F';
+const MUTED = '#8A7562';
 
 export function DailyPromptCard({
   state,
   question,
   onAction,
+  onHide,
 }: {
   state: DailyPromptState;
   /** Only used by `unanswered`, where the question is the headline. */
   question?: string | null;
   onAction: () => void;
+  /**
+   * When given, a quiet "Hide" chip joins the eyebrow in the top row — the way
+   * to dismiss a state without losing the card's single real action.
+   */
+  onHide?: () => void;
 }) {
   const copy = COPY[state];
   const filled = copy.tone === 'ink' || copy.tone === 'gold';
@@ -136,11 +144,26 @@ export function DailyPromptCard({
   return (
     <View style={[styles.card, tone(copy.tone)]}>
       <View style={styles.body}>
-        <View style={styles.eyebrowRow}>
-          <PulseDot color={foreground(copy.tone)} pulse={filled} />
-          <Text variant="smallBold" style={[styles.eyebrow, { color: foreground(copy.tone) }]}>
-            {copy.eyebrow}
-          </Text>
+        <View style={styles.topRow}>
+          <View style={styles.eyebrowRow}>
+            <PulseDot color={foreground(copy.tone)} pulse={filled} />
+            <Text variant="smallBold" style={[styles.eyebrow, { color: foreground(copy.tone) }]}>
+              {copy.eyebrow}
+            </Text>
+          </View>
+          {onHide ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Hide this card"
+              hitSlop={8}
+              onPress={onHide}
+              style={({ pressed }) => [styles.hideChip, pressed && styles.hideChipPressed]}>
+              <LucideIcon name="eye" size={14} color={MUTED} />
+              <Text variant="caption" style={styles.hideLabel}>
+                Hide
+              </Text>
+            </Pressable>
+          ) : null}
         </View>
 
         <Text
@@ -250,10 +273,35 @@ const styles = StyleSheet.create((theme) => ({
   body: {
     gap: theme.spacing.two,
   },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: theme.spacing.two,
+  },
   eyebrowRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.two,
+  },
+  // A ghost chip, not a button: it retires the state, and retiring a state must
+  // never look as loud as the card's one real action. Pill + 1px dash border
+  // borrows the card's own quiet language; pressed just dims.
+  hideChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: theme.radii.pill,
+    borderWidth: 1,
+    borderColor: DASH,
+  },
+  hideChipPressed: {
+    opacity: 0.6,
+  },
+  hideLabel: {
+    color: MUTED,
   },
   eyebrow: {
     textTransform: 'uppercase',
