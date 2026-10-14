@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { LucideIcon } from '@/components/ui/icon';
 import { LoadingBar } from '@/components/ui/loading-bar';
@@ -23,6 +23,7 @@ type Props = {
  * which is not true of anything on this screen.
  */
 export function SessionProgress({ index, total }: Props) {
+  const { theme } = useUnistyles();
   const safeTotal = Math.max(total, 1);
   const done = Math.min(Math.max(index, 0), safeTotal);
   const percent = Math.round((done / safeTotal) * 100);
@@ -40,8 +41,8 @@ export function SessionProgress({ index, total }: Props) {
       <LoadingBar
         size="sm"
         progress={done / safeTotal}
-        fill="#2B1A0F"
-        track="#EDE0BE"
+        fill={theme.colors.ink}
+        track={theme.colors.border}
         accessibilityLabel={`Question ${done} of ${total}, ${percent}% through the deck`}
       />
     </View>

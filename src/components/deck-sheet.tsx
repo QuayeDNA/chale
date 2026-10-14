@@ -90,6 +90,9 @@ export function DeckSheet({ deck, samples, onPlay, price, onOpenChange }: Props)
         <View style={styles.heroRing} pointerEvents="none" />
         <View style={styles.tags}>
           <HeroTag label={`${shown.question_count} questions`} ink={ink} />
+          {shown.question_count > shown.session_length ? (
+            <HeroTag label={`${shown.session_length} a session`} ink={ink} />
+          ) : null}
           <HeroTag label={RELATIONSHIP_LABEL[shown.relationship_type]} ink={ink} />
           {price ? <HeroTag label="Paid" ink="#2B1A0F" solid /> : null}
         </View>
@@ -124,7 +127,7 @@ export function DeckSheet({ deck, samples, onPlay, price, onOpenChange }: Props)
             {samples.map((sample, i) => (
               <View key={sample.id} style={[styles.sample, { width: cardWidth }]}>
                 <Text variant="caption" muted style={styles.sampleIndex}>
-                  {String(i + 1).padStart(2, '0')} / {shown.question_count}
+                  {String(i + 1).padStart(2, '0')}
                 </Text>
                 <Text variant="bodyStrong" numberOfLines={4}>
                   {sample.text}

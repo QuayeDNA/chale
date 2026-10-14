@@ -49,7 +49,8 @@ export function DeckRow({
           </Text>
         ) : null}
         <Text variant="caption" muted numberOfLines={1}>
-          {deckTotalCopy(deck)} · {deck.session_length} a session
+          {deckTotalCopy(deck)}
+          {deck.question_count > deck.session_length ? ` · ${deck.session_length} a session` : ''}
         </Text>
         {popular || recommended ? (
           <View style={styles.tags}>

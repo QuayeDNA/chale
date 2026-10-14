@@ -73,3 +73,29 @@ export async function drawSessionQuestions(
     'Drawing your questions',
   );
 }
+
+/**
+ * The whole question pool of a deck, as the session shuffle needs it: the
+ * client-side seeded shuffle (see `src/lib/shuffle-store.ts`) picks from this
+ * list, so the pool only needs the same filters the RPC applies — active
+ * questions in a published deck.
+ *
+ * SECURITY INVOKER-style read policies still apply: guests hold the same
+ * anonymous select grant they always had (see 0001).
+ */
+export async function loadPoolQuestions(packId: string): Promise<DrawnQuestion[]> {
+  return withTimeout(
+    (async () => {
+      const { data, error } = await supabase
+        .from('questions')
+        .select('id,text,kind,ordinal,question_packs!inner(is_published)')
+        .eq('pack_id', packId)
+        .eq('is_active', true)
+        .eq('question_packs.is_published', true);
+      if (error) throw error;
+      return (data ?? []) as DrawnQuestion[];
+    })(),
+    READ_TIMEOUT_MS,
+    'Loading the deck',
+  );
+}

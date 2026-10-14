@@ -29,6 +29,14 @@ export type StoredSession = {
   /** Zero-based position of the question currently showing. */
   index: number;
   startedAt: number;
+  /** This session's slice was dealt by a brand-new shuffle of a fully-played deck. */
+  reshuffled?: boolean;
+  /** Short slice because the pool ran dry mid-cycle (not a deck smaller than a session). */
+  isTail?: boolean;
+  /** The deck's full question count on this device. */
+  poolSize?: number;
+  /** Unseen questions left after this session's slice is consumed. */
+  freshAfter?: number;
 };
 
 export type SessionMeta = {
@@ -59,11 +67,18 @@ function validate(raw: unknown, packId: string): StoredSession | null {
     return null;
   }
 
+  // Flags are optional: sessions written before the seed model simply lack
+  // them, and a resumed session degrades to "no special copy" rather than
+  // being rejected outright.
   return {
     packId,
     questions: s.questions,
     index: s.index,
     startedAt: s.startedAt,
+    ...(s.reshuffled === true ? { reshuffled: true } : {}),
+    ...(s.isTail === true ? { isTail: true } : {}),
+    ...(typeof s.poolSize === 'number' ? { poolSize: s.poolSize } : {}),
+    ...(typeof s.freshAfter === 'number' ? { freshAfter: s.freshAfter } : {}),
   };
 }
 

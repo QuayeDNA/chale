@@ -2,6 +2,7 @@ import { Pressable, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { CardMark } from './card-mark';
+import { FavouriteButton } from './favourite-button';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { LucideIcon, type ShowcaseIconName } from './ui/icon';
@@ -71,28 +72,12 @@ export function QuestionCard({
         <Text
           variant="bodyStrong"
           style={inPerson ? styles.questionInPerson : styles.question}
-          numberOfLines={4}
+          numberOfLines={6}
         >
           {question}
         </Text>
         {onToggleFavourite ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={isFavourite ? 'Saved to favourites' : 'Save this question'}
-            accessibilityState={{ selected: isFavourite }}
-            hitSlop={8}
-            onPress={onToggleFavourite}
-            style={[styles.favourite, isFavourite && styles.favouriteOn]}>
-            <LucideIcon
-              name="heart"
-              size={20}
-              color={isFavourite ? '#D85A30' : '#8A7562'}
-              filled={isFavourite}
-            />
-            <Text variant="bodyStrong" style={styles.favouriteText}>
-              {isFavourite ? 'Saved to favourites' : 'Save this question'}
-            </Text>
-          </Pressable>
+          <FavouriteButton isFavourite={isFavourite} onToggle={onToggleFavourite} />
         ) : null}
         {hideNavigation ? null : (
           <View style={styles.nav}>
@@ -203,24 +188,6 @@ const styles = StyleSheet.create((theme) => ({
     minHeight: 190,
     textAlignVertical: 'center',
     flexGrow: 1,
-  },
-  favourite: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    paddingLeft: 8,
-    paddingRight: 12,
-    borderRadius: theme.radii.pill,
-  },
-  favouriteOn: {
-    backgroundColor: 'rgba(216, 90, 48, 0.10)',
-  },
-  favouriteText: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: theme.colors.muted,
   },
   nav: {
     flexDirection: 'row',

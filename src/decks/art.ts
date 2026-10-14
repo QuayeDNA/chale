@@ -150,13 +150,14 @@ export function deckTotalCopy(deck: Pick<DeckWithCount, 'question_count'>): stri
 }
 
 /**
- * Detail-screen copy, where there is room to explain the model: a session is a
- * bounded random draw from the pool, so the two numbers are worth stating.
+ * Detail-screen copy, where there is room to explain the model: the deck is
+ * shuffled once and sessions take consecutive slices, so a session is bounded
+ * AND non-repeating — both numbers are worth stating.
  */
 export function deckCountCopy(deck: DeckWithCount): string {
   const total = deck.question_count;
   const session = deck.session_length;
   if (total <= 0) return 'Coming soon';
   if (total <= session) return `${total} questions`;
-  return `${session} a session · ${total} in total`;
+  return `${session} a session · no repeats till you've heard all ${total}`;
 }

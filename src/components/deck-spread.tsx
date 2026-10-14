@@ -161,7 +161,8 @@ export function DeckSpread({
         <View style={styles.heading}>
           <Text variant="title">Choose a deck</Text>
           <Text variant="caption" muted>
-            Each session draws {selected.session_length} questions at random.
+            Each session deals {selected.session_length} fresh questions — no repeats till the
+            deck runs out.
           </Text>
         </View>
       )}
