@@ -41,6 +41,7 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
         <Stack.Screen name="start" />
         <Stack.Screen name="prompt/[id]" />
         <Stack.Screen name="auth" />
+        <Stack.Screen name="auth-callback" />
       </Stack>
     </View>
   );
