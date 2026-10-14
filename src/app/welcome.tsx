@@ -58,6 +58,9 @@ export default function WelcomeScreen() {
           />
         </Animated.View>
       </View>
+      {/* Pushes the credit to the page bottom: the studio sign-off belongs at
+          the foot of the screen, not tucked under the buttons mid-page. */}
+      <View style={styles.spacer} />
       <Animated.View
         style={styles.footer}
         entering={reduceMotion ? undefined : FadeIn.duration(280).delay(460)}>
@@ -77,7 +80,10 @@ const styles = StyleSheet.create((theme) => ({
     marginTop: theme.spacing.four,
     gap: theme.spacing.two,
   },
+  spacer: {
+    flex: 1,
+  },
   footer: {
-    marginTop: theme.spacing.five,
+    marginTop: theme.spacing.two,
   },
 }));

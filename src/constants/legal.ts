@@ -1,5 +1,5 @@
 /** Studio identity shown on the opening screens. */
-export const STUDIO_NAME = 'Ananse';
+export const STUDIO_NAME = 'DNA-Studios';
 
 /** Studio site, once one exists. Null = the credit stays plain text. */
 export const STUDIO_URL: string | null = null;

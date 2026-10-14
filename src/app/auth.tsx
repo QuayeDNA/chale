@@ -150,6 +150,8 @@ export default function AuthScreen() {
         </Animated.View>
       </View>
 
+      {/* Pushes the credit to the page bottom, same as welcome. */}
+      <View style={styles.spacer} />
       <Animated.View
         style={styles.footer}
         entering={reduceMotion ? undefined : FadeIn.duration(280).delay(560)}>
@@ -176,7 +178,10 @@ const styles = StyleSheet.create((theme) => ({
     width: '100%',
     height: 52,
   },
+  spacer: {
+    flex: 1,
+  },
   footer: {
-    marginTop: theme.spacing.five,
+    marginTop: theme.spacing.two,
   },
 }));
