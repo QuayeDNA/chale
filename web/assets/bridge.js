@@ -1,24 +1,35 @@
 /* Auth bridge: hands a Supabase email-link session to the app.
  *
- * Supabase verifies the link, redirects here, and appends the session — a
- * `?code=` (PKCE, what the app's client uses) or an implicit `#access_token`
- * pair. This page forwards it into the app via the `chale://` scheme and
- * falls back to a manual handoff when the scheme doesn't resolve.
+ * Passwordless login, current flow: the email template points its link at
+ * this page carrying a `token_hash` and a `type` (magiclink, signup,
+ * recovery, email_change, invite). The page forwards both into the app via
+ * the `chale://` scheme, and the app exchanges them with
+ * `supabase.auth.verifyOtp({ token_hash, type })`. No session tokens ever
+ * appear in a URL — Supabase stopped putting them there.
+ *
+ * A `?code=` (the PKCE exchange code from Supabase's own verify endpoint) is
+ * still honoured for setups that redirect through it. Anything else lands on
+ * the invalid state, which points back to the one-time code in the app.
  */
 (function () {
   'use strict';
 
   var BOUNCE_TIMEOUT_MS = 1500;
   var SCHEME = 'chale';
+  // The verifyOtp types a link can legitimately carry. An unknown value falls
+  // back to magiclink rather than forwarding noise into the app.
+  var TYPES = ['signup', 'invite', 'magiclink', 'recovery', 'email_change', 'email'];
 
   var params = new URLSearchParams(window.location.search);
-  var hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
 
+  var tokenHash = params.get('token_hash');
+  var type = params.get('type');
+  if (TYPES.indexOf(type) === -1) type = 'magiclink';
   var code = params.get('code');
-  var accessToken = hash.get('access_token');
-  var refreshToken = hash.get('refresh_token');
   var error =
-    params.get('error_description') || params.get('error') || hash.get('error_description') || hash.get('error');
+    params.get('error_description') ||
+    params.get('error') ||
+    params.get('error_code');
 
   function show(id) {
     var states = document.querySelectorAll('.state');
@@ -36,15 +47,15 @@
   }
 
   var target = null;
-  if (code) {
-    target = SCHEME + '://auth-callback?code=' + encodeURIComponent(code);
-  } else if (accessToken && refreshToken) {
+  if (tokenHash) {
     target =
       SCHEME +
-      '://auth-callback#access_token=' +
-      encodeURIComponent(accessToken) +
-      '&refresh_token=' +
-      encodeURIComponent(refreshToken);
+      '://auth-callback?token_hash=' +
+      encodeURIComponent(tokenHash) +
+      '&type=' +
+      encodeURIComponent(type);
+  } else if (code) {
+    target = SCHEME + '://auth-callback?code=' + encodeURIComponent(code);
   }
 
   if (!target) {

@@ -28,12 +28,20 @@ type AuthContextValue = {
   /** Keeps a guest's user id (and therefore their favourites) on sign-up. */
   claimAccount: (email: string) => Promise<void>;
   verifyOtp: (email: string, token: string) => Promise<void>;
+  /**
+   * Deep-link sign-in: exchanges a `token_hash` from an emailed link, carried
+   * through the hosted auth bridge (web/auth-bridge.html) into the app.
+   */
+  verifyOtpLink: (tokenHash: string, type: LinkVerifyType) => Promise<void>;
   updateDisplayName: (name: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const ANONYMOUS_DISPLAY_NAME = 'New friend';
+
+/** The verifyOtp types a magic link can carry. */
+export type LinkVerifyType = 'signup' | 'invite' | 'magiclink' | 'recovery' | 'email_change' | 'email';
 
 async function ensureProfileRow(user: User): Promise<Tables<'users'> | null> {
   const { data: existing } = await supabase
@@ -168,6 +176,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
     await refreshProfile();
   }, [refreshProfile]);
 
+  const verifyOtpLink = useCallback(
+    async (tokenHash: string, type: LinkVerifyType) => {
+      const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
+      if (error) throw error;
+      await refreshProfile();
+    },
+    [refreshProfile],
+  );
+
   const updateDisplayName = useCallback(async (name: string) => {
     const clean = name.trim();
     if (!clean) throw new Error('Name cannot be empty');
@@ -192,6 +209,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       signInWithOtpEmail,
       claimAccount,
       verifyOtp,
+      verifyOtpLink,
       updateDisplayName,
     }),
     [
@@ -204,6 +222,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       signInWithOtpEmail,
       claimAccount,
       verifyOtp,
+      verifyOtpLink,
       updateDisplayName,
     ],
   );

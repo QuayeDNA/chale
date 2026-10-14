@@ -37,15 +37,22 @@ Cloudflare Pages, or point a custom domain at it later.
 1. **Legal links** — once hosted, set the URLs in `src/constants/legal.ts`
    (`LEGAL_LINKS`). `LegalFoot` renders them automatically.
 2. **Auth bridge redirect** — pass the hosted bridge URL on every email-sending
-   auth call in `src/hooks/use-auth.tsx`:
-   `signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo: 'https://<host>/auth-bridge.html' } })`
-   and `updateUser({ email }, { emailRedirectTo: … })`.
+    auth call in `src/hooks/use-auth.tsx`:
+    `signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo: 'https://<host>/auth-bridge.html' } })`
+    and `updateUser({ email }, { emailRedirectTo: … })`.
 3. **Allowlist** — Supabase dashboard → Authentication → URL Configuration → add
-   `https://<host>/auth-bridge.html` to Redirect URLs.
-4. **App route** — add `src/app/auth-callback.tsx`: read `code` from the route
-   params, call `supabase.auth.exchangeCodeForSession(code)`, then
-   `router.replace('/home')`; show a retry card on failure. (`app.json` already
-   declares the `chale://` scheme.)
+    `https://<host>/auth-bridge.html` to Redirect URLs.
+4. **Email template** — the magic link must arrive as a `token_hash`, not a
+    session: point the email template's link at the bridge with the template
+    variables, e.g. `https://<host>/auth-bridge.html?token_hash={{ .TokenHash }}&type=magiclink`
+    (use `{{ .ConfirmationURL }}`'s equivalent for signup/recovery/email_change —
+    the `type` param tells the app which verify call to make). Supabase no
+    longer puts tokens in the redirect URL, so nothing parses a hash.
+5. **App route** — add `src/app/auth-callback.tsx`: read the route params and
+    take the matching path — `code` → `supabase.auth.exchangeCodeForSession(code)`;
+    `token_hash` + `type` → `verifyOtpLink(tokenHash, type)` from `useAuth()` (already
+    in the context). Then `router.replace('/home')`; show a retry card on failure.
+    (`app.json` already declares the `chale://` scheme.)
 5. **Optional upgrade** — Android App Links (`assetlinks.json`) + iOS Associated
    Domains make links open the app directly; the bridge page then only handles
    desktop/odd-client opens.
