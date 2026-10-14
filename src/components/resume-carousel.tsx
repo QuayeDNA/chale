@@ -62,7 +62,7 @@ const TITLE_HEIGHT = 40;
  * parked less far out of the corner — at this width a bigger crop would clip it
  * down to a sliver.
  */
-const MARK_SIZE = 210;
+const MARK_SIZE = 180;
 const MARK_CROP = 44;
 
 const RELATIONSHIP_CHIP: Record<DeckSummary['relationship_type'], string> = {
@@ -441,11 +441,11 @@ const styles = StyleSheet.create((theme) => ({
   },
   rtop: {
     position: 'absolute',
-    top: 14,
+    top: 0,
     // Inset from the card's own padding, not from its edge, so the chips stay
     // aligned with the title below them.
-    left: 14,
-    right: 14,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
