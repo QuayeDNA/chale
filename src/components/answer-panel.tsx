@@ -190,7 +190,7 @@ const styles = StyleSheet.create((theme) => ({
     marginTop: -4,
   },
   error: {
-    color: '#D32F2F',
+    color: theme.status.danger,
     textAlign: 'center',
   },
 }));

@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { useQuery } from '@tanstack/react-query';
 
 import { usePlayMode, type PlayMode } from '@/hooks/use-play-mode';
@@ -51,6 +51,7 @@ const MODES: { mode: PlayMode; icon: 'people' | 'mic'; label: string; hint: stri
  * view — the route would throw the spread away to ask the same question.
  */
 export function DeckSheet({ deck, samples, onPlay, price, onOpenChange }: Props) {
+  const { theme } = useUnistyles();
   const { mode: remembered } = usePlayMode();
   const { width } = useWindowDimensions();
 
@@ -186,7 +187,10 @@ export function DeckSheet({ deck, samples, onPlay, price, onOpenChange }: Props)
                 accessibilityLabel={`${option.label}. ${option.hint}`}
                 style={[styles.mode, selected && styles.modeOn]}
               >
-                <LucideIcon name={option.icon} size={22} color={selected ? '#2B1A0F' : undefined} />
+                {/* Selected mode reads theme ink: the selected tile is theme
+                    surface, so a hardcoded dark-ink glyph vanishes in dark
+                    mode. Unselected keeps the icon default (theme ink). */}
+                <LucideIcon name={option.icon} size={22} color={selected ? theme.colors.ink : undefined} />
                 <Text variant="bodyStrong" style={styles.modeLabel}>
                   {option.label}
                 </Text>

@@ -82,7 +82,10 @@ const styles = StyleSheet.create((theme) => ({
     paddingLeft: theme.spacing.three,
     paddingRight: theme.spacing.four,
     borderRadius: theme.radii.hero,
-    backgroundColor: theme.colors.ink,
+    // Pinned dark, not themed: title/sub/chevron below are fixed creams, which
+    // only read on dark. theme.colors.ink flips to cream in dark mode, which
+    // would put cream text on a cream row.
+    backgroundColor: '#2B1A0F',
     overflow: 'hidden',
   },
   pressed: {
@@ -113,7 +116,9 @@ const styles = StyleSheet.create((theme) => ({
   title: {
     fontSize: 17,
     lineHeight: 22,
-    color: theme.colors.paper,
+    // Matches the pinned row, not the theme: theme paper goes dark in dark
+    // mode, which would vanish against the dark shelf.
+    color: '#FBF3DF',
   },
   sub: {
     color: SUB,

@@ -38,8 +38,6 @@ export type LoadingBarProps = {
 };
 
 const HEIGHT = { sm: 6, md: 10, lg: 14 } as const;
-const SUCCESS = '#2E9E5B';
-const DANGER = '#D32F2F';
 const FILL_MS = 450;
 const LOOP_MS = 1300;
 const SEGMENT_RATIO = 0.35;
@@ -77,6 +75,10 @@ export function LoadingBar({
   const radius = height / 2;
   const activeColor = fill ?? theme.colors.street;
   const trackColor = track ?? theme.colors.border;
+  // Plain strings, captured outside the worklets below — interpolating the
+  // theme object itself across the UI thread is not allowed.
+  const successColor = theme.status.success;
+  const dangerColor = theme.status.danger;
 
   const settled = status !== 'active';
   const looping = indeterminate && !settled && !reduceMotion;
@@ -146,7 +148,7 @@ export function LoadingBar({
       backgroundColor: interpolateColor(
         statusAnim.value,
         [0, 1, 2],
-        [activeColor, SUCCESS, DANGER],
+        [activeColor, successColor, dangerColor],
       ),
     };
   });
@@ -159,7 +161,7 @@ export function LoadingBar({
       backgroundColor: interpolateColor(
         statusAnim.value,
         [0, 1, 2],
-        [activeColor, SUCCESS, DANGER],
+        [activeColor, successColor, dangerColor],
       ),
     };
   });
@@ -198,6 +200,8 @@ export function LoadingBar({
             statusAnim={statusAnim}
             activeColor={activeColor}
             trackColor={trackColor}
+            successColor={successColor}
+            dangerColor={dangerColor}
           />
         ))}
       </View>
@@ -237,6 +241,8 @@ const Cell = memo(function Cell({
   statusAnim,
   activeColor,
   trackColor,
+  successColor,
+  dangerColor,
 }: {
   index: number;
   count: number;
@@ -247,12 +253,14 @@ const Cell = memo(function Cell({
   statusAnim: SharedValue<number>;
   activeColor: string;
   trackColor: string;
+  successColor: string;
+  dangerColor: string;
 }) {
   const style = useAnimatedStyle(() => {
     const backgroundColor = interpolateColor(
       statusAnim.value,
       [0, 1, 2],
-      [activeColor, SUCCESS, DANGER],
+      [activeColor, successColor, dangerColor],
     );
     if (looping) {
       // a soft "playhead" runs through the pills

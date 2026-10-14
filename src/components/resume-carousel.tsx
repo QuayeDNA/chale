@@ -394,7 +394,10 @@ const styles = StyleSheet.create((theme) => ({
     marginHorizontal: -TRAY_BLEED,
     paddingVertical: 18,
     borderRadius: 30,
-    backgroundColor: theme.colors.ink,
+    // Pinned dark, not themed: the labels below are dimmed creams, which only
+    // read on dark. theme.colors.ink flips to cream in dark mode, which would
+    // put cream text on a cream shelf.
+    backgroundColor: '#2B1A0F',
     // A rail that bleeds has to clip, or a card scrolling out of it is visible
     // against the paper.
     overflow: 'hidden',
@@ -412,7 +415,9 @@ const styles = StyleSheet.create((theme) => ({
     flexShrink: 1,
     fontSize: 17,
     lineHeight: 22,
-    color: theme.colors.paper,
+    // Matches the pinned tray, not the theme: theme paper goes dark in dark
+    // mode, which would vanish against the dark shelf.
+    color: '#FBF3DF',
   },
   headCount: {
     color: '#BFAE92',

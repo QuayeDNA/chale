@@ -112,10 +112,10 @@ const styles = StyleSheet.create((theme) => ({
   },
   invalid: {
     // Design-system semantic Error (ref2), not a relationship accent.
-    borderColor: '#D32F2F',
+    borderColor: theme.status.danger,
   },
   invalidText: {
-    color: '#D32F2F',
+    color: theme.status.danger,
   },
   placeholder: {
     color: theme.colors.muted,

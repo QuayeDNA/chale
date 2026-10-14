@@ -123,7 +123,7 @@ const styles = StyleSheet.create((theme) => ({
     aspectRatio: 0.88,
     borderRadius: theme.radii.card,
     // A warm brown reads softer than pure black on the paper background.
-    shadowColor: '#2B1A0F',
+    shadowColor: theme.colors.shadow,
     shadowOpacity: 0.24,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 8 },

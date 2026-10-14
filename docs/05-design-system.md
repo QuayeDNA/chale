@@ -52,7 +52,7 @@ Street yellow `#F5B400` is a **signal, not a wash** — it is the app's single h
 
 ### 1a-1. Semantic interaction tokens
 
-Components never reach for arbitrary hex values; they read semantic roles from the theme. **Status: planned — not yet implemented**; components currently read foundation colors directly. When built, these live beside the foundation colors in `src/unistyles.ts`:
+Components never reach for arbitrary hex values; they read semantic roles from the theme. **Status: partially implemented (2026-10-14)** — `theme.status.success` (`#2E9E5B`) and `theme.status.danger` (`#D32F2F`) ship in `src/unistyles.ts` (identical values in both modes) and are read by the answer error text, invalid inputs, destructive menu rows, the recorder stop affordances, and the loading bar's settle states. The rest of the layer below is still planned; components otherwise read foundation colors directly. When built, these live beside the foundation colors in `src/unistyles.ts`:
 
 ```ts
 text.primary          // primary content (ink)

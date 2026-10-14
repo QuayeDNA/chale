@@ -16,7 +16,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { LucideIcon, type ChaleIconName } from './icon';
 import { Text } from './text';
@@ -34,7 +34,6 @@ type Size = { width: number; height: number };
 
 const EDGE = 12; // min distance from any screen edge / safe-area inset
 const GAP = 6; // distance between trigger and menu
-const DESTRUCTIVE = '#D32F2F';
 
 /**
  * Controlled dropdown — parent owns `open`, so the trigger can be anything.
@@ -246,6 +245,7 @@ const MenuItem = memo(function MenuItem({
   onSelect: (item: DropdownItem) => void;
   divider: boolean;
 }) {
+  const { theme } = useUnistyles();
   return (
     <>
       {divider && <View style={styles.divider} />}
@@ -259,7 +259,7 @@ const MenuItem = memo(function MenuItem({
           <LucideIcon
             name={item.icon}
             size={20}
-            color={item.destructive ? DESTRUCTIVE : undefined}
+            color={item.destructive ? theme.status.danger : undefined}
           />
         )}
         <Text
@@ -284,7 +284,7 @@ const styles = StyleSheet.create((theme) => ({
     borderWidth: 1,
     borderColor: theme.colors.border,
     borderRadius: 16,
-    shadowColor: '#2B1A0F',
+    shadowColor: theme.colors.shadow,
     shadowOpacity: 0.14,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
@@ -310,7 +310,7 @@ const styles = StyleSheet.create((theme) => ({
   rowPressed: { backgroundColor: theme.colors.border },
   label: { flexShrink: 1 },
   rowLabel: { color: theme.colors.ink },
-  destructive: { color: DESTRUCTIVE },
+  destructive: { color: theme.status.danger },
   divider: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: theme.colors.border,

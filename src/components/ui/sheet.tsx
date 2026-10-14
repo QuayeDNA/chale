@@ -240,7 +240,7 @@ const styles = StyleSheet.create((theme) => ({
     borderTopRightRadius: theme.radii.hero,
     borderTopWidth: 1,
     borderColor: theme.colors.border,
-    shadowColor: '#2B1A0F',
+    shadowColor: theme.colors.shadow,
     shadowOpacity: 0.2,
     shadowRadius: 24,
     shadowOffset: { width: 0, height: -8 },

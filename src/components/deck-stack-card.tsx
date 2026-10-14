@@ -168,7 +168,7 @@ const styles = StyleSheet.create((theme) => ({
     overflow: 'hidden',
     // Same warm brown the tiles use. A warm shadow reads softer than pure black
     // on the paper background, and one shadow colour keeps every deck alike.
-    shadowColor: '#2B1A0F',
+    shadowColor: theme.colors.shadow,
     shadowOpacity: 0.3,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 10 },

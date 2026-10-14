@@ -16,6 +16,13 @@ const lightTheme = {
     family: { accent: '#639922', accentSoft: '#C0DD97', accentText: '#173404' },
     friend: { accent: '#D4537E', accentSoft: '#F4C0D1', accentText: '#4B1528' },
   },
+  // Status colors are the same in both modes: they must read on paper AND on
+  // dark espresso, so they were picked darker than the pastel relationship
+  // accents. First slice of the semantic interaction layer (05 §1a-1).
+  status: {
+    success: '#2E9E5B',
+    danger: '#D32F2F',
+  },
   spacing: {
     half: 2,
     one: 4,
@@ -46,6 +53,7 @@ const darkTheme = {
     overlay: 'rgba(0,0,0,0.55)',
   },
   relationship: lightTheme.relationship,
+  status: lightTheme.status,
   spacing: lightTheme.spacing,
   radii: lightTheme.radii,
   maxContentWidth: lightTheme.maxContentWidth,

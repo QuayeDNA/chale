@@ -51,7 +51,6 @@ const BUTTON = 56; // collapsed mic button
 const INNER = 40; // buttons inside the expanded pill
 const SAMPLE_MS = 70;
 const MIN_RECORDING_MS = 600; // shorter than this = accidental tap, discard
-const DANGER = '#D32F2F';
 const DB_FLOOR = -55;
 const DB_CEIL = -8;
 
@@ -311,6 +310,7 @@ const RecordingView = memo(function RecordingView({
   width: number;
   onStop: () => void;
 }) {
+  const { theme } = useUnistyles();
   const dot = useSharedValue(1);
 
   useEffect(() => {
@@ -334,7 +334,7 @@ const RecordingView = memo(function RecordingView({
         accessibilityRole="button"
         accessibilityLabel="Stop recording"
         onPress={onStop}
-        style={[styles.circle, { backgroundColor: DANGER }]}
+        style={[styles.circle, { backgroundColor: theme.status.danger }]}
       >
         <View style={styles.stopGlyph} />
       </Pressable>
@@ -535,7 +535,7 @@ const styles = StyleSheet.create((theme) => ({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: DANGER,
+    backgroundColor: theme.status.danger,
   },
   timer: {
     fontVariant: ['tabular-nums'],

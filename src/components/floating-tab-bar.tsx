@@ -127,7 +127,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingVertical: TAB_BAR_PADDING,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    shadowColor: '#2B1A0F',
+    shadowColor: theme.colors.shadow,
     shadowOpacity: 0.14,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },

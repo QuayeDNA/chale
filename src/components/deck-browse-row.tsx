@@ -211,7 +211,7 @@ const styles = StyleSheet.create((theme) => ({
     bottom: 0,
     width: CARD_W,
     borderRadius: 13,
-    shadowColor: '#2B1A0F',
+    shadowColor: theme.colors.shadow,
     shadowOpacity: 0.2,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 5 },
