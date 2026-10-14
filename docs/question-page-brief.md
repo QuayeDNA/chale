@@ -33,9 +33,13 @@ Route: `src/app/session.tsx` — `/session?pack=<deckId>`
 
 1. Read the local slot first: `loadSession(packId)` from `src/lib/session-store.ts`
    (one AsyncStorage slot per deck, `chale.session.v1.<packId>`, 7-day staleness).
-2. No slot → `drawSessionQuestions(packId, deck.session_length)` — the server
-   shuffles with `order by random()`, so both phones would agree.
-3. The fresh draw is written straight back to storage.
+2. No slot → seeded shuffle model (`src/lib/shuffle-store.ts`): the pack's active
+   questions are read once via PostgREST, shuffled with the per-pack seed
+   (`chale.shuffle.v1.<packId>`), and the session is the cursor's slice of that
+   shuffle — no repeats within a cycle. The server draw
+   (`drawSessionQuestions`, `order by random()`) no longer feeds sessions; it
+   remains the storefront's 3-question sample. Full model: `docs/superpowers/specs/2026-10-14-deck-sessions-design.md`.
+3. The fresh session is written straight back to the slot.
 4. **The index is read from the query, never held in state** (`index = session.data?.index ?? 0`).
    That is deliberate: it is why the sync effect that used to fight the cache is gone.
 
@@ -47,14 +51,17 @@ Route: `src/app/session.tsx` — `/session?pack=<deckId>`
 | Resuming | a slot existed | identical to loading-but-resolved — no "welcome back" ceremony. Home already announced it in the tray. |
 | Reading | mid-session | the card |
 | First question | `index === 0` | **Previous is disabled, not hidden** — the row keeps its width so nothing reflows at the end |
-| Last question | `index === total - 1` | **Next relabels to "Finish — back home"**, primary variant unchanged. Same button, new words. |
+| Last question | `index === total - 1` | nav row keeps **Previous** + relabelled **Back home** (quiet outline), and below the card a full-width primary — **Draw the next 20** (or **Draw a fresh shuffle** at cycle end). Two exits, one momentum. |
+| Tail of the deck | slice shorter than session_length | eyebrow: "The last N you haven't heard — a fresh shuffle comes next." |
+| Cycle restart | the entry after a tail | eyebrow: "Fresh shuffle — you've heard all N in this deck." |
 | Part-way + abandoned | `index > 0` | a quiet centred caption pressable: "Start this deck over". Only shown once you've moved at least one card. |
 | Error | deck missing or draw failed | an ErrorCard naming which. |
 
 ### Navigation
 
 - `goTo(n)` writes `queryClient.setQueryData` **first**, then `saveSession`. Both.
-- `finish()` clears the slot, removes the query, and `router.replace('/home')` — replace, not push, so Back doesn't return you to a finished session.
+- `goHome()` (the "Back home" ending): advances the shuffle cursor, marks the pack completed, clears the slot, removes the query, and `router.replace('/home')` — replace, not push, so Back doesn't return you to a finished session.
+- `drawNext()` (the momentum ending): advances the cursor, clears the slot, resets the query — the same screen re-deals the next slice, a new session without leaving. It does **not** mark the pack completed, so the Home recommendation never fires off it.
 - A favourite toggle failure pushes `/auth`, because signing in is how a guest keeps what it just hearted.
 
 ---

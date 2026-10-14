@@ -36,19 +36,24 @@ flowchart TD
     A[Decks storefront] --> B[Tap a deck: DeckSheet]
     B --> C[Play: Together]
     C --> D[/session?pack=]
-    D --> E[Server draws N questions - deck session_length, default 20]
+    D --> E[Device shuffle: seeded pack order, slice for this pack cursor]
     E --> F[Question card: index/total, favourite, Previous, Next]
     F --> F
-    F --> G[Finish on last card -> Home]
-    G --> H[Resume tray on Home: pick the session back up]
-    F --> I[Start this deck over: fresh draw]
+    F -->|Last card| G{A way out}
+    G -->|Back home| H[Back home: advance cursor + resumable slot cleared]
+    G -->|Draw the next 20| I[Next session of the same deck, same screen]
+    H --> J[Home: NextUpCard offers the same deck — N fresh left]
+    F --> K[Start this deck over: same slice again]
 ```
 
 Notes:
 - Two people, one phone, in a room. **No answers, no reveal, no server-side state** — the question IS the activity. Guests can play this; no connection or account is required.
-- The draw is server-side (`draw_session_questions`) over published questions; the order and position are cached in the React Query cache and mirrored to AsyncStorage (`chale.session.v1.<packId>`), so leaving and returning resumes on the same question, and Home's resume tray offers half-finished sessions (discardable).
+- **The seed model (2026-10-14):** the pack's active questions are fetched once and shuffled on-device with a per-pack seed (`chale.shuffle.v1.<packId>` = seed + cursor). Session k is slice k of that shuffle, so a deck's sessions never repeat a question until the cycle is exhausted — `draw_session_questions`'s `order by random()` was making every session an independent draw with repeats possible. The cursor advances on both endings; "N fresh left" is arithmetic, not a ledger. A tail is honestly short (65 → 20, 20, 20, 5); the session after a tail is a fresh shuffle, eyebrow-announced. Design: `docs/superpowers/specs/2026-10-14-deck-sessions-design.md`.
+- The position and draw are cached in the React Query cache and mirrored to AsyncStorage (`chale.session.v1.<packId>`), so leaving and returning resumes on the same question, and Home's resume tray offers half-finished sessions (discardable).
+- The last card offers two exits: **Back home** (advance the cursor, clear the slot; the pack next opens at slice k+1) and **Draw the next 20** (advance the cursor, stay on the screen, deal the next session — with the last session of a cycle offering a *fresh shuffle* instead).
+- Home's recommendation slot: the pairing-invite card holds the position until a connection is linked or the user dismisses it once; once dismissed, the slot shows **NextUpCard** — the deck most recently completed here ("Keep going — N fresh left"), else a default Friends deck ("Start here"). This is distinct from ResumeCarousel, which tracks half-finished sessions.
 - The favourite toggle works here and on the remote side — one `favourites` table behind the Favourites tab. Guests tapping it get routed to `/auth` first.
-- Mid-session, "Start this deck over" re-draws (hidden on the last card, where Finish is the only sensible exit). Resuming a deck is per-deck: a shared phone can hold sessions on several decks at once.
+- Mid-session, "Start this deck over" re-deals the same slice from index 0 (cursor unchanged). Resuming a deck is per-deck: a shared phone can hold sessions on several decks at once.
 - This mode is not described by the PRD or this doc's earlier versions — it came from design work (archived in `docs/archive/`) and shipped as a first-class mode.
 
 ## 3. Pairing & remote setup

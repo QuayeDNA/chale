@@ -170,7 +170,7 @@ All server-side entry points the app calls; each is `security definer` with expl
 | `submit_answer(p_prompt, p_kind, p_content)` | 0001, 0005, 0012 | insert-or-replace until revealed; sets voice `expires_at`; flips reveal at count ≥ 2 |
 | `record_listen(p_answer)` | 0004 | inserts the (answer, listener) row |
 | `save_own_clip(p_answer)` | 0004 | speaker-only; requires listen count ≥ 2 (both people) |
-| `draw_session_questions(p_pack, p_count default 20)` | 0007 | bounded shuffled draw over published, active questions — used by in-person sessions *and* the storefront's 3-question sample |
+| `draw_session_questions(p_pack, p_count default 20)` | 0007 | bounded shuffled draw over published, active questions — storefront samples and deck spreads only. In-person sessions no longer use it; see §7 (seeded client shuffle) |
 | `list_packs_with_counts()` | 0007 | catalogue listing with per-pack question counts |
 
 Realtime is on `answers` (the reveal flip) and `question_packs` (0010, deck identity changes).
@@ -187,7 +187,7 @@ Realtime is on `answers` (the reveal flip) and `question_packs` (0010, deck iden
 
 - **Routing:** expo-router (file-based). Routes: `index → splash → welcome`, `(tabs)` = home / favourites / remote / profile, then `start`, `auth`, `decks`, `deck/[id]`, `session?pack=`, `prompt/[id]`, `settings`. Two former dev-only showcase routes were removed from production.
 - **Server state:** TanStack Query v5 owns all network state; invalidation keys (`connection`, `prompt`, `answers`, `decks`, `sessions`, `favourites`) are refreshed on tab focus so a stale day never displays.
-- **Local state:** in-person sessions live in AsyncStorage (`chale.session.v1.<packId>`) — no database rows; a session is resumable, discardable, and one deck per session.
+- **Local state:** in-person sessions live in AsyncStorage — no database rows; a session is resumable, discardable, and one deck per session. Two slots per deck: `chale.session.v1.<packId>` (draw + position, 7-day staleness) and `chale.shuffle.v1.<packId>` (seed + cursor + completedAt). The seeded shuffle (`src/lib/shuffle-store.ts`, mulberry32 Fisher-Yates over the pack's active questions, slice `cursor * session_length`) guarantees no repeats within a cycle — the cursor *is* the seen-state; design in `docs/superpowers/specs/2026-10-14-deck-sessions-design.md`. The pack pool is read via PostgREST (`loadPoolQuestions`), so `draw_session_questions` stays answer-free for storefront samples.
 - **Styling:** Unistyles 3.3 (see `05-design-system.md` for tokens). Requires an EAS dev build, not Expo Go.
 - **Types:** `src/lib/database.types.ts` is generated and committed (`supabase gen types typescript`); sync rule in `06-development-workflow.md`.
 
