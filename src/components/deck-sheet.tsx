@@ -2,6 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
+import { useQuery } from '@tanstack/react-query';
 
 import { usePlayMode, type PlayMode } from '@/hooks/use-play-mode';
 
@@ -11,6 +12,8 @@ import { Sheet, useSheetAction } from '@/components/ui/sheet';
 import { Text } from '@/components/ui/text';
 import { DECK_INKS, gradientFor } from '@/decks/art';
 import type { DrawnQuestion, DeckSummary } from '@/lib/decks';
+import { loadSession } from '@/lib/session-store';
+import { freshLeft, loadSlot } from '@/lib/shuffle-store';
 
 type DeckSample = Pick<DrawnQuestion, 'id' | 'text'>;
 
@@ -73,9 +76,38 @@ export function DeckSheet({ deck, samples, onPlay, price, onOpenChange }: Props)
   const colors = useMemo(() => gradientFor(shown?.tone), [shown?.tone]);
   const ink = shown ? (DECK_INKS[shown.tone] ?? '#FFF9E8') : '#FFF9E8';
 
+  // What the Together CTA promises. The session screen auto-resumes a live
+  // slot and deals the next slice at the shuffle cursor, so the sheet must
+  // say which of the three is about to happen — "Start questions" for all
+  // three would be a lie told twice (mid-deck and mid-shuffle). Remote keeps
+  // its own wording: the daily prompt has nothing to do with the cursor.
+  const progress = useQuery({
+    queryKey: ['sheet-state', shown?.id],
+    enabled: !!shown,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const [slot, shuffle] = await Promise.all([
+        loadSession(shown!.id),
+        loadSlot(shown!.id),
+      ]);
+      return { slot, shuffle };
+    },
+  });
+
   if (!shown) return null;
 
   const cardWidth = Math.round(width * 0.62);
+
+  const togetherLabel = (() => {
+    const slot = progress.data?.slot;
+    if (slot) return `Continue — question ${slot.index + 1} of ${slot.questions.length}`;
+    const cursor = progress.data?.shuffle?.cursor ?? 0;
+    if (cursor > 0) {
+      const fresh = freshLeft(shown.question_count, cursor, shown.session_length);
+      return fresh > 0 ? `Play next — ${fresh} fresh left` : 'Start a fresh shuffle';
+    }
+    return 'Start questions';
+  })();
 
   return (
     <Sheet open={!!deck} onOpenChange={onOpenChange} title={shown.title} scroll>
@@ -168,7 +200,7 @@ export function DeckSheet({ deck, samples, onPlay, price, onOpenChange }: Props)
       </View>
 
       <PlayAction
-        label={price ? `Unlock for ${price}` : 'Start questions'}
+        label={price ? `Unlock for ${price}` : mode === 'remote' ? 'Start questions' : togetherLabel}
         icon={price ? 'lock' : 'play'}
         onPlay={() => onPlay(shown, mode)}
       />
