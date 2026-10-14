@@ -15,8 +15,9 @@ flowchart TD
     B --> C[Welcome screen]
     C -->|Get started| D{Anonymous?}
     C -->|Browse decks as guest| E[Tabs: Home as guest]
-    D -->|Yes| F[Auth: email + consent checkbox → one-time code]
+    D -->|Yes| F[Auth: Apple, Google, or email + consent → one-time code]
     D -->|No| E2[Tabs: Home, signed in]
+    F --> G[Auth callback: code, token hash, or empty return]
     G --> E2
     E --> H[Browse decks, start in-person sessions]
 ```
@@ -24,9 +25,10 @@ flowchart TD
 Notes:
 - Auth is deferred, not eliminated: first launch anonymously signs in via Supabase anonymous sign-in, and every guest gets a `users` row ("New friend"). The account boundary sits at the first action that needs to persist to a person — creating/joining a connection, or saving a favourite.
 - Guests can browse the whole catalogue (`/decks`, `/deck/[id]`) and play in-person sessions without an account. Toggling a favourite routes them to `/auth` — favourites, answers and connections are account-only.
-- Account creation is **email one-time code only**. There is no phone auth, no password, no social login. Name is collected after verification and is optional; it feeds the greeting on Home.
-- Claiming an account keeps the anonymous user id, so favourites saved while browsing survive the upgrade.
-- The account boundary carries an age consent: "Send code" stays disabled until the user checks "I'm 13 or older / a parent or guardian agrees if you're under 16" — the same rule as the Terms. Guests never see this gate; it only exists on the account-creation path.
+- Account creation is a **method ladder**: Apple (iOS only, official button, rendered only where `isAvailableAsync()` is true), Google (secondary row with the globe glyph), then email one-time code below an "or" divider. Name is collected after verification and is optional; it feeds the greeting on Home.
+- Social sign-in links the anonymous identity in place, so guest favourites survive the upgrade; where the provider identity already belongs to another account, the app signs in separately and says so in place. Email claiming keeps the anonymous user id via the same rule as before. Cancelled Apple sheets and dismissed browsers return silently — cancellation is not failure.
+- Returns land on the `auth-callback` route: `?code=` (PKCE, exchanged in place), `?token_hash=` + `?type=` (emailed link via the hosted bridge), or neither (OAuth-link return — the session never left, nothing to exchange). A failed link renders a retryable error card with a way back.
+- The account boundary carries an age consent: "Send code" stays disabled until the user checks "I'm 13 or older / a parent or guardian agrees if you're under 16" — the same rule as the Terms. The gate stays **email-only for now** (social methods do not ask for it); extending or unifying the gate is a flagged follow-up, not a silent drop. Guests never see this gate; it only exists on the account-creation path.
 - After verifying, the user lands back where they were (`/auth` is a push, dismissed on success).
 
 ## 2. In-person session ("together" mode)
