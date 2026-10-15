@@ -118,20 +118,30 @@ html {
 
 /* ------------------------------------------------------------------ nav ---- */
 
+/* The mobile floating tab bar translated to the top of the page (see
+   src/components/floating-tab-bar.tsx): a detached surface container —
+   radius 28, 1px border, soft shadow, 12px off the viewport edges like the
+   app's side margins and bottom gap — riding 12px under the top while stuck.
+   Still sticky, still blurred; only the silhouette changed. */
 .site-nav {
   position: sticky;
-  top: 0;
+  top: 12px;
   z-index: 50;
+  width: min(1240px, calc(100% - 32px));
+  margin: 12px auto 0;
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
   backdrop-filter: blur(14px);
-  background: color-mix(in srgb, var(--paper) 80%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  box-shadow: 0 8px 16px var(--shadow);
 }
 
 .site-nav .wrap {
   display: flex;
   align-items: center;
-  gap: 28px;
-  height: 68px;
+  gap: 20px;
+  height: 72px;
+  padding: 0 8px 0 20px;
 }
 
 .logo {
