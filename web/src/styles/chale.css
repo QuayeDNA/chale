@@ -322,15 +322,15 @@ html {
   }
 }
 
-/* The brand crown, doodled in street yellow, bottom-left. */
-.hero .crown {
-  position: absolute;
-  left: -24px;
-  bottom: 36px;
-  width: clamp(104px, 13vw, 176px);
+/* The brand crown, riding the headline like it rides the wordmark in the
+   lockup: full street yellow, no wash, lifted a touch above the baseline. */
+.hero .h-crown {
+  display: inline-block;
+  height: 0.66em;
+  width: auto;
+  margin-left: 0.14em;
+  vertical-align: 0.1em;
   pointer-events: none;
-  opacity: 0.13;
-  animation: drift 18s ease-in-out infinite alternate;
 }
 
 /* The deck gets its own fixed-width column. The headline sizes itself to the
