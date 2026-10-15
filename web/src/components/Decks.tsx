@@ -14,6 +14,7 @@ const DECKS = [
 const SPEED = 0.03;
 const RESUME_DELAY = 1400;
 const DRAG_SLOP = 14;
+const HIDE_AFTER = 5000;
 
 export function Decks() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -185,8 +186,42 @@ export function Decks() {
     face?.style.setProperty('--gl', '0');
   };
 
+  const hideTimers = useRef(new Map<string, number>());
+
+  const clearHide = (key: string) => {
+    const timer = hideTimers.current.get(key);
+    if (timer !== undefined) {
+      window.clearTimeout(timer);
+      hideTimers.current.delete(key);
+    }
+  };
+
+  useEffect(() => {
+    const timers = hideTimers.current;
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+      timers.clear();
+    };
+  }, []);
+
   const toggle = (key: string) => {
     if (suppressFlip.current) return;
+    const opening = !flipped[key];
+    clearHide(key);
+    if (opening) {
+      hideTimers.current.set(
+        key,
+        window.setTimeout(() => {
+          hideTimers.current.delete(key);
+          setFlipped((prev) => {
+            if (!prev[key]) return prev;
+            const next = { ...prev };
+            delete next[key];
+            return next;
+          });
+        }, HIDE_AFTER),
+      );
+    }
     setFlipped((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
