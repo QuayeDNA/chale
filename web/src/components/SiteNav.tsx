@@ -1,20 +1,22 @@
 import lockupLightNoSubtitle from '../assets/brand/lockup-no-subtitle-light.svg';
 import lockupDarkNoSubtitle from '../assets/brand/lockup-no-subtitle-dark.svg';
+
 /**
- * The site nav — sticky, blurred, the wordmark in Archivo Black with the
- * street-yellow dot, the section anchors, and the store pill.
+ * The site nav — sticky and blurred, carrying the no-subtitle lockup, the
+ * section anchors, and the store pill.
  *
- * Colour note: the mockup hardcodes a light translucent bar (#FBF3DFcc on
- * #EDE0BE88). The same look is expressed here with color-mix over the theme
- * vars so the bar works in dark mode too, where those hexes would be a solid
- * cream slab.
+ * The lockup pair is the same rule the hero runs: the artwork swaps with the
+ * visitor's colour scheme, so the bar never shows ink on ink. The bar itself
+ * is the mockup's translucent cream expressed as color-mix over the theme
+ * vars, so it holds in dark mode where the fixed hexes would be a slab.
  */
 export function SiteNav() {
   return (
     <nav className="site-nav">
       <div className="wrap">
-        <a className="logo" href="#top">
-          chale<i></i>
+        <a className="logo" href="#top" aria-label="Chale">
+          <img className="brand-dark" src={lockupDarkNoSubtitle} alt="Chale" />
+          <img className="brand-light" src={lockupLightNoSubtitle} alt="Chale" />
         </a>
         <ul>
           <li>

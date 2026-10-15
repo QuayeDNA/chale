@@ -113,22 +113,15 @@ html {
 
 .logo {
   display: flex;
-  align-items: baseline;
-  gap: 3px;
-  font-family: var(--font-display);
-  font-size: 26px;
-  letter-spacing: -0.04em;
+  align-items: center;
   text-decoration: none;
-  color: var(--ink);
 }
 
-/* The dot after the wordmark: the street yellow as a full stop, not a wash. */
-.logo i {
-  display: block;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--street);
+/* Sizing only — the light/dark swap lives in the `img.brand-*` rules further
+   down, and a `display` here would out-specify them. */
+.logo img {
+  height: 32px;
+  width: auto;
 }
 
 .site-nav ul {
@@ -194,21 +187,21 @@ html {
 /* The class names describe the artwork, not the theme: `-light` is the cream
    lockup file, `-dark` the ink one. A theme shows the artwork whose ink has
    contrast against it — light paper gets the ink (dark) lockup, dark paper
-   gets the cream (light) lockup. Air-dropped as `img.class` (not bare class)
-   to out-specify `.brand-lockup img` above — specificity bit us once. */
-.brand-lockup img.brand-light {
+   gets the cream (light) lockup. Kept as `img.class` (not the bare class) to
+   out-specify `.brand-lockup img` above — specificity bit us once. */
+img.brand-light {
   display: none;
 }
 
-.brand-lockup img.brand-dark {
+img.brand-dark {
   display: block;
 }
 
 @media (prefers-color-scheme: dark) {
-  .brand-lockup img.brand-light {
+  img.brand-light {
     display: block;
   }
-  .brand-lockup img.brand-dark {
+  img.brand-dark {
     display: none;
   }
 }
