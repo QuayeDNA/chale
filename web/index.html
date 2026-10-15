@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Chale — question cards for the people you're close to</title>
     <meta name="description" content="Play through decks of question cards in person, or trade answers over text and voice when you're apart.">
+    <meta name="theme-color" content="#fbf3df" id="theme-color">
+    <script>
+      // Applies the stored theme before first paint so the page never
+      // flashes the wrong one. Mirrors ThemeToggle's read/write exactly.
+      try {
+        var t = localStorage.getItem('chale-theme');
+        if (t === 'light' || t === 'dark') {
+          document.documentElement.dataset.theme = t;
+          if (t === 'dark') document.getElementById('theme-color').content = '#231408';
+        }
+      } catch (e) {}
+    </script>
     <link rel="icon" href="data:,">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

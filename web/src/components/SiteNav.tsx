@@ -1,5 +1,6 @@
 import lockupLightNoSubtitle from '../assets/brand/lockup-no-subtitle-light.svg';
 import lockupDarkNoSubtitle from '../assets/brand/lockup-no-subtitle-dark.svg';
+import { ThemeToggle } from './ThemeToggle';
 
 /**
  * The site nav — sticky and blurred, carrying the no-subtitle lockup, the
@@ -30,8 +31,10 @@ export function SiteNav() {
           </li>
         </ul>
         <span className="pill" aria-disabled="true">
-          Coming to Android &amp; iOS
+          <span className="pill-full">Coming to Android &amp; iOS</span>
+          <span className="pill-short">Coming soon</span>
         </span>
+        <ThemeToggle />
       </div>
     </nav>
   );

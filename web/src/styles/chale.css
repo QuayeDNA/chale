@@ -31,8 +31,22 @@
   --font-body: 'Spline Sans', system-ui, sans-serif;
 }
 
+/* An explicit choice always wins; the system preference only applies while
+   the visitor hasn't chosen (no data-theme on <html>). The two blocks stay
+   identical — edit both. */
+:root[data-theme='dark'] {
+  --paper: #231408;
+  --ink: #fbf3df;
+  --surface: #2e1e10;
+  --border: #3d2a18;
+  --muted: #c4a991;
+  --street: #f5b400; /* the one pop that passes on both grounds */
+  --shadow: rgba(0, 0, 0, 0.45);
+  color-scheme: dark;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
     --paper: #231408;
     --ink: #fbf3df;
     --surface: #2e1e10;
@@ -40,11 +54,19 @@
     --muted: #c4a991;
     --street: #f5b400; /* the one pop that passes on both grounds */
     --shadow: rgba(0, 0, 0, 0.45);
+    color-scheme: dark;
   }
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* The theme toggle crossfades the page between the two token sets via a
+   same-document view transition (see ThemeToggle). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.35s;
 }
 
 html {
@@ -155,12 +177,93 @@ html {
   white-space: nowrap;
 }
 
+/* -------------------------------------------------------- theme toggle ---- */
+
+/* A two-option segmented control — the tab bar's street-gold indicator,
+   translated to the nav: the yellow pill slides behind the active icon. The
+   pill is positioned by the component (measured like the tab bar's onLayout),
+   so this is paint only, no motion. */
+.theme-toggle {
+  position: relative;
+  display: flex;
+  flex: none;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+}
+
+.theme-toggle-pill {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  width: 0;
+  border-radius: var(--radius-pill);
+  background: var(--street);
+  opacity: 0;
+}
+
+.theme-toggle-pill.is-placed {
+  opacity: 1;
+}
+
+.theme-toggle button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.2s, transform 0.12s;
+}
+
+.theme-toggle button[aria-pressed='true'] {
+  color: var(--ink);
+}
+
+.theme-toggle button:active {
+  transform: scale(0.92);
+}
+
+.theme-toggle svg {
+  width: 15px;
+  height: 15px;
+}
+
+.pill .pill-short {
+  display: none;
+}
+
 @media (max-width: 720px) {
   .site-nav ul {
     display: none;
   }
+  .site-nav .wrap {
+    gap: 12px;
+  }
   .pill {
     margin-left: auto;
+  }
+}
+
+/* Logo + pill + toggle stop fitting together under here, so the pill says
+   less. The full text stays on the accessible name. */
+@media (max-width: 480px) {
+  .pill {
+    padding: 8px 12px;
+  }
+  .pill .pill-full {
+    display: none;
+  }
+  .pill .pill-short {
+    display: inline;
   }
 }
 
@@ -197,11 +300,19 @@ img.brand-dark {
   display: block;
 }
 
+:root[data-theme='dark'] img.brand-light {
+  display: block;
+}
+
+:root[data-theme='dark'] img.brand-dark {
+  display: none;
+}
+
 @media (prefers-color-scheme: dark) {
-  img.brand-light {
+  :root:not([data-theme]) img.brand-light {
     display: block;
   }
-  img.brand-dark {
+  :root:not([data-theme]) img.brand-dark {
     display: none;
   }
 }
@@ -528,6 +639,11 @@ img.brand-dark {
 @media (prefers-reduced-motion: reduce) {
   .bar-fill {
     width: 40%;
+    animation: none;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
     animation: none;
   }
 }
