@@ -426,10 +426,9 @@ html {
   border: 1.5px solid var(--ink);
 }
 
-/* The mockup pairs the lift with a -1deg tilt; dropped — it reads as a wobble,
-   not a lift. Pure vertical rise, same spring. */
+/* Mockup-exact hover: the lift carries a -1deg tilt on the same spring. */
 .btn:hover:not([aria-disabled]) {
-  transform: translateY(-3px);
+  transform: translateY(-3px) rotate(-1deg);
   box-shadow: 0 10px 0 -2px color-mix(in srgb, var(--ink) 13%, transparent);
 }
 
