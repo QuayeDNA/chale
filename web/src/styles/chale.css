@@ -290,52 +290,39 @@ html {
 
 .hero {
   position: relative;
+  isolation: isolate;
   overflow-x: clip;
-  padding: clamp(36px, 6vw, 88px) 0 clamp(64px, 8vw, 120px);
+  padding: clamp(40px, 6vw, 96px) 0 clamp(72px, 9vw, 128px);
 }
 
-.hero .wrap {
-  display: grid;
-  /* minmax(0, …) plus min-width: 0 below: the underlined phrase is unbroken
-     and wider than its track at several widths, and without this the grid's
-     automatic minimums blow the tracks out — shoving the deck off-screen
-     and shifting the page right. The grid must never exceed the wrap. */
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-  gap: clamp(24px, 5vw, 72px);
-  align-items: center;
-}
-
-.hero .wrap > * {
-  min-width: 0;
-}
-
-/* The exiting card flies left as it fades, passing over this column — the
-   copy and buttons stay painted and hit-testable above it throughout. */
-.hero .wrap > :first-child {
-  position: relative;
-  z-index: 1;
-}
-
-/* The drifting circles behind the headline. Ring tints are mixed toward
-   transparent so they read as a wash on either ground. */
-.hero .ring {
+/* Soft brand blobs (the pattern's shapes) behind everything. Tints are mixed
+   toward transparent so they read as a wash on either ground. */
+.hero .backdrop {
   position: absolute;
-  border-radius: 50%;
-  border: 44px solid color-mix(in srgb, var(--street) 13%, transparent);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
   pointer-events: none;
-  animation: drift 14s ease-in-out infinite alternate;
 }
 
-.hero .r1 {
-  width: 520px;
-  height: 520px;
-  right: -140px;
-  top: -120px;
+.hero .blob {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: drift 16s ease-in-out infinite alternate;
+}
+.hero .blob.pk { fill: color-mix(in srgb, #e8547c 20%, transparent); }
+.hero .blob.pu { fill: color-mix(in srgb, #8e63b8 20%, transparent); animation-duration: 21s; animation-direction: alternate-reverse; }
+.hero .blob.or { fill: color-mix(in srgb, #ee6a33 18%, transparent); animation-duration: 13s; }
+.hero .blob.ye { fill: color-mix(in srgb, var(--street) 24%, transparent); animation-duration: 23s; }
+
+@keyframes drift {
+  to {
+    transform: translate(-30px, 40px) scale(1.06);
+  }
 }
 
-/* The brand crown, doodled in street yellow, where the second ring used to
-   sit — bottom-left of the hero. Drifts on the rings' rhythm so it reads as
-   part of the same ambient layer. */
+/* The brand crown, doodled in street yellow, bottom-left. */
 .hero .crown {
   position: absolute;
   left: -24px;
@@ -346,69 +333,155 @@ html {
   animation: drift 18s ease-in-out infinite alternate;
 }
 
-@keyframes drift {
-  to {
-    transform: translate(-30px, 40px) scale(1.06);
+/* The deck gets its own fixed-width column. The headline sizes itself to the
+   OTHER column (container units, below), so no amount of text can widen a
+   track and shove the stack around. */
+.hero .wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  gap: clamp(24px, 5vw, 80px);
+  align-items: center;
+}
+
+.hero .wrap > * {
+  min-width: 0;
+}
+
+/* The exiting card flies left over this column; copy and buttons stay above
+   it and clickable throughout. */
+.hero .copy {
+  position: relative;
+  z-index: 1;
+  container-type: inline-size;
+}
+
+/* Until the markup grows a .copy wrapper, the first column keeps the same
+   stacking guard by position: the flying card must never cover the buttons. */
+.hero .wrap > :first-child {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- eyebrow chip ---- */
+.hero .eyebrow {
+  padding: 7px 14px 7px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.hero .eyebrow i {
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--street) 60%, transparent);
+  animation: ping 2.6s ease-out infinite;
+}
+
+@keyframes ping {
+  70%, 100% {
+    box-shadow: 0 0 0 9px transparent;
   }
 }
 
+/* ---- headline ---- */
+/* Sized to the copy column: the unbroken phrase is ~9.6em wide, so 9.6cqi lets
+   it fill the column without ever overflowing it, at any viewport. The vw
+   line is the fallback for browsers without container units. */
 .hero h1 {
-  margin: 18px 0 0;
+  margin: 22px 0 0;
   font-family: var(--font-display);
   font-weight: 400;
   letter-spacing: -0.03em;
-  line-height: 1.02;
-  /* Fluid against the layout, not the viewport alone: the underlined phrase
-     is ~10em wide and unbroken, so side-by-side type must stay small enough
-     to fit its track (see the grid note above). Stacked text gets the big
-     sizes, where the full width is available. */
-  font-size: clamp(28px, 8.5vw, 78px);
+  line-height: 1.04;
+  font-size: clamp(30px, 8.5vw, 78px);
+  font-size: clamp(30px, 9.6cqi, 92px);
 }
 
-@media (min-width: 1024px) {
-  .hero h1 {
-    font-size: clamp(44px, 4.2vw, 54px);
+.hero h1 .ln {
+  display: block;
+}
+
+.hero h1 .ln > span {
+  display: inline-block;
+  animation: rise 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.hero h1 .ln:nth-child(1) > span { animation-delay: 0.05s; }
+.hero h1 .ln:nth-child(2) > span { animation-delay: 0.16s; }
+.hero h1 .ln:nth-child(3) > span { animation-delay: 0.27s; }
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.45em) rotate(1.5deg);
   }
 }
 
-/* The underlined phrase never breaks; the stroke draws itself once. */
+/* The phrase never breaks. Its bottom padding is the room the brush stroke
+   lives in, so the stroke clears the descenders and the line below. */
 .hero h1 em {
   font-style: normal;
   position: relative;
+  display: inline-block;
   white-space: nowrap;
+  padding-bottom: 0.2em;
 }
 
-.hero h1 em svg {
+/* A marker swash: a filled, tapered brush shape (the brand's squiggle
+   language) wiped in left to right. */
+.hero .swash {
   position: absolute;
-  left: -2%;
-  bottom: -0.12em;
-  width: 104%;
-  height: 0.3em;
+  left: -1.5%;
+  bottom: 0;
+  width: 103%;
+  height: 0.4em;
   overflow: visible;
+  clip-path: inset(0 100% 0 0);
+  animation: wipe 0.9s 0.75s cubic-bezier(0.65, 0, 0.2, 1) forwards;
 }
 
-.hero h1 em path {
-  stroke: var(--street);
-  stroke-width: 9;
-  fill: none;
-  stroke-linecap: round;
-  stroke-dasharray: 420;
-  stroke-dashoffset: 420;
-  animation: draw 1.1s 0.5s cubic-bezier(0.3, 0.7, 0.2, 1) forwards;
+.hero .swash path {
+  fill: var(--street);
 }
 
-@keyframes draw {
+@keyframes wipe {
   to {
-    stroke-dashoffset: 0;
+    clip-path: inset(-30% -3% -30% -3%);
+  }
+}
+
+/* The last word gets a sparkle instead of standing alone. */
+.hero .spark {
+  display: inline-block;
+  width: 0.62em;
+  height: 0.62em;
+  margin-left: 0.2em;
+  vertical-align: 0.2em;
+  color: var(--street);
+  overflow: visible;
+  animation: pop 0.7s 1.1s cubic-bezier(0.3, 1.8, 0.5, 1) both,
+    twinkle 5s 2s ease-in-out infinite;
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0) rotate(-40deg);
+  }
+}
+
+@keyframes twinkle {
+  50% {
+    transform: rotate(14deg) scale(1.1);
   }
 }
 
 .hero .lede {
-  margin: 26px 0 30px;
-  max-width: 520px;
-  font-size: 19px;
+  margin: 28px 0 32px;
+  max-width: 34em;
+  font-size: clamp(17px, 1.5vw, 19px);
+  line-height: 1.55;
+  text-wrap: pretty;
   /* The mockup's warm brown, expressed against the theme so it holds dark. */
   color: color-mix(in srgb, var(--ink) 78%, var(--paper));
+  animation: rise 0.9s 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 /* Buttons — shared by the hero, the reveal panel, and the CTA. */
@@ -433,8 +506,25 @@ html {
   cursor: default;
 }
 
+/* The "not yet" state says so: a live gold dot, not a dead button. */
+.btn .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--street);
+  animation: ping 2.6s ease-out infinite;
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--street) 70%, transparent);
+}
+
 .btn.o {
   border: 1.5px solid var(--ink);
+}
+
+.btn .arr {
+  transition: transform 0.25s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.btn:hover .arr {
+  transform: translateX(4px);
 }
 
 /* Mockup-exact hover: the lift carries a -1deg tilt on the same spring. */
@@ -447,12 +537,187 @@ html {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+  animation: rise 0.9s 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.hero .facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+  margin: 30px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--muted);
+  animation: rise 0.9s 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.hero .facts li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hero .facts svg {
+  width: 17px;
+  height: 17px;
+  color: var(--ink);
 }
 
 .small {
   margin-top: 14px;
   font-size: 13.5px;
   color: var(--muted);
+}
+
+/* ---- the stage the deck sits on ---- */
+.hero .stage {
+  position: relative;
+  isolation: isolate;
+  width: min(400px, 100%);
+  justify-self: center;
+  animation: stage-in 1s 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes stage-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px) rotate(2deg);
+  }
+}
+
+/* A warm disc and a slowly turning dashed orbit behind the cards. */
+.hero .stage::before,
+.hero .stage::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  border-radius: 50%;
+  translate: -50% -50%;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.hero .stage::before {
+  width: 118%;
+  aspect-ratio: 1;
+  background: radial-gradient(
+    circle at 32% 28%,
+    color-mix(in srgb, var(--street) 38%, transparent),
+    color-mix(in srgb, var(--street) 12%, transparent) 68%
+  );
+}
+
+.hero .stage::after {
+  width: 140%;
+  aspect-ratio: 1;
+  border: 1.5px dashed color-mix(in srgb, var(--ink) 22%, transparent);
+  animation: spin 80s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+/* The cards' z-indexes stay inside the deck, so the flying card can never
+   paint above the text column. */
+.hero .stage .deck {
+  z-index: 0;
+}
+
+.hero .dd {
+  position: absolute;
+  pointer-events: none;
+  z-index: 2;
+  overflow: visible;
+  animation: float 6s ease-in-out infinite alternate;
+}
+.hero .dd.sp { right: -34px; top: -36px; width: 84px; color: var(--street); }
+.hero .dd.st { left: -26px; bottom: 56px; width: 54px; color: var(--ink); animation-delay: -2s; }
+.hero .dd.sl { right: -22px; bottom: 28px; width: 100px; animation-delay: -4s; }
+
+@keyframes float {
+  to {
+    transform: translateY(-10px) rotate(4deg);
+  }
+}
+
+/* A hand-lettered nudge that fades once it has done its job. */
+.hero .hint-tag {
+  position: absolute;
+  left: 26%;
+  top: -40px;
+  z-index: 3;
+  display: inline-block;
+  padding: 7px 13px;
+  border-radius: var(--radius-pill);
+  background: var(--street);
+  color: #2b1a0f;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transform: rotate(-7deg);
+  pointer-events: none;
+  animation: bob 3s ease-in-out infinite, fade-out 1s 14s forwards;
+}
+
+.hero .hint-tag svg {
+  position: absolute;
+  left: 78%;
+  top: 100%;
+  width: 40px;
+  color: var(--ink);
+  overflow: visible;
+}
+
+@keyframes bob {
+  50% {
+    transform: rotate(-4deg) translateY(-4px);
+  }
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 1023px) {
+  .hero .wrap {
+    grid-template-columns: 1fr;
+  }
+  .hero .stage {
+    margin-top: 44px;
+  }
+  .hero .dd.sp {
+    right: -10px;
+  }
+  .deck {
+    margin-top: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero *,
+  .hero *::before,
+  .hero *::after {
+    animation: none !important;
+  }
+  .hero .swash {
+    clip-path: none;
+  }
 }
 
 /* The draggable hero deck. Card artwork (--f fill, --k ink) is verbatim from
@@ -568,15 +833,6 @@ html {
   clip: rect(0 0 0 0);
   white-space: nowrap;
   border: 0;
-}
-
-@media (max-width: 1023px) {
-  .hero .wrap {
-    grid-template-columns: 1fr;
-  }
-  .deck {
-    margin-top: 20px;
-  }
 }
 
 /* ---------------------------------------------------------------- brand ---- */
