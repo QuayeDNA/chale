@@ -13,7 +13,9 @@ import { ThemeToggle } from './ThemeToggle';
  */
 export function SiteNav() {
   return (
-    <nav className="site-nav">
+    <>
+      <div className="nav-spacer" aria-hidden="true" />
+      <nav className="site-nav">
       <div className="wrap">
         <a className="logo" href="#top" aria-label="Chale">
           <img className="brand-dark" src={lockupDarkNoSubtitle} alt="Chale" />
@@ -37,5 +39,6 @@ export function SiteNav() {
         <ThemeToggle />
       </div>
     </nav>
+    </>
   );
 }

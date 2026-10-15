@@ -114,6 +114,9 @@ a {
 
 html {
   scroll-behavior: smooth;
+  /* The nav floats above the page now, so anchor jumps leave room for it
+     instead of sliding section tops underneath the bar. */
+  scroll-padding-top: 96px;
 }
 
 /* ------------------------------------------------------------------ nav ---- */
@@ -121,19 +124,32 @@ html {
 /* The mobile floating tab bar translated to the top of the page (see
    src/components/floating-tab-bar.tsx): a detached surface container —
    radius 28, 1px border, soft shadow, 12px off the viewport edges like the
-   app's side margins and bottom gap — riding 12px under the top while stuck.
-   Still sticky, still blurred; only the silhouette changed. */
+   app's side margins and bottom gap — riding 12px under the top.
+   Fixed, not sticky: sticky re-seats the bar on the main thread every frame,
+   and under the backdrop blur that lags behind a fast fling (the bar trails
+   upward, then snaps back). Fixed pins it in the compositor, so it never
+   moves; the spacer below holds its old flow space. */
 .site-nav {
-  position: sticky;
+  position: fixed;
   top: 12px;
+  left: 16px;
+  right: 16px;
   z-index: 50;
-  width: min(1240px, calc(100% - 32px));
-  margin: 12px auto 0;
+  max-width: 1240px;
+  margin: 0 auto;
   border: 1px solid var(--border);
   border-radius: 28px;
   background: color-mix(in srgb, var(--surface) 85%, transparent);
   backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   box-shadow: 0 8px 16px var(--shadow);
+}
+
+/* Flow space the fixed bar used to occupy: its 12px top margin plus its
+   74px border box (72px wrap + 1px borders). Keeps the hero exactly where
+   the sticky bar left it. */
+.nav-spacer {
+  height: 86px;
 }
 
 .site-nav .wrap {
