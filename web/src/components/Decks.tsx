@@ -13,7 +13,7 @@ const DECKS = [
 
 const SPEED = 0.03;
 const RESUME_DELAY = 1400;
-const DRAG_SLOP = 8;
+const DRAG_SLOP = 14;
 
 export function Decks() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -141,7 +141,7 @@ export function Decks() {
       window.removeEventListener('pointercancel', up);
       stopDrag.current = null;
       down.current = false;
-      suppressFlip.current = moved.current > DRAG_SLOP;
+      suppressFlip.current = moved.current >= DRAG_SLOP;
       if (!draggingRef.current) return;
       draggingRef.current = false;
       setDragging(false);
