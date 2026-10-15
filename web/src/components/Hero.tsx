@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 
 import crownUrl from '../assets/brand/crown.svg';
+import sparkleUrl from '../assets/chale-brand-svgs/doodles/sparkle.svg';
 import { DeckStack } from './DeckStack';
 
 /**
@@ -19,7 +20,7 @@ export function Hero() {
           <h1>
             <span className="ln"><span>Questions worth</span></span>
             <span className="ln"><span><em>passing the phone<svg viewBox="0 0 400 20" preserveAspectRatio="none" aria-hidden="true"><path d="M4 12 C 60 2, 110 18, 170 9 S 290 3, 396 11" /></svg></em></span></span>
-            <span className="ln"><span>for.<svg className="spark" viewBox="0 0 100 100" aria-hidden="true"><g stroke="currentColor" strokeWidth="5" strokeLinecap="round" fill="none"><path d="M68.4 51.9 L88.1 53.9" /><path d="M61.2 65.1 L68.7 75.2" /><path d="M48.9 70.0 L48.0 88.0" /><path d="M30.6 60.4 L19.5 66.4" /><path d="M31.5 45.3 L12.3 40.4" /><path d="M39.0 34.0 L32.9 25.1" /><path d="M51.5 31.5 L52.9 15.4" /><path d="M67.5 35.6 L77.2 27.6" /><circle cx="50" cy="50" r="3.2" fill="currentColor" stroke="none" /></g></svg></span></span>
+            <span className="ln"><span>for.<img src={sparkleUrl} className="spark" alt="" aria-hidden="true" /></span></span>
           </h1>
           <p className="lede">Chale is decks of question cards for your person, your family, your friends. Play through them together on one phone, or trade answers by text and voice when you're apart.</p>
           <div className="actions">
