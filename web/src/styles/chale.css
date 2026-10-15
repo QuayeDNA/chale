@@ -342,6 +342,7 @@ html {
   bottom: 36px;
   width: clamp(104px, 13vw, 176px);
   pointer-events: none;
+  opacity: 0.13;
   animation: drift 18s ease-in-out infinite alternate;
 }
 
