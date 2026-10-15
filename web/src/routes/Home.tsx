@@ -1,5 +1,6 @@
 import { BrandFooter } from '../components/BrandChrome';
 import { Hero } from '../components/Hero';
+import { Marquee } from '../components/Marquee';
 import { SiteNav } from '../components/SiteNav';
 
 export function Home() {
@@ -7,6 +8,7 @@ export function Home() {
     <>
       <SiteNav />
       <Hero />
+      <Marquee />
       <div className="page">
 
       <main className="landing">

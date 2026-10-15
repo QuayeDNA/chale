@@ -895,6 +895,46 @@ img.brand-dark {
   font-size: 15px;
 }
 
+/* ---------------------------------------------------------------- marquee ---- */
+
+.band {
+  background: var(--ink);
+  color: var(--paper);
+  transform: rotate(-1.6deg);
+  margin: 0 -4vw;
+  padding: 20px 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.band > div {
+  display: inline-flex;
+  gap: 34px;
+  padding-right: 34px;
+  animation: mq 60s linear infinite;
+}
+
+.band:hover > div {
+  animation-play-state: paused;
+}
+
+.band span {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.6vw, 30px);
+  letter-spacing: -0.02em;
+}
+
+.band b {
+  color: var(--street);
+  font-size: 26px;
+}
+
+@keyframes mq {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 /* ---------------------------------------------------------------- footer ---- */
 
 .foot {
@@ -925,6 +965,9 @@ img.brand-dark {
   }
   .hero h1 em path {
     stroke-dashoffset: 0;
+    animation: none;
+  }
+  .band > div {
     animation: none;
   }
   ::view-transition-group(*),
