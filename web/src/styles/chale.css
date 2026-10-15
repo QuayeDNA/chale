@@ -1968,6 +1968,7 @@ h2 {
   background: var(--ink);
   color: var(--paper);
   margin: 0 var(--pad) 0 calc(-1 * var(--bleed));
+  padding: clamp(72px, 10vw, 140px) 0;
   border-radius: 0 clamp(28px, 5vw, 56px) clamp(28px, 5vw, 56px) 0;
   overflow: hidden;
   position: relative;
@@ -2154,6 +2155,7 @@ h2 {
 @media (prefers-reduced-motion: reduce) {
 .rvl-slot {
   position: relative;
+  padding: 0;
 }
 
 .rvl {
