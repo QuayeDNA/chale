@@ -333,13 +333,16 @@ html {
   top: -120px;
 }
 
-.hero .r2 {
-  width: 300px;
-  height: 300px;
-  left: -120px;
-  bottom: 40px;
-  border-color: color-mix(in srgb, #d85a30 8%, transparent);
-  animation-duration: 18s;
+/* The brand crown, doodled in street yellow, where the second ring used to
+   sit — bottom-left of the hero. Drifts on the rings' rhythm so it reads as
+   part of the same ambient layer. */
+.hero .crown {
+  position: absolute;
+  left: -24px;
+  bottom: 36px;
+  width: clamp(104px, 13vw, 176px);
+  pointer-events: none;
+  animation: drift 18s ease-in-out infinite alternate;
 }
 
 @keyframes drift {

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 
+import crownUrl from '../assets/brand/crown.svg';
 import { DeckStack } from './DeckStack';
 
 /**
@@ -11,7 +12,7 @@ export function Hero() {
   return (
     <header className="hero" id="top">
       <i className="ring r1" aria-hidden="true"></i>
-      <i className="ring r2" aria-hidden="true"></i>
+      <img src={crownUrl} className="crown" alt="" aria-hidden="true" />
       <div className="wrap">
         <div>
           <span className="eyebrow">
