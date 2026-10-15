@@ -1,64 +1,67 @@
-# Chale — web pages
+# Chale web — landing, legal, auth bridge
 
-Static pages for the things that must live outside the app: the legal documents
-(app-store submissions require public URLs) and the email sign-in bridge.
+A small Vite + React app that serves the public web surface: the marketing
+landing, Terms and Privacy, and the email-link bridge that hands a Supabase
+magic-link token to the app.
 
-| File | Purpose |
+## Run it
+
+```bash
+cd web
+npm install
+npm run dev        # http://localhost:5173
+npm run build      # static build in web/dist — host anywhere
+npm run typecheck  # tsc --noEmit over src
+```
+
+`base: './'` in `vite.config.ts` keeps asset URLs relative, so the build runs
+from a sub-path (Supabase Storage) or a root domain (Vercel/Netlify) alike.
+
+## Routes
+
+| Path | What |
 |---|---|
-| `terms.html` | Terms & Conditions (draft copy, structured for the real text) |
-| `privacy.html` | Privacy Policy (draft copy, structured for the real text) |
-| `auth-bridge.html` | Catches Supabase's email-link redirect and bounces the session into the app |
-| `assets/chale.css` | `docs/05-design-system.md` in CSS — tokens mirror `src/unistyles.ts` |
-| `assets/bridge.js` | Bridge logic: parse `?code=` / `#access_token`, bounce to `chale://…` |
-| `assets/brand/` | The real lockup SVGs (copied from `assets/brand/`) |
+| `/` | Landing: hero, two modes (in person / apart), how it works |
+| `/terms` | Terms & Conditions (draft — `src/routes/Terms.tsx`) |
+| `/privacy` | Privacy Policy (draft — `src/routes/Privacy.tsx`) |
+| `/auth/bridge` | The emailed-link landing: forwards to `chale://auth-callback` |
 
-Everything is static HTML/CSS/JS — no build step. All three pages follow the
-app's Playful Street Energy system: same tokens, same fonts (Archivo Black +
-Spline Sans), dark mode via `prefers-color-scheme`, reduced-motion respected.
-The lockup is the supplied with-subtitle artwork, swapped by theme: the ink
-lockup on light paper, the cream lockup on dark.
+`email/magic-link.html` is the Supabase email template. Paste it into
+Dashboard → Authentication → Email Templates → **Magic Link**.
 
-## Hosting
+## Supabase configuration (dashboard, user-side)
 
-Any static host works. On the locked Supabase infra:
+1. **Site URL** → your hosted root, e.g. `https://chale-dna-studios.vercel.app`.
+   The email template builds `{{ .SiteURL }}/auth/bridge?token_hash=…`, so this
+   one setting drives dev, staging and prod.
+2. **Redirect URLs** (Authentication → URL Configuration) — allow all of:
+   - `chale://auth-callback` (the app deep link)
+   - `<site-url>/auth/bridge` (the bridge route, incl. any dev/preview URLs)
+3. **Email Templates → Magic Link** → paste `email/magic-link.html`, and set
+   the logo `src` to an absolute URL on your host, e.g.
+   `{{ .SiteURL }}/assets/brand/lockup-dark.svg`.
+4. **Providers** — enable Google + Apple (see the auth plan's prerequisites in
+   `docs/superpowers/plans/2026-10-14-auth-signin.md`).
 
-1. Dashboard → **Storage → New bucket** → name it `web`, tick **Public**.
-2. Upload the contents of this folder (`terms.html`, `privacy.html`,
-   `auth-bridge.html`, `assets/`) at the bucket root.
-3. URLs come out as
-   `https://<project-ref>.supabase.co/storage/v1/object/public/web/terms.html`
-   (same pattern for the others).
+### Dev access to the link
 
-Alternatives if you want prettier URLs: drag the folder onto Netlify/Vercel/
-Cloudflare Pages, or point a custom domain at it later.
+Deploy once (Vercel preview is enough). Emailed links land on the hosted
+bridge and deep-link into the dev app — no tunnel needed for the flow itself.
+Only reach for `npm run dev` + a tunnel (cloudflared/ngrok) when you want to
+debug the bridge page's own HTML/JS locally.
 
-## Wiring the app
+## Wiring back into the app
 
-1. **Legal links** — once hosted, set the URLs in `src/constants/legal.ts`
-   (`LEGAL_LINKS`). `LegalFoot` renders them automatically.
-2. **Auth bridge redirect** — pass the hosted bridge URL on every email-sending
-    auth call in `src/hooks/use-auth.tsx`:
-    `signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo: 'https://<host>/auth-bridge.html' } })`
-    and `updateUser({ email }, { emailRedirectTo: … })`.
-3. **Allowlist** — Supabase dashboard → Authentication → URL Configuration → add
-    `https://<host>/auth-bridge.html` to Redirect URLs.
-4. **Email template** — the magic link must arrive as a `token_hash`, not a
-    session: point the email template's link at the bridge with the template
-    variables, e.g. `https://<host>/auth-bridge.html?token_hash={{ .TokenHash }}&type=magiclink`
-    (use `{{ .ConfirmationURL }}`'s equivalent for signup/recovery/email_change —
-    the `type` param tells the app which verify call to make). Supabase no
-    longer puts tokens in the redirect URL, so nothing parses a hash.
-5. **App route** — add `src/app/auth-callback.tsx`: read the route params and
-    take the matching path — `code` → `supabase.auth.exchangeCodeForSession(code)`;
-    `token_hash` + `type` → `verifyOtpLink(tokenHash, type)` from `useAuth()` (already
-    in the context). Then `router.replace('/home')`; show a retry card on failure.
-    (`app.json` already declares the `chale://` scheme.)
-5. **Optional upgrade** — Android App Links (`assetlinks.json`) + iOS Associated
-   Domains make links open the app directly; the bridge page then only handles
-   desktop/odd-client opens.
+- `src/constants/legal.ts` — set `LEGAL_LINKS` entries to
+  `<site-url>/terms` and `<site-url>/privacy` (right now they're null, so the
+  in-app `LegalFoot` shows no links).
+- `src/constants/legal.ts` — set `AUTH_BRIDGE_URL` to
+  `<site-url>/auth/bridge`; `use-auth.tsx` then adds it as `emailRedirectTo`
+  on every OTP send.
 
-## Design sync
+## Design tokens
 
-If `src/unistyles.ts` or `docs/05-design-system.md` change, update
-`assets/chale.css` to match — the CSS variables at the top of the file are the
-source of truth on the web side.
+`src/styles/chale.css` mirrors `docs/05-design-system.md` and
+`src/unistyles.ts` (light/dark via `prefers-color-scheme`, radii, spacing,
+Archivo Black + Spline Sans). If the app's tokens change, change the CSS vars
+in `:root` and its dark-mode copy — nothing else hardcodes a colour.

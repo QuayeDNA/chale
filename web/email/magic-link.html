@@ -1,0 +1,76 @@
+<!--
+  Chale — Supabase magic-link email template (passwordless / token_hash flow).
+
+  Paste into Supabase Dashboard → Authentication → Email Templates → "Magic
+  Link" (the template Supabase sends for the passwordless email flow).
+
+  WHY THIS SHAPE
+  - Email clients strip <style> blocks and class rules. This is a table
+    layout with inline styles only, which is the only thing that survives
+    Gmail / Apple Mail / Outlook.
+  - The link is built from {{ .SiteURL }} + /auth/bridge, so one dashboard
+    setting (Site URL) controls every environment — dev, staging, prod.
+    The bridge page then hands the token to the app via the chale:// deep
+    link. Do NOT use {{ .ConfirmationURL }} here: it resolves against the
+    Site URL directly and skips the bridge.
+
+  LOGO: replace the src with an absolute URL to the deployed lockup-dark.svg,
+  e.g. {{ .SiteURL }}/assets/brand/lockup-dark.svg (the built app ships the
+  same SVG at that path when hosted at the site root).
+-->
+<!doctype html>
+<html lang="en">
+<body style="margin:0;padding:0;background-color:#fbf3df;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#fbf3df;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;">
+
+          <!-- Brand mark -->
+          <tr>
+            <td align="center" style="padding:24px 0 8px;">
+              <img src="{{ .SiteURL }}/assets/brand/lockup-dark.svg"
+                   width="200" alt="Chale — better questions, deeper chats"
+                   style="display:block;width:200px;height:auto;border:0;">
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:0 24px 24px;font-family:'Spline Sans',system-ui,sans-serif;font-size:14px;line-height:20px;color:#8a7562;">
+              Your one-time code link.
+            </td>
+          </tr>
+
+          <!-- Card -->
+          <tr>
+            <td style="background-color:#fff9e8;border:1px solid #ede0be;border-radius:20px;padding:32px 24px;font-family:'Spline Sans',system-ui,sans-serif;font-size:16px;line-height:24px;color:#2b1a0f;">
+              <p style="margin:0 0 16px;">Tap below to sign in. If Chale isn't installed yet, the page will tell you what to do next.</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <a href="{{ .SiteURL }}/auth/bridge?token_hash={{ .TokenHash }}&type=magiclink"
+                       style="display:inline-block;background-color:#f5b400;color:#2b1a0f;font-family:'Spline Sans',system-ui,sans-serif;font-size:16px;font-weight:600;text-decoration:none;padding:16px 32px;border-radius:999px;">
+                      Sign in to Chale
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:16px 0 0;font-size:13px;line-height:18px;color:#8a7562;">
+                This link is for this device only. Didn't ask for it? You can safely ignore this email.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="padding:24px 0 16px;font-family:'Spline Sans',system-ui,sans-serif;font-size:12px;line-height:16px;color:#8a7562;">
+              Made by DNA-Studios
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

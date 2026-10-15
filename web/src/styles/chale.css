@@ -24,6 +24,7 @@
   --radius-pill: 999px;
 
   --measure: 720px; /* legal reading column */
+  --wide: 960px; /* landing column */
 
   --font-display: 'Archivo Black', system-ui, sans-serif;
   --font-body: 'Spline Sans', system-ui, sans-serif;
@@ -102,7 +103,8 @@ a {
 /* The class names describe the artwork, not the theme: `-light` is the cream
    lockup file, `-dark` the ink one. A theme shows the artwork whose ink has
    contrast against it — light paper gets the ink (dark) lockup, dark paper
-   gets the cream (light) lockup. */
+   gets the cream (light) lockup. Air-dropped as `img.class` (not bare class)
+   to out-specify `.brand-lockup img` above — specificity bit us once. */
 .brand-lockup img.brand-light {
   display: none;
 }
@@ -302,6 +304,121 @@ a {
   font-family: ui-monospace, monospace;
   font-size: 12px;
   word-break: break-all;
+}
+
+/* --------------------------------------------------------------- landing ---- */
+
+.landing {
+  max-width: var(--wide);
+}
+
+.landing-hero {
+  text-align: center;
+  padding: var(--space-six) 0 var(--space-five);
+}
+
+.landing-hero h1 {
+  margin: var(--space-five) 0 var(--space-three);
+  font-family: var(--font-display);
+  font-size: clamp(32px, 6vw, 44px);
+  line-height: 1.1;
+}
+
+.landing-hero .lede {
+  margin: 0 auto var(--space-five);
+  max-width: 520px;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 26px;
+}
+
+.landing-hero .actions {
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.landing-section {
+  padding: var(--space-five) 0;
+}
+
+.landing-section h2 {
+  margin: 0 0 var(--space-four);
+  font-family: var(--font-display);
+  font-size: 22px;
+  line-height: 28px;
+  text-align: center;
+}
+
+.modes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-three);
+}
+
+.mode .eyebrow {
+  display: inline-flex;
+  margin-bottom: var(--space-two);
+  padding: var(--space-half) var(--space-three);
+  border-radius: var(--radius-pill);
+  background: var(--street);
+  color: #2b1a0f;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.mode h3 {
+  margin: 0 0 var(--space-two);
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 22px;
+}
+
+.mode p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.steps {
+  counter-reset: step;
+  display: grid;
+  gap: var(--space-three);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.steps li {
+  counter-increment: step;
+  display: flex;
+  gap: var(--space-three);
+  align-items: flex-start;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.steps li::before {
+  content: counter(step);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-pill);
+  background: var(--street);
+  color: #2b1a0f;
+  font-family: var(--font-display);
+  font-size: 14px;
+}
+
+.steps li strong {
+  display: block;
+  color: var(--ink);
+  font-size: 15px;
 }
 
 /* ---------------------------------------------------------------- footer ---- */
