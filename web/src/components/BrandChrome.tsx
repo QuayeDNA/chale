@@ -3,11 +3,6 @@ import { Link } from 'react-router-dom';
 import lockupLight from '../assets/brand/lockup-light.svg';
 import lockupDark from '../assets/brand/lockup-dark.svg';
 
-/**
- * The brand lockup, swapped by the visitor's colour scheme — the same rule the
- * app uses: ink artwork on light paper, cream artwork on dark paper. The class
- * names describe the ARTWORK, not the theme; the CSS does the swap.
- */
 export function BrandHeader() {
   return (
     <header className="brand-header">

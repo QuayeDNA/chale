@@ -1,5 +1,4 @@
-/* Chale web pages — docs/05-design-system.md translated to CSS.
-   Tokens mirror src/unistyles.ts exactly; keep the two in sync. */
+
 
 :root {
   --paper: #fbf3df;
@@ -23,24 +22,21 @@
   --radius-chip: 12px;
   --radius-pill: 999px;
 
-  --measure: 720px; /* legal reading column */
-  --wide: 960px; /* landing column */
-  --pad: clamp(20px, 5vw, 64px); /* landing page gutter */
+  --measure: 720px;
+  --wide: 960px;
+  --pad: clamp(20px, 5vw, 64px);
 
   --font-display: 'Archivo Black', system-ui, sans-serif;
   --font-body: 'Spline Sans', system-ui, sans-serif;
 }
 
-/* An explicit choice always wins; the system preference only applies while
-   the visitor hasn't chosen (no data-theme on <html>). The two blocks stay
-   identical — edit both. */
 :root[data-theme='dark'] {
   --paper: #231408;
   --ink: #fbf3df;
   --surface: #2e1e10;
   --border: #3d2a18;
   --muted: #c4a991;
-  --street: #f5b400; /* the one pop that passes on both grounds */
+  --street: #f5b400;
   --shadow: rgba(0, 0, 0, 0.45);
   color-scheme: dark;
 }
@@ -52,7 +48,7 @@
     --surface: #2e1e10;
     --border: #3d2a18;
     --muted: #c4a991;
-    --street: #f5b400; /* the one pop that passes on both grounds */
+    --street: #f5b400;
     --shadow: rgba(0, 0, 0, 0.45);
     color-scheme: dark;
   }
@@ -62,8 +58,6 @@
   box-sizing: border-box;
 }
 
-/* The theme toggle crossfades the page between the two token sets via a
-   same-document view transition (see ThemeToggle). */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 0.35s;
@@ -113,8 +107,6 @@ a {
   padding: var(--space-four);
 }
 
-/* The landing works at body width (full-bleed sections like the rotated band
-   and the reveal panel), so it brings its own padded column. */
 .wrap {
   max-width: 1240px;
   margin: 0 auto;
@@ -123,21 +115,10 @@ a {
 
 html {
   scroll-behavior: smooth;
-  /* The nav floats above the page now, so anchor jumps leave room for it
-     instead of sliding section tops underneath the bar. */
+
   scroll-padding-top: 96px;
 }
 
-/* ------------------------------------------------------------------ nav ---- */
-
-/* The mobile floating tab bar translated to the top of the page (see
-   src/components/floating-tab-bar.tsx): a detached surface container —
-   radius 28, 1px border, soft shadow, 12px off the viewport edges like the
-   app's side margins and bottom gap — riding 12px under the top.
-   Fixed, not sticky: sticky re-seats the bar on the main thread every frame,
-   and under the backdrop blur that lags behind a fast fling (the bar trails
-   upward, then snaps back). Fixed pins it in the compositor, so it never
-   moves; the spacer below holds its old flow space. */
 .site-nav {
   position: fixed;
   top: 12px;
@@ -152,14 +133,10 @@ html {
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   box-shadow: 0 8px 16px var(--shadow);
-  /* Its own compositor layer, so its paint never interleaves with the
-     backdrop repaints its blur triggers underneath it. */
+
   transform: translateZ(0);
 }
 
-/* Flow space the fixed bar used to occupy: its 12px top margin plus its
-   74px border box (72px wrap + 1px borders). Keeps the hero exactly where
-   the sticky bar left it. */
 .nav-spacer {
   height: 86px;
 }
@@ -178,8 +155,6 @@ html {
   text-decoration: none;
 }
 
-/* Sizing only — the light/dark swap lives in the `img.brand-*` rules further
-   down, and a `display` here would out-specify them. */
 .logo img {
   height: 32px;
   width: auto;
@@ -216,12 +191,6 @@ html {
   white-space: nowrap;
 }
 
-/* -------------------------------------------------------- theme toggle ---- */
-
-/* A two-option segmented control — the tab bar's street-gold indicator,
-   translated to the nav: the yellow pill slides behind the active icon. The
-   pill is positioned by the component (measured like the tab bar's onLayout),
-   so this is paint only, no motion. */
 .theme-toggle {
   position: relative;
   display: flex;
@@ -292,8 +261,6 @@ html {
   }
 }
 
-/* Logo + pill + toggle stop fitting together under here, so the pill says
-   less. The full text stays on the accessible name. */
 @media (max-width: 480px) {
   .pill {
     padding: 8px 12px;
@@ -306,9 +273,6 @@ html {
   }
 }
 
-/* ----------------------------------------------------------------- hero ---- */
-
-/* The kicker line — shared by every section that introduces itself. */
 .eyebrow {
   display: inline-flex;
   gap: 8px;
@@ -334,14 +298,6 @@ html {
   padding: clamp(40px, 6vw, 96px) 0 clamp(72px, 9vw, 128px);
 }
 
-/* The page background: seven sparse brand washes in varied organic shapes,
-   fixed behind the whole landing (the paper ground moved up to html so this
-   layer can sit at z-index -1). Tints are mixed toward transparent so they
-   read as a wash on either ground. Each blob is a non-square box with a
-   strongly asymmetric radius — never a disc — and drifts on its own slow
-   loop (desynced durations, some reversed); the reduced-motion block parks
-   them. Positions are viewport-relative with clearance between neighbours
-   so no two blobs pile up. */
 .page-bg {
   position: fixed;
   inset: 0;
@@ -356,8 +312,6 @@ html {
   animation: bg-drift 18s ease-in-out infinite alternate;
 }
 
-/* The scroll-pause from PageBackground: the room holds still while the
-   camera moves, so the nav's blur has one less thing to re-sample. */
 .is-scrolling .page-bg i {
   animation-play-state: paused;
 }
@@ -371,7 +325,6 @@ html {
   }
 }
 
-/* Pink blob, top left, spilling off the corner. The giant of the set. */
 .page-bg .b1 {
   top: -10vmin;
   left: -9vmin;
@@ -382,7 +335,6 @@ html {
   animation-duration: 22s;
 }
 
-/* Yellow blob, top right. Tall rather than round. */
 .page-bg .b2 {
   top: 0;
   right: -12vmin;
@@ -395,7 +347,6 @@ html {
   animation-direction: alternate-reverse;
 }
 
-/* Coral blob outline, left edge, mid page. Outline only, so it stays airy. */
 .page-bg .b3 {
   top: 42vh;
   left: -6vmin;
@@ -407,7 +358,6 @@ html {
   animation-delay: -11s;
 }
 
-/* Purple blob, right side, upper middle — clear of the green below it. */
 .page-bg .b4 {
   top: 46vh;
   right: -3vmin;
@@ -420,7 +370,6 @@ html {
   animation-direction: alternate-reverse;
 }
 
-/* Orange blob, bottom left. Wide and low. */
 .page-bg .b5 {
   bottom: 2vh;
   left: 5vw;
@@ -432,7 +381,6 @@ html {
   animation-delay: -9s;
 }
 
-/* Green blob, bottom right, spilling off the corner. */
 .page-bg .b6 {
   bottom: -13vmin;
   right: 3vw;
@@ -445,7 +393,6 @@ html {
   animation-direction: alternate-reverse;
 }
 
-/* One small street blob low centre-left, for balance. */
 .page-bg .b7 {
   bottom: 24vh;
   left: 30vw;
@@ -457,8 +404,6 @@ html {
   animation-delay: -2s;
 }
 
-/* The brand crown, riding the headline like it rides the wordmark in the
-   lockup: full street yellow, no wash, lifted a touch above the baseline. */
 .hero .h-crown {
   display: inline-block;
   height: 0.66em;
@@ -468,9 +413,6 @@ html {
   pointer-events: none;
 }
 
-/* The deck gets its own fixed-width column. The headline sizes itself to the
-   OTHER column (container units, below), so no amount of text can widen a
-   track and shove the stack around. */
 .hero .wrap {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
@@ -482,22 +424,17 @@ html {
   min-width: 0;
 }
 
-/* The exiting card flies left over this column; copy and buttons stay above
-   it and clickable throughout. */
 .hero .copy {
   position: relative;
   z-index: 1;
   container-type: inline-size;
 }
 
-/* Until the markup grows a .copy wrapper, the first column keeps the same
-   stacking guard by position: the flying card must never cover the buttons. */
 .hero .wrap > :first-child {
   position: relative;
   z-index: 1;
 }
 
-/* ---- eyebrow chip ---- */
 .hero .eyebrow {
   padding: 7px 14px 7px 11px;
   border: 1px solid var(--border);
@@ -517,10 +454,6 @@ html {
   }
 }
 
-/* ---- headline ---- */
-/* Sized to the copy column: the unbroken phrase is ~9.6em wide, so 9.6cqi lets
-   it fill the column without ever overflowing it, at any viewport. The vw
-   line is the fallback for browsers without container units. */
 .hero h1 {
   margin: 22px 0 0;
   font-family: var(--font-display);
@@ -550,8 +483,6 @@ html {
   }
 }
 
-/* The phrase never breaks. Its bottom padding is the room the drawn stroke
-   lives in, so the stroke clears the descenders and the line below. */
 .hero h1 em {
   font-style: normal;
   position: relative;
@@ -560,7 +491,6 @@ html {
   padding-bottom: 0.2em;
 }
 
-/* The stroke draws itself once, left to right. */
 .hero h1 em svg {
   position: absolute;
   left: -2%;
@@ -586,7 +516,6 @@ html {
   }
 }
 
-/* The last word gets a sparkle instead of standing alone. */
 .hero .spark {
   display: inline-block;
   width: 0.62em;
@@ -617,12 +546,11 @@ html {
   font-size: clamp(17px, 1.5vw, 19px);
   line-height: 1.55;
   text-wrap: pretty;
-  /* The mockup's warm brown, expressed against the theme so it holds dark. */
+
   color: color-mix(in srgb, var(--ink) 78%, var(--paper));
   animation: rise 0.9s 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-/* Buttons — shared by the hero, the reveal panel, and the CTA. */
 .btn {
   height: 56px;
   padding: 0 24px;
@@ -644,7 +572,6 @@ html {
   cursor: default;
 }
 
-/* The "not yet" state says so: a live gold dot, not a dead button. */
 .btn .dot {
   width: 9px;
   height: 9px;
@@ -665,7 +592,6 @@ html {
   transform: translateX(4px);
 }
 
-/* Mockup-exact hover: the lift carries a -1deg tilt on the same spring. */
 .btn:hover:not([aria-disabled]) {
   transform: translateY(-3px) rotate(-1deg);
   box-shadow: 0 10px 0 -2px color-mix(in srgb, var(--ink) 13%, transparent);
@@ -709,7 +635,6 @@ html {
   color: var(--muted);
 }
 
-/* ---- the stage the deck sits on ---- */
 .hero .stage {
   position: relative;
   isolation: isolate;
@@ -725,7 +650,6 @@ html {
   }
 }
 
-/* A warm disc and a slowly turning dashed orbit behind the cards. */
 .hero .stage::before,
 .hero .stage::after {
   content: '';
@@ -761,8 +685,6 @@ html {
   }
 }
 
-/* The cards' z-indexes stay inside the deck, so the flying card can never
-   paint above the text column. */
 .hero .stage .deck {
   z-index: 0;
 }
@@ -784,7 +706,6 @@ html {
   }
 }
 
-/* A hand-lettered nudge that fades once it has done its job. */
 .hero .hint-tag {
   position: absolute;
   left: 26%;
@@ -855,14 +776,9 @@ html {
   }
 }
 
-/* The draggable hero deck. Card artwork (--f fill, --k ink) is verbatim from
-   the mockup; the chrome around it (controls, counter, hint) runs on theme
-   vars so it holds in dark mode. Focus keeps the global street ring: the
-   deck is keyboard-operable, so it must show where focus is. */
 .deck {
   position: relative;
-  z-index: 0; /* traps the cards' z-indexes inside: the flying card can never
-    paint or hit-test above the text column, whatever its own z says. */
+  z-index: 0;
   width: min(380px, 84vw);
   height: 500px;
   margin: 0 auto;
@@ -894,8 +810,6 @@ html {
   will-change: transform, opacity;
 }
 
-/* Each deck's own icon as a giant watermark, tucked into the corner where
-   the ring used to sit. Same lucide glyph as the tile, oversized. */
 .hc .art {
   position: absolute;
   right: -64px;
@@ -947,7 +861,6 @@ html {
   opacity: 0.85;
 }
 
-/* Depth shading over the cards behind the current one. */
 .shd {
   position: absolute !important;
   inset: 0;
@@ -957,7 +870,6 @@ html {
   z-index: 5;
 }
 
-/* Visually hidden but announced: the deck's only remaining text. */
 .vh {
   position: absolute;
   width: 1px;
@@ -969,8 +881,6 @@ html {
   white-space: nowrap;
   border: 0;
 }
-
-/* ---------------------------------------------------------------- brand ---- */
 
 .brand-header {
   display: flex;
@@ -990,11 +900,6 @@ html {
   height: auto;
 }
 
-/* The class names describe the artwork, not the theme: `-light` is the cream
-   lockup file, `-dark` the ink one. A theme shows the artwork whose ink has
-   contrast against it — light paper gets the ink (dark) lockup, dark paper
-   gets the cream (light) lockup. Kept as `img.class` (not the bare class) to
-   out-specify `.brand-lockup img` above — specificity bit us once. */
 img.brand-light {
   display: none;
 }
@@ -1020,10 +925,6 @@ img.brand-dark {
   }
 }
 
-/* The doodle assets bake their own ink (#2B1A0F), which is invisible on the
-   dark ground. Flattening to black then inverting turns the line art cream
-   without touching the shape — the gold, pink and green doodles are left
-   alone because they pass on both grounds. */
 :root[data-theme='dark'] :is(.ways-decor .ink, .hero .dd.st) {
   filter: brightness(0) invert(1);
 }
@@ -1033,8 +934,6 @@ img.brand-dark {
     filter: brightness(0) invert(1);
   }
 }
-
-/* -------------------------------------------------------------- surfaces ---- */
 
 .card {
   width: 100%;
@@ -1062,8 +961,6 @@ img.brand-dark {
   font-size: 22px;
   line-height: 28px;
 }
-
-/* --------------------------------------------------------------- buttons ---- */
 
 .button {
   display: inline-flex;
@@ -1097,8 +994,6 @@ img.brand-dark {
   display: flex;
   width: 100%;
 }
-
-/* ------------------------------------------------------------- legal doc ---- */
 
 .doc h1 {
   margin: 0 0 var(--space-one);
@@ -1155,10 +1050,6 @@ img.brand-dark {
   line-height: 20px;
 }
 
-/* ----------------------------------------------------------- bridge page ---- */
-
-/* The same indeterminate travel as the app's LoadingBar: a 35% pill crossing
-   the track in 1300ms, easing in and out. */
 .bar-track {
   width: 160px;
   height: 10px;
@@ -1209,12 +1100,6 @@ img.brand-dark {
   font-size: 12px;
   word-break: break-all;
 }
-
-/* ----------------------------------------------------------------- decks ---- */
-
-/* Every rule below is scoped to the section. The mockup leans on single-letter
-   classes (.t .f .b .c .q .m); unscoped they would repaint the hero, the ways
-   copy and the footer. */
 
 #decks {
   padding-top: 0;
@@ -1289,8 +1174,6 @@ img.brand-dark {
   box-shadow: inset 0 0 0 1px #fff3, 0 24px 34px -18px #2b1a0f66;
 }
 
-/* Content sits above the watermark; the watermark and the paid tag opt back
-   out to absolute. */
 #decks .dk .f > * {
   position: relative;
 }
@@ -1384,7 +1267,6 @@ img.brand-dark {
   opacity: 0.7;
 }
 
-/* The mockup's 1-2-3 strip, which retires the old landing steps. */
 #decks .steps {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1444,10 +1326,6 @@ img.brand-dark {
   }
 }
 
-/* ------------------------------------------------------------------ ways ---- */
-
-/* The mockup resets margins globally; this port scopes the reset to the
-   landing sections so the legal pages keep their own rhythm. */
 button {
   font: inherit;
   color: inherit;
@@ -1508,9 +1386,6 @@ h2 {
   margin-top: 34px;
 }
 
-/* Every accent hangs off this one layer: it is positioned against the wrap's
-   padding box, so nothing here can become a grid child, get clipped by the
-   stagebox, or leak outside the section's own stacking context. */
 .ways-decor {
   position: absolute;
   inset: 0;
@@ -1539,9 +1414,6 @@ h2 {
   animation-delay: -3s;
 }
 
-/* The copy is centred against the stagebox, so the only free room in this
-   column is the band under it. Both accents live there, side by side, clear
-   of the paragraph. */
 .ways-decor .heart {
   bottom: clamp(48px, 5vw, 72px);
   left: clamp(4px, 4vw, 64px);
@@ -1636,8 +1508,6 @@ h2 {
   overflow: hidden;
 }
 
-/* The phone is a body, not a card with a painted border: the ink is the
-   handset itself and the paper is the glass set into it. */
 .phone {
   width: 262px;
   height: 508px;
@@ -1660,8 +1530,6 @@ h2 {
   overflow: hidden;
 }
 
-/* Light falling across the glass — enough to read as a screen, faint enough
-   to stay out of the way of the dark card sitting on it. */
 .screen::after {
   content: '';
   position: absolute;
@@ -1963,9 +1831,7 @@ h2 {
     grid-template-columns: 1fr;
   }
 
-  /* Stacked, the top-right void and the under-copy band are both gone, so the
-     accents that filled them step aside. Crown and heart survive, re-anchored
-     to the only two spots that stay empty. */
+
   .ways-decor :is(.swoosh, .dashes, .slashes, .ring) {
     display: none;
   }
@@ -1983,8 +1849,6 @@ h2 {
     width: clamp(46px, 11vw, 62px);
   }
 }
-
-/* ---------------------------------------------------------------- marquee ---- */
 
 .band-wrap {
   overflow-x: clip;
@@ -2028,8 +1892,6 @@ h2 {
   }
 }
 
-/* ---------------------------------------------------------------- footer ---- */
-
 .foot {
   margin-top: auto;
   padding-top: var(--space-four);
@@ -2045,8 +1907,6 @@ h2 {
   min-height: 44px;
   text-decoration: underline;
 }
-
-/* --------------------------------------------------------- reduced motion ---- */
 
 @media (prefers-reduced-motion: reduce) {
   .bar-fill {

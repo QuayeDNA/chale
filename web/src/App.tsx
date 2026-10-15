@@ -12,7 +12,6 @@ export function App() {
       <Route path="/" element={<Home />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/privacy" element={<Privacy />} />
-      {/* Supabase email templates point here (token_hash flow). */}
       <Route path="/auth/bridge" element={<AuthBridge />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

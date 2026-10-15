@@ -3,25 +3,12 @@ import { useSearchParams } from 'react-router-dom';
 
 import { BrandFooter, BrandHeader } from '../components/BrandChrome';
 
-/** Same scheme the deep link uses in the app (app.json `scheme`). */
 const CALLBACK = 'chale://auth-callback';
 
-/** The verifyOtp types a link may carry; anything unknown defaults here. */
 const VERIFY_TYPES = ['signup', 'invite', 'magiclink', 'recovery', 'email_change', 'email'];
 
 type Phase = 'loading' | 'fallback' | 'invalid' | 'error';
 
-/**
- * The emailed-link landing page.
- *
- * Supabase's passwordless template links here with a token hash; this page
- * hands it to the app via the chale:// deep link. The superseded implicit
- * (#access_token) flow is gone — tokens are no longer in the URL.
- *
- * The reason this page exists at all: email clients and desktop browsers
- * can't be relied on to open a custom URL scheme, so we land somewhere
- * readable, try the deep link, and offer a button when it doesn't take.
- */
 export function AuthBridge() {
   const [params] = useSearchParams();
   const [phase, setPhase] = useState<Phase>('loading');
@@ -50,8 +37,6 @@ export function AuthBridge() {
 
     window.location.replace(target);
 
-    // If the app didn't take the hand-off, the browser is still showing this
-    // page after a beat — offer the button so nobody is stranded.
     const timer = window.setTimeout(() => {
       if (!document.hidden) setPhase('fallback');
     }, 1500);
@@ -95,7 +80,6 @@ export function AuthBridge() {
   );
 }
 
-/** Rebuilds the deep link for the fallback button's retry. */
 function buildTarget(params: URLSearchParams): string | null {
   const tokenHash = params.get('token_hash');
   const code = params.get('code');

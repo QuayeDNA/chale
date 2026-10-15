@@ -1,17 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Moon, Sun } from 'lucide-react';
 
-/**
- * The nav's theme toggle — a two-option segmented control that ports the tab
- * bar's active-indicator motion to the web (see
- * src/components/floating-tab-bar.tsx): a street-yellow pill springs to the
- * measured active option and retargets mid-flight.
- *
- * The spring runs on the UI thread over there (reanimated); here a small
- * requestAnimationFrame integrator carries the same constants, writing plain
- * React state the pill reads as transform/width.
- */
-
 type SiteTheme = 'light' | 'dark';
 
 const STORAGE_KEY = 'chale-theme';
@@ -30,13 +19,10 @@ function writeTheme(next: SiteTheme) {
     try {
       localStorage.setItem(STORAGE_KEY, next);
     } catch {
-      /* Private mode — the attribute still holds for this visit. */
+
     }
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', META_COLORS[next]);
   };
-  // A view transition crossfades the whole page between the two token sets,
-  // so grounds and surfaces glide instead of swapping instantly. Older
-  // browsers skip the animation and swap synchronously.
   if (typeof document.startViewTransition === 'function') {
     document.startViewTransition(apply);
   } else {
@@ -50,9 +36,6 @@ function step(x: number, v: number, target: number, dt: number) {
   return { x: x + nv * dt, v: nv };
 }
 
-/** Springs toward `target`; jumps there when `snap` (first place, or the
- *  visitor asked for reduced motion). Keeps its own velocity so a retarget
- *  mid-flight bends the curve instead of restarting it. */
 function useSpringTo(target: number, snap: boolean): number {
   const [value, setValue] = useState(target);
   const pos = useRef(target);
@@ -102,8 +85,6 @@ export function ThemeToggle() {
   const lightRef = useRef<HTMLButtonElement>(null);
   const darkRef = useRef<HTMLButtonElement>(null);
 
-  // Measure the active option like the tab bar's onLayout; re-measure on
-  // choice, font load, or resize so the pill never drifts off its icon.
   useLayoutEffect(() => {
     const track = trackRef.current;
     if (!track) return;
@@ -119,8 +100,6 @@ export function ThemeToggle() {
     return () => ro.disconnect();
   }, [theme]);
 
-  // First measure lands silently under the active icon; everything after it
-  // springs. Runs post-paint so the snap render above has already committed.
   useEffect(() => {
     if (rect && !placed) setPlaced(true);
   }, [rect, placed]);

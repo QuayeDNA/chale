@@ -22,8 +22,6 @@
     <meta name="twitter:description" content="Play through decks of question cards in person, or trade answers over text and voice when you're apart.">
     <meta name="twitter:image" content="./og-image.png">
     <script>
-      // Applies the stored theme before first paint so the page never
-      // flashes the wrong one. Mirrors ThemeToggle's read/write exactly.
       try {
         var t = localStorage.getItem('chale-theme');
         if (t === 'light' || t === 'dark') {

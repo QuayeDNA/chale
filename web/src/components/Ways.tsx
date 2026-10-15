@@ -6,13 +6,6 @@ import heartUrl from '../assets/chale-brand-svgs/doodles/heart.svg';
 import slashesGreenUrl from '../assets/chale-brand-svgs/doodles/slashes-green.svg';
 import swooshUrl from '../assets/chale-brand-svgs/doodles/squiggle-swoosh.svg';
 
-/**
- * Two ways to play — the segmented In person / Apart switch beside the
- * animated phone simulation. Ports the mockup's renderSb/auto2/typer logic:
- * in person is user-driven (turn the card, next question); apart auto-plays
- * a 4-step sequence every 3.2s while the stage is on screen.
- */
-
 const WCOPY: [string, string][] = [
   [
     'One phone, passed around the room',
@@ -55,7 +48,6 @@ export function Ways() {
   const sectionRef = useRef<HTMLElement>(null);
   const sbRef = useRef<HTMLDivElement>(null);
 
-  // Scroll reveal: .rv elements ease in once, then stay.
   useEffect(() => {
     const root = sectionRef.current;
     if (!root) return;
@@ -75,7 +67,6 @@ export function Ways() {
     return () => io.disconnect();
   }, []);
 
-  // The apart sequence only advances while the stage is on screen.
   useEffect(() => {
     const sb = sbRef.current;
     if (!sb) return;
@@ -90,7 +81,6 @@ export function Ways() {
     return () => clearInterval(id);
   }, [mode, visible]);
 
-  // The typing effect on the answer screen.
   useEffect(() => {
     if (mode !== 1 || step !== 1) {
       setTyped('');
@@ -105,7 +95,6 @@ export function Ways() {
     return () => clearInterval(id);
   }, [mode, step]);
 
-  // The second reveal card flips half a beat after the screen lands.
   useEffect(() => {
     setF2go(false);
     if (mode !== 1 || step !== 3) return;

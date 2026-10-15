@@ -1,9 +1,5 @@
 import { BrandFooter, BrandHeader } from '../components/BrandChrome';
 
-/**
- * REPLACE: this whole document is a structured draft. Swap the sections and
- * copy for the reviewed legal text; keep the markup and classes.
- */
 export function Privacy() {
   return (
     <div className="page">
@@ -34,7 +30,6 @@ export function Privacy() {
           <li>
             <strong>Basic diagnostics</strong> — app version and crash data from
             the stores, when you've opted into sharing them.{' '}
-            {/* REPLACE: confirm whether crash reporting is enabled. */}
           </li>
         </ul>
 
@@ -59,8 +54,6 @@ export function Privacy() {
           Chale runs on Supabase (hosting, database, and file storage) — a
           processor that stores data on our instruction. We don't sell your data
           and we don't share it with advertisers.{' '}
-          {/* REPLACE: list any additional processors, e.g. crash reporting or
-              email delivery, once confirmed. */}
         </p>
 
         <h2>5. How long we keep things</h2>
@@ -86,9 +79,6 @@ export function Privacy() {
           knowingly collect data from anyone under 13. If you believe a child is
           using the app without that consent, contact us and we'll remove the
           account.
-          {/* REVIEW: threshold set to 13+ with guardian consent under 16 to keep
-              family play possible; confirm against counsel for each launch
-              market (GDPR sets the digital-consent age at 13–16 by country). */}
         </p>
 
         <h2>8. Changes</h2>
@@ -99,7 +89,7 @@ export function Privacy() {
 
         <h2>9. Contact</h2>
         <p>
-          {/* REPLACE: insert the real contact email or form. */}Privacy
+          Privacy
           questions: <a href="mailto:privacy@example.com">privacy@example.com</a>.
         </p>
       </main>

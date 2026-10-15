@@ -9,18 +9,6 @@ import {
 } from 'react';
 import { Heart, Home, MessageCircle, Sparkle, Sun, Users } from 'lucide-react';
 
-/**
- * The draggable hero deck — eight sample cards fanned behind the current
- * one, with flick physics, prev/next controls, and a slow auto-advance that
- * yields the moment the visitor touches it. A faithful port of the mockup's
- * deck script: same card data, same layout constants, same cubic solver.
- *
- * The float position `p` and the animation loop live in refs and write
- * straight to the DOM (60fps without re-renders); React state only carries
- * the settled index for the counter.
- */
-
-/** Deck artwork: name, card fill, card ink, tile icon, question count. */
 const DECKS = {
   love: { name: 'Love & Relationships', fill: '#D85A30', ink: '#fff', Icon: Heart, count: 100 },
   deep: { name: 'Deep Talks', fill: '#2B4BD8', ink: '#fff', Icon: MessageCircle, count: 80 },
@@ -32,7 +20,6 @@ const DECKS = {
 
 type DeckKey = keyof typeof DECKS;
 
-/** The eight hero cards: [deck, question]. */
 const CARDS: [DeckKey, string][] = [
   ['love', 'When did you last feel completely understood by me?'],
   ['deep', 'What belief did you hold at 18 that you have let go of?'],
@@ -45,11 +32,9 @@ const CARDS: [DeckKey, string][] = [
 ];
 
 const N = CARDS.length;
-/** The layout preset: slide duration, off-screen throw, exit tilt, stack
- *  lift, stack shrink, visible depth, shade, fan. Untouched from the mockup. */
+
 const C = { dur: 520, shift: 1.15, tilt: 15, lift: 30, scale: 0.07, depth: 2, shade: 0.08, fan: 3 };
 
-/** Cubic-bezier solver (Newton–Raphson), as in the mockup. */
 function bez(x1: number, y1: number, x2: number, y2: number) {
   return (t: number): number => {
     if (t <= 0) return 0;
@@ -94,7 +79,6 @@ export function DeckStack() {
   });
   const [pos, setPos] = useState(0);
 
-  /** Places every card for the current float position. */
   const layout = useCallback(() => {
     const deck = deckRef.current;
     if (!deck) return;
@@ -138,7 +122,6 @@ export function DeckStack() {
     });
   }, []);
 
-  /** Slides the float position to card n. */
   const go = useCallback(
     (n: number) => {
       const s = st.current;
@@ -165,9 +148,6 @@ export function DeckStack() {
     [layout],
   );
 
-  // First paint + the idle auto-play: it loops the whole stack, wraps back
-  // to the first card, and yields the moment the visitor takes over —
-  // resuming only after 10s untouched (or the tab hidden).
   useEffect(() => {
     layout();
     const auto = setInterval(() => {
@@ -284,7 +264,6 @@ export function DeckStack() {
             </div>
           );
         })}
-      {/* The deck's only text: invisible, but announced as cards change. */}
       <span className="vh" aria-live="polite">
         Card {pos + 1} of {N}
       </span>

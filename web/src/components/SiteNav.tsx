@@ -2,15 +2,6 @@ import lockupLightNoSubtitle from '../assets/brand/lockup-no-subtitle-light.svg'
 import lockupDarkNoSubtitle from '../assets/brand/lockup-no-subtitle-dark.svg';
 import { ThemeToggle } from './ThemeToggle';
 
-/**
- * The site nav — sticky and blurred, carrying the no-subtitle lockup, the
- * section anchors, and the store pill.
- *
- * The lockup pair is the same rule the hero runs: the artwork swaps with the
- * visitor's colour scheme, so the bar never shows ink on ink. The bar itself
- * is the mockup's translucent cream expressed as color-mix over the theme
- * vars, so it holds in dark mode where the fixed hexes would be a slab.
- */
 export function SiteNav() {
   return (
     <>

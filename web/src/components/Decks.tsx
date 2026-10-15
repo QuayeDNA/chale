@@ -109,10 +109,6 @@ export function Decks() {
     return () => io.disconnect();
   }, []);
 
-  /* Capture would retarget the click to the shelf and starve the card's own
-     handler, so a mouse drag is tracked on the window instead. Touch never
-     comes through here: the browser pans it natively and the tap lands on
-     the card as an ordinary click. */
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     suppressFlip.current = false;
     moved.current = 0;

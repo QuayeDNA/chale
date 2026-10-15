@@ -6,12 +6,6 @@ import star4Url from '../assets/chale-brand-svgs/doodles/star-4.svg';
 import slashesGreenUrl from '../assets/chale-brand-svgs/doodles/slashes-green.svg';
 import { DeckStack } from './DeckStack';
 
-/**
- * The hero. Copy on the left (headline sized to its own column), the draggable
- * deck on a stage on the right. The page background lives behind the whole
- * landing now; the stage dressing here (doodles, hint) is aria-hidden and
- * pointer-events: none.
- */
 export function Hero() {
   return (
     <header className="hero" id="top">

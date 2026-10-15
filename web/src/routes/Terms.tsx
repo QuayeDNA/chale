@@ -1,9 +1,5 @@
 import { BrandFooter, BrandHeader } from '../components/BrandChrome';
 
-/**
- * REPLACE: this whole document is a structured draft. Swap the sections and
- * copy for the reviewed legal text; keep the markup and classes.
- */
 export function Terms() {
   return (
     <div className="page">
@@ -81,8 +77,6 @@ export function Terms() {
 
         <h2>7. Disclaimers &amp; liability</h2>
         <p>
-          {/* REPLACE: insert the reviewed disclaimer and limitation-of-liability
-              language, including the caps and exclusions counsel recommends. */}
           The service is provided without warranties. To the maximum extent
           permitted by law, we are not liable for indirect or consequential loss
           arising from your use of Chale.
@@ -104,7 +98,7 @@ export function Terms() {
 
         <h2>10. Contact</h2>
         <p>
-          {/* REPLACE: insert the real contact email or form. */}Questions about
+          Questions about
           these terms: <a href="mailto:legal@example.com">legal@example.com</a>.
         </p>
       </main>

@@ -1,10 +1,5 @@
 import { Fragment } from 'react';
 
-/**
- * The tilted ink marquee under the hero — the questions scroll by on a 60s
- * loop, pausing while hovered. Doubled so the -50% keyframe wraps cleanly.
- * Pure decoration (aria-hidden); the real questions live in the deck.
- */
 const QUESTIONS = [
   'When did you last feel completely understood by me?',
   'What belief did you hold at 18 that you let go of?',
