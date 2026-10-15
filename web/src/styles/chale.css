@@ -1201,62 +1201,238 @@ img.brand-dark {
   word-break: break-all;
 }
 
-/* --------------------------------------------------------------- landing ---- */
+/* ----------------------------------------------------------------- decks ---- */
 
-.landing {
-  max-width: var(--wide);
+/* Every rule below is scoped to the section. The mockup leans on single-letter
+   classes (.t .f .b .c .q .m); unscoped they would repaint the hero, the ways
+   copy and the footer. */
+
+#decks {
+  padding-top: 0;
 }
 
-.landing-section {
-  padding: var(--space-five) 0;
+#decks .shelf {
+  display: flex;
+  gap: 22px;
+  padding: 46px var(--pad) 36px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  perspective: 1400px;
+  cursor: grab;
 }
 
-.landing-section h2 {
-  margin: 0 0 var(--space-four);
+#decks .shelf::-webkit-scrollbar {
+  display: none;
+}
+
+#decks .shelf.is-dragging {
+  cursor: grabbing;
+}
+
+#decks .decks-set {
+  display: flex;
+  gap: 22px;
+  flex: none;
+}
+
+#decks .dk {
+  flex: none;
+  position: relative;
+  width: 250px;
+  height: 350px;
+  perspective: 1000px;
+  text-align: left;
+}
+
+#decks .dk .t {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transition: transform .25s ease-out;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+}
+
+#decks .dk .fl {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transition: transform .8s cubic-bezier(.3, 1.25, .4, 1);
+}
+
+#decks .dk.on .fl {
+  transform: rotateY(180deg);
+}
+
+#decks .dk .f,
+#decks .dk .b {
+  position: absolute;
+  inset: 0;
+  border-radius: 26px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  backface-visibility: hidden;
+  color: var(--k);
+  background: radial-gradient(120% 90% at 15% 0%, color-mix(in srgb, var(--f) 78%, white), var(--f));
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px #fff3, 0 24px 34px -18px #2b1a0f66;
+}
+
+/* Content sits above the watermark; the watermark and the paid tag opt back
+   out to absolute. */
+#decks .dk .f > * {
+  position: relative;
+}
+
+#decks .dk .f::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--gx, 30%) var(--gy, 10%), #fff5, transparent 55%);
+  opacity: var(--gl, 0);
+  transition: opacity .25s;
+  pointer-events: none;
+}
+
+#decks .dk .f > .art {
+  position: absolute;
+  right: -64px;
+  bottom: -64px;
+  width: 230px;
+  height: 230px;
+  color: rgba(255, 255, 255, 0.16);
+  pointer-events: none;
+}
+
+#decks .dk .b {
+  transform: rotateY(180deg);
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  box-shadow: 0 24px 34px -18px #2b1a0f55;
+}
+
+#decks .dk .b .c {
+  position: absolute;
+  right: -60px;
+  top: -60px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  border: 26px solid color-mix(in srgb, var(--f) 20%, transparent);
+}
+
+#decks .dk .b .q {
   font-family: var(--font-display);
   font-size: 22px;
-  line-height: 28px;
-  text-align: center;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
 }
 
-.steps {
-  counter-reset: step;
-  display: grid;
-  gap: var(--space-three);
-  margin: 0;
-  padding: 0;
-  list-style: none;
+#decks .dk h3 {
+  position: relative;
+  font-size: 25px;
 }
 
-.steps li {
-  counter-increment: step;
+#decks .dk .m {
+  position: relative;
+  margin-top: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+#decks .dk .tag {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 2;
   display: flex;
-  gap: var(--space-three);
-  align-items: flex-start;
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 22px;
-}
-
-.steps li::before {
-  content: counter(step);
-  display: flex;
+  gap: 5px;
   align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  width: 32px;
-  height: 32px;
+  padding: 5px 9px;
   border-radius: var(--radius-pill);
-  background: var(--street);
-  color: #2b1a0f;
-  font-family: var(--font-display);
-  font-size: 14px;
+  background: #0008;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
 }
 
-.steps li strong {
+#decks .dk.lock .f {
+  filter: saturate(0.6) brightness(0.85);
+}
+
+#decks .dk.lock .b .q {
+  filter: blur(6px);
+}
+
+#decks .flipnote {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+/* The mockup's 1-2-3 strip, which retires the old landing steps. */
+#decks .steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 48px;
+  border-top: 2px solid var(--ink);
+}
+
+#decks .steps > div {
+  padding: 26px 28px 0 0;
+}
+
+#decks .steps > div + div {
+  padding-left: 28px;
+  border-left: 1px solid var(--border);
+}
+
+#decks .steps b {
   display: block;
-  color: var(--ink);
-  font-size: 15px;
+  font-family: var(--font-display);
+  font-size: clamp(56px, 7vw, 96px);
+  line-height: 1;
+  color: var(--street);
+  -webkit-text-stroke: 2px var(--ink);
+}
+
+#decks .steps h3 {
+  margin: 10px 0 8px;
+  font-size: 24px;
+}
+
+#decks .steps p {
+  font-size: 16px;
+  color: color-mix(in srgb, var(--ink) 72%, var(--paper));
+}
+
+@media (max-width: 860px) {
+  #decks .steps {
+    grid-template-columns: 1fr;
+  }
+  #decks .steps > div + div {
+    margin-top: 22px;
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid var(--border);
+  }
+  #decks .shelf {
+    padding-top: 34px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #decks .dk .t {
+    transition: none;
+  }
+  #decks .dk .f::after {
+    transition: none;
+  }
 }
 
 /* ------------------------------------------------------------------ ways ---- */
