@@ -249,13 +249,13 @@ export function Ways() {
                   <span className="av" style={{ background: '#2B1A0F' }}>
                     Y
                   </span>
-                  Your turn
+                  <span>Your turn</span>
                 </div>
                 <div className="who b">
                   <span className="av" style={{ background: '#D85A30' }}>
                     A
                   </span>
-                  Ama&apos;s turn
+                  <span>Ama&apos;s turn</span>
                 </div>
                 <div className="phone">
                   <div className="ph-h">

@@ -1261,6 +1261,11 @@ section {
   padding: clamp(72px, 10vw, 140px) 0;
 }
 
+h2,
+h3 {
+  line-height: 1.1;
+}
+
 h2 {
   font-size: clamp(36px, 5.4vw, 68px);
   max-width: 14ch;
@@ -1285,7 +1290,7 @@ h2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: clamp(24px, 5vw, 80px);
-  align-items: center;
+  align-items: start;
   margin-top: 44px;
 }
 
@@ -1324,7 +1329,7 @@ h2 {
   color: var(--paper);
 }
 
-.wcopy h3 {
+#ways .wcopy h3 {
   font-size: clamp(26px, 3.2vw, 38px);
   margin-bottom: 14px;
 }
@@ -1476,15 +1481,41 @@ h2 {
 }
 
 @media (max-width: 560px) {
+  .phone {
+    width: 204px;
+    height: 470px;
+  }
+
+  .who {
+    top: 44%;
+    font-size: 10px;
+    gap: 4px;
+  }
+
   .who.a {
-    left: 6px;
+    left: 8px;
   }
+
   .who.b {
-    right: 6px;
+    right: 8px;
   }
+
+  .who span:not(.av) {
+    white-space: nowrap;
+  }
+
   .who .av {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+
+  .stagebox::after {
+    right: -70px;
+    top: -70px;
+    width: 140px;
+    height: 140px;
+    border-width: 24px;
   }
 }
 
