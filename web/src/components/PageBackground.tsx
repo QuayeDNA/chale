@@ -1,8 +1,9 @@
 /**
- * The landing's ambient background: a fixed layer of six to seven sparse
- * brand washes in varied organic shapes, sitting behind the whole page
- * (z-index -1, between the html ground and the content). Static by design —
- * the marquee, deck, and simulations carry the page's motion.
+ * The landing's ambient background: a fixed layer of seven sparse brand
+ * washes in varied organic shapes, sitting behind the whole page (z-index
+ * -1, between the html ground and the content). Each blob drifts on its own
+ * slow desynced loop — the marquee, deck, and simulations are sharper motion,
+ * this is the room breathing behind them.
  */
 export function PageBackground() {
   return (
