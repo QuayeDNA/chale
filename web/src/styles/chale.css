@@ -481,15 +481,14 @@ html {
   will-change: transform, opacity;
 }
 
-.hc::before {
-  content: "";
+/* Each deck's own icon as a giant watermark, tucked into the corner where
+   the ring used to sit. Same lucide glyph as the tile, oversized. */
+.hc .art {
   position: absolute;
-  right: -90px;
-  bottom: -90px;
-  width: 290px;
-  height: 290px;
-  border-radius: 50%;
-  border: 38px solid #ffffff1f;
+  right: -64px;
+  bottom: -64px;
+  color: rgba(255, 255, 255, 0.16);
+  pointer-events: none;
 }
 
 .hc > * {

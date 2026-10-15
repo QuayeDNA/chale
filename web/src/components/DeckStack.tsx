@@ -7,7 +7,7 @@ import {
   type KeyboardEvent,
   type PointerEvent,
 } from 'react';
-import { Heart, Home, MessageCircle, Sparkles, Sun, Users } from 'lucide-react';
+import { Heart, Home, MessageCircle, Sparkle, Sun, Users } from 'lucide-react';
 
 /**
  * The draggable hero deck — eight sample cards fanned behind the current
@@ -25,7 +25,7 @@ const DECKS = {
   love: { name: 'Love & Relationships', fill: '#D85A30', ink: '#fff', Icon: Heart, count: 100 },
   deep: { name: 'Deep Talks', fill: '#2B4BD8', ink: '#fff', Icon: MessageCircle, count: 80 },
   fun: { name: 'Fun & Silly', fill: '#F5B400', ink: '#2B1A0F', Icon: Sun, count: 60 },
-  dreams: { name: 'Life & Dreams', fill: '#1E7A3C', ink: '#fff', Icon: Sparkles, count: 75 },
+  dreams: { name: 'Life & Dreams', fill: '#1E7A3C', ink: '#fff', Icon: Sparkle, count: 75 },
   family: { name: 'Family', fill: '#639922', ink: '#fff', Icon: Home, count: 65 },
   friends: { name: 'Friends', fill: '#D4537E', ink: '#fff', Icon: Users, count: 80 },
 } as const;
@@ -89,6 +89,7 @@ export function DeckStack() {
     idx: 0,
     anim: null as { f: number; to: number; t0: number } | null,
     user: false,
+    lastTouch: 0,
     raf: 0,
   });
   const [pos, setPos] = useState(0);
@@ -164,15 +165,17 @@ export function DeckStack() {
     [layout],
   );
 
-  // First paint + the slow auto-advance, which stops for good the moment the
-  // visitor takes over (or the tab hides).
+  // First paint + the idle auto-play: it loops the whole stack, wraps back
+  // to the first card, and yields the moment the visitor takes over —
+  // resuming only after 10s untouched (or the tab hidden).
   useEffect(() => {
     layout();
     const auto = setInterval(() => {
       const s = st.current;
-      if (s.user || document.hidden) return;
-      if (s.idx < N - 3) go(s.idx + 1);
-      else clearInterval(auto);
+      if (document.hidden) return;
+      if (s.user && performance.now() - s.lastTouch < 10000) return;
+      s.user = false;
+      go(s.idx >= N - 1 ? 0 : s.idx + 1);
     }, 3800);
     return () => {
       clearInterval(auto);
@@ -183,6 +186,7 @@ export function DeckStack() {
 
   const claim = () => {
     st.current.user = true;
+    st.current.lastTouch = performance.now();
   };
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
@@ -266,6 +270,7 @@ export function DeckStack() {
               className="hc"
               style={{ '--f': d.fill, '--k': d.ink } as CSSProperties}
             >
+              <Icon size={240} strokeWidth={1.4} className="art" aria-hidden="true" />
               <div className="top">
                 <span className="ic">
                   <Icon size={22} strokeWidth={2.2} aria-hidden="true" />
