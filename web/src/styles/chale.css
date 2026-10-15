@@ -444,28 +444,156 @@ html {
   color: var(--muted);
 }
 
-/* Stands in for the draggable deck stack: same footprint (380x500, radius
-   28) so the layout doesn't shift when the real one lands. */
-.deck-placeholder {
+/* The draggable hero deck. Card artwork (--f fill, --k ink) is verbatim from
+   the mockup; the chrome around it (controls, counter, hint) runs on theme
+   vars so it holds in dark mode. Focus keeps the global street ring: the
+   deck is keyboard-operable, so it must show where focus is. */
+.deck {
+  position: relative;
   width: min(380px, 84vw);
   height: 500px;
   margin: 0 auto;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+
+.deck:active {
+  cursor: grabbing;
+}
+
+.hc {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 460px;
+  border-radius: 28px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: var(--k);
+  background: radial-gradient(120% 90% at 15% 0%, color-mix(in srgb, var(--f) 78%, white), var(--f));
+  box-shadow: inset 0 0 0 1px #fff3, 0 24px 40px -18px #2b1a0f55;
+  overflow: hidden;
+  will-change: transform, opacity;
+}
+
+.hc::before {
+  content: "";
+  position: absolute;
+  right: -90px;
+  bottom: -90px;
+  width: 290px;
+  height: 290px;
+  border-radius: 50%;
+  border: 38px solid #ffffff1f;
+}
+
+.hc > * {
+  position: relative;
+}
+
+.hc .top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ic {
+  width: 46px;
+  height: 46px;
+  border-radius: 15px;
+  background: #0003;
   display: grid;
   place-items: center;
-  padding: 24px;
-  border: 1.5px dashed var(--border);
-  border-radius: 28px;
-  color: var(--muted);
-  font-size: 14px;
-  font-weight: 500;
+}
+
+.chip {
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  background: #0003;
+  padding: 6px 11px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+
+.hc .q {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(26px, 3.2vw, 32px);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+
+.hc .m {
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+/* Depth shading over the cards behind the current one. */
+.shd {
+  position: absolute !important;
+  inset: 0;
+  background: #2b1a0f;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.dctl {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.cb {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink);
+  background: transparent;
+  color: inherit;
+  font-size: 20px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, transform 0.2s;
+}
+
+.cb:hover {
+  background: var(--ink);
+  color: var(--paper);
+  transform: scale(1.08);
+}
+
+.cnt {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 15px;
+  min-width: 70px;
   text-align: center;
+}
+
+.hint {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 10px;
 }
 
 @media (max-width: 1023px) {
   .hero .wrap {
     grid-template-columns: 1fr;
   }
-  .deck-placeholder {
+  .deck {
     margin-top: 20px;
   }
 }

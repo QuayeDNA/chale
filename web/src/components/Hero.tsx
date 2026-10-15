@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
 
+import { DeckStack } from './DeckStack';
+
 /**
  * The hero — eyebrow, the giant headline with its self-drawing underline,
  * lede, the two actions, and the small print, over the drifting rings.
- * The right column is a same-footprint placeholder until the draggable
- * deck stack lands.
+ * The right column is the draggable deck stack.
  */
 export function Hero() {
   return (
@@ -39,7 +40,7 @@ export function Hero() {
           <p className="small">The beta isn't public yet. The card on the right is real: drag it.</p>
         </div>
         <div>
-          <div className="deck-placeholder">Draggable deck stack lands here</div>
+          <DeckStack />
         </div>
       </div>
     </header>
