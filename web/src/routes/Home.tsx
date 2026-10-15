@@ -1,32 +1,15 @@
 import { BrandFooter } from '../components/BrandChrome';
+import { Hero } from '../components/Hero';
 import { SiteNav } from '../components/SiteNav';
 
 export function Home() {
   return (
     <>
       <SiteNav />
+      <Hero />
       <div className="page">
 
       <main className="landing">
-        <section className="landing-hero">
-          <h1>Better questions. Deeper chats.</h1>
-          <p className="lede">
-            Chale is decks of question cards for the people you're close to.
-            Play through them together in person, or trade answers over text
-            and voice when you're apart.
-          </p>
-          <div className="actions">
-            {/* No store links yet — the beta isn't public. The buttons stay in
-                the layout so the design doesn't change the day they exist. */}
-            <span className="button button-block" aria-disabled="true">
-              Coming to Android &amp; iOS
-            </span>
-            <a className="button button-outline button-block" href="/terms">
-              Read the terms
-            </a>
-          </div>
-        </section>
-
         <section className="landing-section">
           <h2>Two ways to play</h2>
           <div className="modes">
