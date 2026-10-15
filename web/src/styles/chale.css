@@ -25,6 +25,7 @@
 
   --measure: 720px; /* legal reading column */
   --wide: 960px; /* landing column */
+  --pad: clamp(20px, 5vw, 64px); /* landing page gutter */
 
   --font-display: 'Archivo Black', system-ui, sans-serif;
   --font-body: 'Spline Sans', system-ui, sans-serif;
@@ -78,6 +79,96 @@ a {
   align-items: center;
   gap: var(--space-four);
   padding: var(--space-four);
+}
+
+/* The landing works at body width (full-bleed sections like the rotated band
+   and the reveal panel), so it brings its own padded column. */
+.wrap {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 var(--pad);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* ------------------------------------------------------------------ nav ---- */
+
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(14px);
+  background: color-mix(in srgb, var(--paper) 80%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+}
+
+.site-nav .wrap {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  height: 68px;
+}
+
+.logo {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font-family: var(--font-display);
+  font-size: 26px;
+  letter-spacing: -0.04em;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+/* The dot after the wordmark: the street yellow as a full stop, not a wash. */
+.logo i {
+  display: block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--street);
+}
+
+.site-nav ul {
+  display: flex;
+  gap: 26px;
+  margin: 0 0 0 auto;
+  padding: 0;
+  list-style: none;
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.site-nav ul a {
+  color: var(--muted);
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.site-nav ul a:hover {
+  color: var(--ink);
+}
+
+.pill {
+  padding: 10px 16px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 13.5px;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .site-nav ul {
+    display: none;
+  }
+  .pill {
+    margin-left: auto;
+  }
 }
 
 /* ---------------------------------------------------------------- brand ---- */

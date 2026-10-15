@@ -1,9 +1,11 @@
-import { BrandFooter, BrandHeader } from '../components/BrandChrome';
+import { BrandFooter } from '../components/BrandChrome';
+import { SiteNav } from '../components/SiteNav';
 
 export function Home() {
   return (
-    <div className="page">
-      <BrandHeader />
+    <>
+      <SiteNav />
+      <div className="page">
 
       <main className="landing">
         <section className="landing-hero">
@@ -76,6 +78,7 @@ export function Home() {
       </main>
 
       <BrandFooter />
-    </div>
+      </div>
+    </>
   );
 }
