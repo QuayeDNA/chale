@@ -218,7 +218,7 @@ export function Ways() {
           <i></i>Two ways to play
         </span>
         <h2 className="rv" style={{ marginTop: 14 }}>
-          Same deck. Near or far.
+          Same deck. {'Near\u00a0or far.'}
         </h2>
         <div className="ways rv">
           <div>
@@ -264,41 +264,47 @@ export function Ways() {
                   <span>Ama&apos;s turn</span>
                 </div>
                 <div className="phone">
-                  <div className="ph-h">
-                    <span>DEEP TALKS</span>
-                    <span>{qi + 1} / 20</span>
+                  <div className="screen">
+                    <span className="notch" aria-hidden="true" />
+                    <div className="ph-h">
+                      <span>DEEP TALKS</span>
+                      <span>{qi + 1} / 20</span>
+                    </div>
+                    <div className="mc" style={{ transform: `rotate(${turned ? 180 : 0}deg)` }}>
+                      <div className="t">READ IT OUT LOUD</div>
+                      <div className="qq">{QP[qi % 3]}</div>
+                      <div className="t">NO TYPING, JUST TALK</div>
+                    </div>
+                    <button className="mbtn" type="button" onClick={() => setTurned((t) => !t)}>
+                      Turn to face them
+                    </button>
+                    <button
+                      className="mbtn"
+                      type="button"
+                      style={{ background: 'var(--ink)', color: 'var(--paper)', marginTop: 8 }}
+                      onClick={() => setQi((q) => q + 1)}
+                    >
+                      Next ›
+                    </button>
                   </div>
-                  <div className="mc" style={{ transform: `rotate(${turned ? 180 : 0}deg)` }}>
-                    <div className="t">READ IT OUT LOUD</div>
-                    <div className="qq">{QP[qi % 3]}</div>
-                    <div className="t">NO TYPING, JUST TALK</div>
-                  </div>
-                  <button className="mbtn" type="button" onClick={() => setTurned((t) => !t)}>
-                    Turn to face them
-                  </button>
-                  <button
-                    className="mbtn"
-                    type="button"
-                    style={{ background: 'var(--ink)', color: 'var(--paper)', marginTop: 8 }}
-                    onClick={() => setQi((q) => q + 1)}
-                  >
-                    Next ›
-                  </button>
                 </div>
               </>
             ) : (
               <div className="phone">
-                {apartScreens[step]}
-                <div className="dots">
-                  {[0, 1, 2, 3].map((i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      className={i === step ? 'on' : ''}
-                      aria-label={`Step ${i + 1}`}
-                      onClick={() => setStep(i)}
-                    />
-                  ))}
+                <div className="screen">
+                  <span className="notch" aria-hidden="true" />
+                  {apartScreens[step]}
+                  <div className="dots">
+                    {[0, 1, 2, 3].map((i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        className={i === step ? 'on' : ''}
+                        aria-label={`Step ${i + 1}`}
+                        onClick={() => setStep(i)}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
             )}

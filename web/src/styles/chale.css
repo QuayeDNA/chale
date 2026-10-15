@@ -1319,7 +1319,7 @@ h2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: clamp(24px, 5vw, 80px);
-  align-items: start;
+  align-items: center;
   margin-top: 34px;
 }
 
@@ -1354,21 +1354,21 @@ h2 {
   animation-delay: -3s;
 }
 
-/* Anchored from the bottom rather than the top: the stagebox sets the floor of
-   this section, so the band under the copy keeps its proportions whatever the
-   copy does. */
+/* The copy is centred against the stagebox, so the only free room in this
+   column is the band under it. Both accents live there, side by side, clear
+   of the paragraph. */
 .ways-decor .heart {
-  bottom: clamp(190px, 15vw, 240px);
+  bottom: clamp(48px, 5vw, 72px);
   left: clamp(4px, 4vw, 64px);
-  width: clamp(58px, 6vw, 86px);
+  width: clamp(50px, 5vw, 72px);
   opacity: 0.55;
   animation-delay: -1.5s;
 }
 
 .ways-decor .dashes {
-  bottom: clamp(104px, 9vw, 150px);
-  left: clamp(150px, 22vw, 320px);
-  width: clamp(76px, 8vw, 118px);
+  bottom: clamp(56px, 5vw, 84px);
+  left: clamp(150px, 18vw, 260px);
+  width: clamp(70px, 7vw, 104px);
   opacity: 0.5;
   animation-delay: -4.5s;
 }
@@ -1451,17 +1451,51 @@ h2 {
   overflow: hidden;
 }
 
+/* The phone is a body, not a card with a painted border: the ink is the
+   handset itself and the paper is the glass set into it. */
 .phone {
   width: 262px;
   height: 508px;
-  border-radius: 38px;
-  background: var(--paper);
-  box-shadow: 0 0 0 7px var(--ink), 0 30px 50px -20px #2B1A0F66;
-  padding: 20px 16px;
+  border-radius: 40px;
+  background: var(--ink);
+  box-shadow: 0 30px 50px -20px #2B1A0F66;
+  padding: 7px;
   position: relative;
   z-index: 2;
+}
+
+.screen {
+  position: relative;
+  height: 100%;
   display: flex;
   flex-direction: column;
+  padding: 20px 16px;
+  border-radius: 33px;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+/* Light falling across the glass — enough to read as a screen, faint enough
+   to stay out of the way of the dark card sitting on it. */
+.screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(118deg, #ffffff5c 0%, #ffffff00 42%);
+  pointer-events: none;
+}
+
+.notch {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 72px;
+  height: 18px;
+  margin-left: -36px;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  z-index: 4;
+  pointer-events: none;
 }
 
 .mc {
@@ -1563,6 +1597,20 @@ h2 {
   .phone {
     width: 204px;
     height: 470px;
+    border-radius: 32px;
+    padding: 5px;
+  }
+
+  .screen {
+    border-radius: 27px;
+    padding: 18px 13px;
+  }
+
+  .notch {
+    top: 6px;
+    width: 56px;
+    height: 14px;
+    margin-left: -28px;
   }
 
   .who {
