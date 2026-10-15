@@ -426,8 +426,10 @@ html {
   border: 1.5px solid var(--ink);
 }
 
+/* The mockup pairs the lift with a -1deg tilt; dropped — it reads as a wobble,
+   not a lift. Pure vertical rise, same spring. */
 .btn:hover:not([aria-disabled]) {
-  transform: translateY(-3px) rotate(-1deg);
+  transform: translateY(-3px);
   box-shadow: 0 10px 0 -2px color-mix(in srgb, var(--ink) 13%, transparent);
 }
 
@@ -581,14 +583,6 @@ img.brand-dark {
 .button-block {
   display: flex;
   width: 100%;
-}
-
-.actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-two);
-  width: 100%;
-  max-width: var(--measure);
 }
 
 /* ------------------------------------------------------------- legal doc ---- */
