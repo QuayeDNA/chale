@@ -13,8 +13,8 @@ const WCOPY: [string, string][] = [
     'Put the phone in the middle. The deck deals the questions, and you take turns answering out loud. Nobody types anything. Turn the card to face whoever is reading.',
   ],
   [
-    'One card a day, answered your way',
-    "When you are apart, the day's card comes to both of you. Answer in text or in your own voice, then wait for the reveal.",
+    'Same game, different rooms',
+    'The same deck and the same turns — you just answer from where you are, in text or in your own voice. Nothing shows until you both flip.',
   ],
 ];
 
@@ -115,11 +115,11 @@ export function Ways() {
   const apartScreens = [
     <div className="scr" key="s0">
       <div className="ph-h">
-        <span>TODAY</span>
+        <span>CARD 4</span>
         <span>with Ama</span>
       </div>
       <div className="mc" style={{ flex: 1 }}>
-        <div className="t">TODAY'S CARD</div>
+        <div className="t">THE CARD</div>
         <div className="qq">{QP[0]}</div>
         <div className="t">ONE QUESTION, TWO ANSWERS</div>
       </div>
@@ -174,7 +174,7 @@ export function Ways() {
         </span>
       </div>
       <h4>Held until Ama answers</h4>
-      <p style={{ color: 'var(--muted)', fontSize: 14 }}>We&apos;ll nudge you the second she does.</p>
+      <p style={{ color: 'var(--muted)', fontSize: 14 }}>The flip unlocks when you&apos;re both in.</p>
     </div>,
     <div className="scr" key="s3">
       <div className="ph-h">
