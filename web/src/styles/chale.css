@@ -296,9 +296,17 @@ html {
 
 .hero .wrap {
   display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
+  /* minmax(0, …) plus min-width: 0 below: the underlined phrase is unbroken
+     and wider than its track at several widths, and without this the grid's
+     automatic minimums blow the tracks out — shoving the deck off-screen
+     and shifting the page right. The grid must never exceed the wrap. */
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
   gap: clamp(24px, 5vw, 72px);
   align-items: center;
+}
+
+.hero .wrap > * {
+  min-width: 0;
 }
 
 /* The drifting circles behind the headline. Ring tints are mixed toward
@@ -339,7 +347,17 @@ html {
   font-weight: 400;
   letter-spacing: -0.03em;
   line-height: 1.02;
-  font-size: clamp(44px, 7.4vw, 96px);
+  /* Fluid against the layout, not the viewport alone: the underlined phrase
+     is ~10em wide and unbroken, so side-by-side type must stay small enough
+     to fit its track (see the grid note above). Stacked text gets the big
+     sizes, where the full width is available. */
+  font-size: clamp(28px, 8vw, 72px);
+}
+
+@media (min-width: 1024px) {
+  .hero h1 {
+    font-size: clamp(42px, 4vw, 50px);
+  }
 }
 
 /* The underlined phrase never breaks; the stroke draws itself once. */
@@ -442,7 +460,7 @@ html {
   text-align: center;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 1023px) {
   .hero .wrap {
     grid-template-columns: 1fr;
   }
