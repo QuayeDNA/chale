@@ -2,6 +2,7 @@ import { BrandFooter } from '../components/BrandChrome';
 import { Hero } from '../components/Hero';
 import { Marquee } from '../components/Marquee';
 import { SiteNav } from '../components/SiteNav';
+import { Ways } from '../components/Ways';
 
 export function Home() {
   return (
@@ -9,31 +10,10 @@ export function Home() {
       <SiteNav />
       <Hero />
       <Marquee />
+      <Ways />
       <div className="page">
 
       <main className="landing">
-        <section className="landing-section">
-          <h2>Two ways to play</h2>
-          <div className="modes">
-            <div className="card mode">
-              <span className="eyebrow">In person</span>
-              <h3>One phone, passed around the room</h3>
-              <p>
-                Put the phone in the middle. The deck deals the questions, two
-                people take turns answering out loud — nobody types anything.
-              </p>
-            </div>
-            <div className="card mode">
-              <span className="eyebrow">Apart</span>
-              <h3>One card a day, answered your way</h3>
-              <p>
-                When you're apart, the day's card comes to both of you. Answer
-                as text or voice, then reveal when you've both had your turn.
-              </p>
-            </div>
-          </div>
-        </section>
-
         <section className="landing-section">
           <h2>How it works</h2>
           <ol className="steps">

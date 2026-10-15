@@ -823,38 +823,6 @@ img.brand-dark {
   text-align: center;
 }
 
-.modes {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--space-three);
-}
-
-.mode .eyebrow {
-  display: inline-flex;
-  margin-bottom: var(--space-two);
-  padding: var(--space-half) var(--space-three);
-  border-radius: var(--radius-pill);
-  background: var(--street);
-  color: #2b1a0f;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 20px;
-}
-
-.mode h3 {
-  margin: 0 0 var(--space-two);
-  font-family: var(--font-display);
-  font-size: 16px;
-  line-height: 22px;
-}
-
-.mode p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 22px;
-}
-
 .steps {
   counter-reset: step;
   display: grid;
@@ -893,6 +861,390 @@ img.brand-dark {
   display: block;
   color: var(--ink);
   font-size: 15px;
+}
+
+/* ------------------------------------------------------------------ ways ---- */
+
+/* The mockup resets margins globally; this port scopes the reset to the
+   landing sections so the legal pages keep their own rhythm. */
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+section {
+  padding: clamp(72px, 10vw, 140px) 0;
+}
+
+h2 {
+  font-size: clamp(36px, 5.4vw, 68px);
+  max-width: 14ch;
+}
+
+.rv {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity .8s cubic-bezier(.2,.8,.2,1), transform .8s cubic-bezier(.2,.8,.2,1);
+}
+
+.rv.in {
+  opacity: 1;
+  transform: none;
+}
+
+#ways :is(h2, h3, h4, p) {
+  margin: 0;
+}
+
+.ways {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(24px, 5vw, 80px);
+  align-items: center;
+  margin-top: 44px;
+}
+
+.seg {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 5px;
+  margin-bottom: 28px;
+}
+
+.seg i {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 5px;
+  width: calc(50% - 5px);
+  background: var(--ink);
+  border-radius: 13px;
+  transition: transform .4s cubic-bezier(.3,1.3,.4,1);
+}
+
+.seg button {
+  position: relative;
+  z-index: 1;
+  padding: 12px 26px;
+  font-weight: 700;
+  color: var(--muted);
+  transition: color .25s;
+}
+
+.seg button.on {
+  color: var(--paper);
+}
+
+.wcopy h3 {
+  font-size: clamp(26px, 3.2vw, 38px);
+  margin-bottom: 14px;
+}
+
+.wcopy p {
+  color: color-mix(in srgb, var(--ink) 78%, var(--paper));
+  max-width: 440px;
+}
+
+.wcopy > div {
+  animation: pop .5s cubic-bezier(.2,.9,.2,1);
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+.stagebox {
+  display: grid;
+  place-items: center;
+  min-height: 560px;
+  border-radius: 40px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.stagebox::after {
+  content: "";
+  position: absolute;
+  right: -80px;
+  top: -80px;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  border: 34px solid #D85A301a;
+}
+
+.phone {
+  width: 262px;
+  height: 508px;
+  border-radius: 38px;
+  background: var(--paper);
+  box-shadow: 0 0 0 7px var(--ink), 0 30px 50px -20px #2B1A0F66;
+  padding: 20px 16px;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.mc {
+  border-radius: 22px;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 18px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform .9s cubic-bezier(.3,1.3,.4,1);
+}
+
+.mc .t {
+  font: 700 10px 'Spline Sans';
+  letter-spacing: .1em;
+  color: #CDBB9F;
+}
+
+.mc .qq {
+  font: 400 23px/1.1 var(--font-display);
+  letter-spacing: -.02em;
+}
+
+.mbtn {
+  margin-top: 12px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--street);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 14px;
+  transition: transform .15s;
+}
+
+.mbtn:active {
+  transform: scale(.96);
+}
+
+.who {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  z-index: 3;
+}
+
+.who .av {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font: 400 18px var(--font-display);
+  color: #fff;
+  position: relative;
+}
+
+.who .av::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  border: 3px solid var(--street);
+  opacity: 0;
+  animation: turn 6s infinite;
+}
+
+.who.b .av::after {
+  animation-delay: 3s;
+}
+
+@keyframes turn {
+  0%, 45% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50%, 100% {
+    opacity: 0;
+    transform: scale(1.25);
+  }
+}
+
+.who.a {
+  left: 22px;
+  top: 42%;
+}
+
+.who.b {
+  right: 22px;
+  top: 42%;
+}
+
+@media (max-width: 560px) {
+  .who.a {
+    left: 6px;
+  }
+  .who.b {
+    right: 6px;
+  }
+  .who .av {
+    width: 42px;
+    height: 42px;
+  }
+}
+
+.ph-h {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 10px;
+  letter-spacing: .06em;
+}
+
+.ansbox {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
+  font-weight: 500;
+  font-size: 15px;
+  min-height: 96px;
+}
+
+.ansbox .cur {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--ink);
+  vertical-align: -2px;
+  animation: bl 1s steps(2) infinite;
+}
+
+@keyframes bl {
+  50% {
+    opacity: 0;
+  }
+}
+
+.dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.dots button {
+  width: 8px;
+  height: 8px;
+  border-radius: 9px;
+  background: var(--border);
+  transition: .3s;
+}
+
+.dots button.on {
+  width: 22px;
+  background: var(--ink);
+}
+
+.scr {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: pop .5s cubic-bezier(.2,.9,.2,1);
+}
+
+.scr h4 {
+  font: 400 22px/1.1 var(--font-display);
+  letter-spacing: -.02em;
+}
+
+.pulse {
+  animation: br 1.8s ease-in-out infinite;
+}
+
+@keyframes br {
+  50% {
+    transform: scale(1.07);
+    opacity: .6;
+  }
+}
+
+.flipc {
+  perspective: 600px;
+  flex: 1;
+  min-height: 0;
+}
+
+.flipc > div {
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform .9s cubic-bezier(.3,1.2,.4,1);
+  transform: rotateY(180deg);
+}
+
+.flipc.go > div {
+  transform: none;
+}
+
+.flipc .fa,
+.flipc .fb {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  backface-visibility: hidden;
+  padding: 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.flipc .fa {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.flipc .fb {
+  background: var(--street);
+  transform: rotateY(180deg);
+  display: grid;
+  place-items: center;
+  font: 400 30px var(--font-display);
+}
+
+.wf {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  height: 30px;
+}
+
+.wf i {
+  flex: 1;
+  border-radius: 3px;
+  background: var(--ink);
+  opacity: .8;
+}
+
+@media (max-width: 860px) {
+  .ways {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ---------------------------------------------------------------- marquee ---- */
@@ -969,6 +1321,27 @@ img.brand-dark {
   }
   .band > div {
     animation: none;
+  }
+  .rv {
+    opacity: 1;
+    transform: none;
+  }
+  .wcopy > div,
+  .scr {
+    animation: none;
+  }
+  .who .av::after,
+  .pulse,
+  .ansbox .cur {
+    animation: none;
+  }
+  .seg i,
+  .seg button,
+  .mc,
+  .dots button,
+  .flipc > div,
+  .rv {
+    transition: none;
   }
   ::view-transition-group(*),
   ::view-transition-old(*),
