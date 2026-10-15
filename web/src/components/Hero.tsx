@@ -8,13 +8,13 @@ import { DeckStack } from './DeckStack';
 
 /**
  * The hero. Copy on the left (headline sized to its own column), the draggable
- * deck on a stage on the right. Decorative layers (blobs, doodles, hint) are
- * aria-hidden and pointer-events: none.
+ * deck on a stage on the right. The page background lives behind the whole
+ * landing now; the stage dressing here (doodles, hint) is aria-hidden and
+ * pointer-events: none.
  */
 export function Hero() {
   return (
     <header className="hero" id="top">
-      <svg className="backdrop" viewBox="0 0 1440 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><path className="blob pk" d="M1344 168C1344 201 1307 260 1281 286C1256 312 1221 325 1190 325C1158 325 1121 312 1093 286C1065 259 1024 198 1023 164C1021 130 1057 111 1082 84C1107 57 1137 2 1171 3C1204 3 1252 61 1281 88C1310 116 1344 135 1344 168Z" /><path className="blob pu" d="M208 699C205 732 165 762 145 782C125 803 115 818 87 822C58 827 -1 831 -27 810C-52 788 -65 728 -65 693C-65 658 -47 620 -26 601C-6 581 25 577 57 574C90 571 141 563 166 584C191 604 212 666 208 699Z" /><path className="blob or" d="M1432 683C1431 707 1418 755 1403 770C1387 786 1358 777 1337 774C1316 772 1291 770 1276 755C1262 740 1250 706 1249 685C1248 664 1258 644 1271 630C1284 616 1302 598 1325 598C1347 597 1389 613 1406 627C1424 641 1432 659 1432 683Z" /><path className="blob ye" d="M726 50C727 70 717 116 704 129C690 143 666 134 645 132C623 130 591 127 576 116C561 105 554 84 554 65C554 45 562 12 575 -1C588 -14 612 -13 632 -11C653 -8 683 3 699 13C715 23 725 31 726 50Z" /></svg>
       <div className="wrap">
         <div className="copy">
           <span className="eyebrow"><i aria-hidden="true"></i>Question cards for people you're close to</span>

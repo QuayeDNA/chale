@@ -71,11 +71,12 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  background: var(--paper);
 }
 
 body {
   margin: 0;
-  background: var(--paper);
+  background: transparent;
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 16px;
@@ -295,31 +296,91 @@ html {
   padding: clamp(40px, 6vw, 96px) 0 clamp(72px, 9vw, 128px);
 }
 
-/* Soft brand blobs (the pattern's shapes) behind everything. Tints are mixed
-   toward transparent so they read as a wash on either ground. */
-.hero .backdrop {
-  position: absolute;
+/* The page background: six to seven sparse brand washes in varied organic
+   shapes, fixed behind the whole landing (the paper ground moved up to html
+   so this layer can sit at z-index -1). Tints are mixed toward transparent
+   so they read as a wash on either ground. Static by design. */
+.page-bg {
+  position: fixed;
   inset: 0;
-  width: 100%;
-  height: 100%;
   z-index: -1;
+  overflow: hidden;
   pointer-events: none;
 }
 
-.hero .blob {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: drift 16s ease-in-out infinite alternate;
+.page-bg i {
+  position: absolute;
+  display: block;
 }
-.hero .blob.pk { fill: color-mix(in srgb, #e8547c 20%, transparent); }
-.hero .blob.pu { fill: color-mix(in srgb, #8e63b8 20%, transparent); animation-duration: 21s; animation-direction: alternate-reverse; }
-.hero .blob.or { fill: color-mix(in srgb, #ee6a33 18%, transparent); animation-duration: 13s; }
-.hero .blob.ye { fill: color-mix(in srgb, var(--street) 24%, transparent); animation-duration: 23s; }
 
-@keyframes drift {
-  to {
-    transform: translate(-30px, 40px) scale(1.06);
-  }
+/* Pink blob, top left, spilling off the corner. */
+.page-bg .b1 {
+  top: -9vmin;
+  left: -8vmin;
+  width: 36vmin;
+  height: 32vmin;
+  border-radius: 58% 42% 55% 45% / 50% 56% 44% 50%;
+  background: color-mix(in srgb, #e8547c 18%, transparent);
+}
+
+/* Yellow blob, top right. */
+.page-bg .b2 {
+  top: 2vh;
+  right: -11vmin;
+  width: 28vmin;
+  height: 26vmin;
+  border-radius: 45% 55% 42% 58% / 56% 44% 58% 42%;
+  background: color-mix(in srgb, var(--street) 22%, transparent);
+}
+
+/* Coral ring, left edge, mid page. Outline only, so it stays airy. */
+.page-bg .b3 {
+  top: 44vh;
+  left: -5vmin;
+  width: 19vmin;
+  height: 19vmin;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, #ee6a33 30%, transparent);
+}
+
+/* Purple blob, right side, lower middle. */
+.page-bg .b4 {
+  top: 58vh;
+  right: 1vw;
+  width: 31vmin;
+  height: 29vmin;
+  border-radius: 52% 48% 60% 40% / 44% 58% 42% 56%;
+  background: color-mix(in srgb, #8e63b8 16%, transparent);
+}
+
+/* Orange blob, bottom left. */
+.page-bg .b5 {
+  bottom: 4vh;
+  left: 7vw;
+  width: 24vmin;
+  height: 22vmin;
+  border-radius: 60% 40% 48% 52% / 52% 48% 55% 45%;
+  background: color-mix(in srgb, #ee6a33 16%, transparent);
+}
+
+/* Green disc, bottom right, spilling off the corner. */
+.page-bg .b6 {
+  bottom: -8vmin;
+  right: 10vw;
+  width: 26vmin;
+  height: 26vmin;
+  border-radius: 50%;
+  background: color-mix(in srgb, #4f9e5c 16%, transparent);
+}
+
+/* One small street dot low centre-left, for balance. */
+.page-bg .b7 {
+  bottom: 22vh;
+  left: 32vw;
+  width: 5vmin;
+  height: 5vmin;
+  border-radius: 48% 52% 55% 45% / 52% 46% 54% 48%;
+  background: color-mix(in srgb, var(--street) 30%, transparent);
 }
 
 /* The brand crown, riding the headline like it rides the wordmark in the
@@ -1566,9 +1627,6 @@ h2 {
 @media (prefers-reduced-motion: reduce) {
   .bar-fill {
     width: 40%;
-    animation: none;
-  }
-  .hero .ring {
     animation: none;
   }
   .hero h1 em path {
