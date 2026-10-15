@@ -1011,6 +1011,20 @@ img.brand-dark {
   }
 }
 
+/* The doodle assets bake their own ink (#2B1A0F), which is invisible on the
+   dark ground. Flattening to black then inverting turns the line art cream
+   without touching the shape — the gold, pink and green doodles are left
+   alone because they pass on both grounds. */
+:root[data-theme='dark'] :is(.ways-decor .ink, .hero .dd.st) {
+  filter: brightness(0) invert(1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) :is(.ways-decor .ink, .hero .dd.st) {
+    filter: brightness(0) invert(1);
+  }
+}
+
 /* -------------------------------------------------------------- surfaces ---- */
 
 .card {
@@ -1286,12 +1300,85 @@ h2 {
   margin: 0;
 }
 
+#ways {
+  position: relative;
+  isolation: isolate;
+  overflow-x: clip;
+}
+
+#ways .wrap {
+  position: relative;
+}
+
+#ways .wrap > :is(.eyebrow, h2, .ways) {
+  position: relative;
+  z-index: 3;
+}
+
 .ways {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: clamp(24px, 5vw, 80px);
   align-items: start;
-  margin-top: 44px;
+  margin-top: 34px;
+}
+
+/* Every accent hangs off this one layer: it is positioned against the wrap's
+   padding box, so nothing here can become a grid child, get clipped by the
+   stagebox, or leak outside the section's own stacking context. */
+.ways-decor {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.ways-decor > * {
+  position: absolute;
+  display: block;
+  animation: float 7s ease-in-out infinite alternate;
+}
+
+.ways-decor .swoosh {
+  top: clamp(88px, 7vw, 132px);
+  right: clamp(40px, 5vw, 96px);
+  width: clamp(150px, 15vw, 230px);
+  opacity: 0.55;
+}
+
+.ways-decor .crown {
+  top: clamp(28px, 4vw, 58px);
+  right: clamp(200px, 21vw, 330px);
+  width: clamp(44px, 5vw, 72px);
+  opacity: 0.9;
+  animation-delay: -3s;
+}
+
+/* Anchored from the bottom rather than the top: the stagebox sets the floor of
+   this section, so the band under the copy keeps its proportions whatever the
+   copy does. */
+.ways-decor .heart {
+  bottom: clamp(190px, 15vw, 240px);
+  left: clamp(4px, 4vw, 64px);
+  width: clamp(58px, 6vw, 86px);
+  opacity: 0.55;
+  animation-delay: -1.5s;
+}
+
+.ways-decor .dashes {
+  bottom: clamp(104px, 9vw, 150px);
+  left: clamp(150px, 22vw, 320px);
+  width: clamp(76px, 8vw, 118px);
+  opacity: 0.5;
+  animation-delay: -4.5s;
+}
+
+.ways-decor .slashes {
+  bottom: clamp(18px, 3vw, 48px);
+  left: clamp(400px, 39vw, 560px);
+  width: clamp(56px, 6vw, 90px);
+  opacity: 0.5;
+  animation-delay: -2.5s;
 }
 
 .seg {
@@ -1337,6 +1424,7 @@ h2 {
 .wcopy p {
   color: color-mix(in srgb, var(--ink) 78%, var(--paper));
   max-width: 440px;
+  line-height: 1.55;
 }
 
 .wcopy > div {
@@ -1355,21 +1443,12 @@ h2 {
   place-items: center;
   min-height: 560px;
   border-radius: 40px;
-  background: var(--surface);
+  background:
+    radial-gradient(420px 420px at 88% -8%, #d85a3026, transparent 70%),
+    var(--surface);
   border: 1px solid var(--border);
   position: relative;
   overflow: hidden;
-}
-
-.stagebox::after {
-  content: "";
-  position: absolute;
-  right: -80px;
-  top: -80px;
-  width: 260px;
-  height: 260px;
-  border-radius: 50%;
-  border: 34px solid #D85A301a;
 }
 
 .phone {
@@ -1508,14 +1587,6 @@ h2 {
     width: 40px;
     height: 40px;
     font-size: 16px;
-  }
-
-  .stagebox::after {
-    right: -70px;
-    top: -70px;
-    width: 140px;
-    height: 140px;
-    border-width: 24px;
   }
 }
 
@@ -1658,6 +1729,26 @@ h2 {
   .ways {
     grid-template-columns: 1fr;
   }
+
+  /* Stacked, the top-right void and the under-copy band are both gone, so the
+     accents that filled them step aside. Crown and heart survive, re-anchored
+     to the only two spots that stay empty. */
+  .ways-decor :is(.swoosh, .dashes, .slashes, .ring) {
+    display: none;
+  }
+
+  .ways-decor .crown {
+    top: clamp(6px, 2vw, 16px);
+    right: clamp(8px, 3vw, 20px);
+    width: clamp(34px, 8vw, 46px);
+  }
+
+  .ways-decor .heart {
+    top: auto;
+    bottom: clamp(-52px, -13vw, -44px);
+    left: clamp(8px, 4vw, 24px);
+    width: clamp(46px, 11vw, 62px);
+  }
 }
 
 /* ---------------------------------------------------------------- marquee ---- */
@@ -1733,6 +1824,9 @@ h2 {
     animation: none;
   }
   .page-bg i {
+    animation: none;
+  }
+  .ways-decor > * {
     animation: none;
   }
   .rv {

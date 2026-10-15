@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 
+import crownUrl from '../assets/chale-brand-svgs/doodles/crown.svg';
+import dashesUrl from '../assets/chale-brand-svgs/doodles/dashes.svg';
+import heartUrl from '../assets/chale-brand-svgs/doodles/heart.svg';
+import slashesGreenUrl from '../assets/chale-brand-svgs/doodles/slashes-green.svg';
+import swooshUrl from '../assets/chale-brand-svgs/doodles/squiggle-swoosh.svg';
+
 /**
  * Two ways to play — the segmented In person / Apart switch beside the
  * animated phone simulation. Ports the mockup's renderSb/auto2/typer logic:
@@ -297,6 +303,13 @@ export function Ways() {
               </div>
             )}
           </div>
+        </div>
+        <div className="ways-decor" aria-hidden>
+          <img className="swoosh ink" src={swooshUrl} alt="" />
+          <img className="crown" src={crownUrl} alt="" />
+          <img className="heart" src={heartUrl} alt="" />
+          <img className="dashes" src={dashesUrl} alt="" />
+          <img className="slashes" src={slashesGreenUrl} alt="" />
         </div>
       </div>
     </section>
