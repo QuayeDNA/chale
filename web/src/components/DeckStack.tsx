@@ -240,24 +240,18 @@ export function DeckStack() {
     }
   };
 
-  const step = (d: number) => {
-    claim();
-    go(st.current.idx + d);
-  };
-
   return (
-    <>
-      <div
-        ref={deckRef}
-        className="deck"
-        tabIndex={0}
-        aria-label="Sample question cards. Use arrow keys or drag."
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
-        onKeyDown={onKeyDown}
-      >
+    <div
+      ref={deckRef}
+      className="deck"
+      tabIndex={0}
+      aria-label="Sample question cards. Use arrow keys or drag."
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
+      onKeyDown={onKeyDown}
+    >
         {CARDS.map(([key, q], i) => {
           const d = DECKS[key];
           const Icon = d.Icon;
@@ -290,19 +284,10 @@ export function DeckStack() {
             </div>
           );
         })}
-      </div>
-      <div className="dctl">
-        <button className="cb" type="button" aria-label="Previous card" onClick={() => step(-1)}>
-          ‹
-        </button>
-        <span className="cnt" aria-live="polite">
-          {String(pos + 1).padStart(2, '0')} / {String(N).padStart(2, '0')}
-        </span>
-        <button className="cb" type="button" aria-label="Next card" onClick={() => step(1)}>
-          ›
-        </button>
-      </div>
-      <p className="hint">Drag, flick, or press →</p>
-    </>
+      {/* The deck's only text: invisible, but announced as cards change. */}
+      <span className="vh" aria-live="polite">
+        Card {pos + 1} of {N}
+      </span>
+    </div>
   );
 }

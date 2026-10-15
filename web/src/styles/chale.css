@@ -309,6 +309,13 @@ html {
   min-width: 0;
 }
 
+/* The exiting card flies left as it fades, passing over this column — the
+   copy and buttons stay painted and hit-testable above it throughout. */
+.hero .wrap > :first-child {
+  position: relative;
+  z-index: 1;
+}
+
 /* The drifting circles behind the headline. Ring tints are mixed toward
    transparent so they read as a wash on either ground. */
 .hero .ring {
@@ -450,6 +457,8 @@ html {
    deck is keyboard-operable, so it must show where focus is. */
 .deck {
   position: relative;
+  z-index: 0; /* traps the cards' z-indexes inside: the flying card can never
+    paint or hit-test above the text column, whatever its own z says. */
   width: min(380px, 84vw);
   height: 500px;
   margin: 0 auto;
@@ -544,48 +553,17 @@ html {
   z-index: 5;
 }
 
-.dctl {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 16px;
-  margin-top: 6px;
-}
-
-.cb {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  border: 1.5px solid var(--ink);
-  background: transparent;
-  color: inherit;
-  font-size: 20px;
-  line-height: 1;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: background-color 0.2s, color 0.2s, transform 0.2s;
-}
-
-.cb:hover {
-  background: var(--ink);
-  color: var(--paper);
-  transform: scale(1.08);
-}
-
-.cnt {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: 15px;
-  min-width: 70px;
-  text-align: center;
-}
-
-.hint {
-  text-align: center;
-  font-size: 13px;
-  color: var(--muted);
-  margin-top: 10px;
+/* Visually hidden but announced: the deck's only remaining text. */
+.vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 @media (max-width: 1023px) {
