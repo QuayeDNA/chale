@@ -143,6 +143,9 @@ html {
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   box-shadow: 0 8px 16px var(--shadow);
+  /* Its own compositor layer, so its paint never interleaves with the
+     backdrop repaints its blur triggers underneath it. */
+  transform: translateZ(0);
 }
 
 /* Flow space the fixed bar used to occupy: its 12px top margin plus its
@@ -342,6 +345,12 @@ html {
   position: absolute;
   display: block;
   animation: bg-drift 18s ease-in-out infinite alternate;
+}
+
+/* The scroll-pause from PageBackground: the room holds still while the
+   camera moves, so the nav's blur has one less thing to re-sample. */
+.is-scrolling .page-bg i {
+  animation-play-state: paused;
 }
 
 @keyframes bg-drift {
