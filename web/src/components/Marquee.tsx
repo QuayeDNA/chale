@@ -18,14 +18,16 @@ const QUESTIONS = [
 export function Marquee() {
   const items = [...QUESTIONS, ...QUESTIONS];
   return (
-    <div className="band" aria-hidden="true">
-      <div>
-        {items.map((q, i) => (
-          <Fragment key={i}>
-            <span>{q}</span>
-            <b>✺</b>
-          </Fragment>
-        ))}
+    <div className="band-wrap">
+      <div className="band" aria-hidden="true">
+        <div>
+          {items.map((q, i) => (
+            <Fragment key={i}>
+              <span>{q}</span>
+              <b>✺</b>
+            </Fragment>
+          ))}
+        </div>
       </div>
     </div>
   );
