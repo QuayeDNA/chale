@@ -148,7 +148,7 @@ export function ThemeToggle() {
         aria-pressed={theme === 'light'}
         onClick={() => choose('light')}
       >
-        <Sun size={15} />
+        <Sun size={18} />
       </button>
       <button
         ref={darkRef}
@@ -157,7 +157,7 @@ export function ThemeToggle() {
         aria-pressed={theme === 'dark'}
         onClick={() => choose('dark')}
       >
-        <Moon size={15} />
+        <Moon size={18} />
       </button>
     </div>
   );
