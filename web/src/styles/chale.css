@@ -702,19 +702,34 @@ html {
 }
 
 .btn {
-  height: 56px;
-  padding: 0 24px;
-  border-radius: 18px;
-  font-weight: 700;
+  min-height: 52px;
+  padding: 14px 22px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
   text-decoration: none;
-  transition: transform 0.2s cubic-bezier(0.3, 1.6, 0.5, 1), box-shadow 0.2s;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.3, 1.6, 0.5, 1), box-shadow 0.2s, opacity 0.15s;
+}
+
+.btn:active:not([aria-disabled]) {
+  opacity: 0.88;
+}
+
+.btn[aria-disabled],
+.btn:disabled {
+  opacity: 0.5;
 }
 
 .btn.p {
   background: var(--ink);
+  border-color: var(--ink);
   color: var(--paper);
 }
 
@@ -1888,12 +1903,6 @@ h2 {
   border-width: 2px;
   padding: 0 15px;
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--street) 20%, transparent);
-}
-
-.cta .form .btn {
-  border-radius: var(--radius-pill);
-  padding: 0 22px;
-  font-weight: 600;
 }
 
 .cta .toast {
