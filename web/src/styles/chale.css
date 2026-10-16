@@ -1972,6 +1972,46 @@ h2 {
   gap: 20px;
 }
 
+.site-foot-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.site-foot-socials {
+  display: flex;
+  gap: 10px;
+}
+
+.site-foot-socials a {
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--muted);
+}
+
+.site-foot-socials a:hover {
+  color: var(--ink);
+  border-color: var(--street);
+}
+
+@media (max-width: 640px) {
+  .site-foot .wrap {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .site-foot-right {
+    justify-content: center;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cta h2 .cta-word > span,
   .cta .toast {
