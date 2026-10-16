@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 
 const HEADLINE = 'Ask something real.';
-const LETTERS = HEADLINE.split('');
+const WORDS = HEADLINE.split(' ');
 const TOAST_MS = 2600;
 
 export function Cta() {
@@ -43,7 +43,18 @@ export function Cta() {
     <section className="cta" ref={sectionRef}>
       <div className="wrap">
         <h2 className="rv" aria-label={HEADLINE}>
-          {LETTERS.map((c, i) => (c === ' ' ? c : <span key={i} aria-hidden="true">{c}</span>))}
+          {WORDS.map((word, w) => (
+            <Fragment key={w}>
+              <span className="cta-word">
+                {Array.from(word).map((c, i) => (
+                  <span key={i} aria-hidden="true">
+                    {c}
+                  </span>
+                ))}
+              </span>
+              {w < WORDS.length - 1 ? ' ' : null}
+            </Fragment>
+          ))}
         </h2>
 
         <form className="form rv" onSubmit={submit}>

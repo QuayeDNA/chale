@@ -1690,13 +1690,18 @@ h2 {
   text-wrap: balance;
 }
 
-.cta h2 span {
+.cta h2 .cta-word > span {
   display: inline-block;
   transition: transform .3s cubic-bezier(.3, 1.8, .5, 1);
 }
 
-.cta h2 span:hover {
+.cta h2 .cta-word > span:hover {
   transform: translateY(-.08em) rotate(-4deg);
+}
+
+.cta .cta-word {
+  display: inline-block;
+  white-space: nowrap;
 }
 
 .cta .form {
@@ -1778,12 +1783,12 @@ h2 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cta h2 span,
+  .cta h2 .cta-word > span,
   .cta .toast {
     transition: none;
   }
 
-  .cta h2 span:hover {
+  .cta h2 .cta-word > span:hover {
     transform: none;
   }
 }
