@@ -127,7 +127,7 @@ export function ThemeToggle() {
         aria-pressed={theme === 'light'}
         onClick={() => choose('light')}
       >
-        <Sun size={18} />
+        <Sun size={18} key={theme} className={theme === 'light' ? 'tt-pop' : undefined} />
       </button>
       <button
         ref={darkRef}
@@ -136,7 +136,7 @@ export function ThemeToggle() {
         aria-pressed={theme === 'dark'}
         onClick={() => choose('dark')}
       >
-        <Moon size={18} />
+        <Moon size={18} key={theme} className={theme === 'dark' ? 'tt-pop' : undefined} />
       </button>
     </div>
   );

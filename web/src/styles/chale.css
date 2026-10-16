@@ -372,6 +372,19 @@ html {
   height: 18px;
 }
 
+.theme-toggle svg.tt-pop {
+  animation: tt-pop .5s cubic-bezier(.3, 1.8, .5, 1);
+}
+
+@keyframes tt-pop {
+  0% {
+    transform: scale(.4) rotate(-30deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
 .pill .pill-short {
   display: none;
 }
@@ -382,6 +395,13 @@ html {
   }
   .site-nav .wrap {
     gap: 12px;
+    padding: 0 8px 0 16px;
+  }
+  .site-nav .logo {
+    flex: none;
+  }
+  .site-nav .theme-toggle {
+    margin-left: auto;
   }
   .site-nav .pill {
     display: none;
@@ -1949,6 +1969,10 @@ h2 {
   .nav-menu li {
     transform: none;
     transition: none;
+  }
+
+  .theme-toggle svg.tt-pop {
+    animation: none;
   }
 
   .nav-hanger {
