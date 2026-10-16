@@ -31,7 +31,7 @@ export function Cta() {
   useEffect(() => () => window.clearTimeout(toastTimer.current), []);
 
   return (
-    <section className="cta" ref={sectionRef}>
+    <section id="cta" className="cta" ref={sectionRef}>
       <div className="wrap">
         <h2 className="rv" aria-label={HEADLINE}>
           {WORDS.map((word, w) => (
