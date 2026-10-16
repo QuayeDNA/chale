@@ -1,5 +1,4 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
-import type { FormEvent } from 'react';
 
 const HEADLINE = 'Ask something real.';
 const WORDS = HEADLINE.split(' ');
@@ -31,14 +30,6 @@ export function Cta() {
 
   useEffect(() => () => window.clearTimeout(toastTimer.current), []);
 
-  function submit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    e.currentTarget.reset();
-    setToasted(true);
-    window.clearTimeout(toastTimer.current);
-    toastTimer.current = window.setTimeout(() => setToasted(false), TOAST_MS);
-  }
-
   return (
     <section className="cta" ref={sectionRef}>
       <div className="wrap">
@@ -57,7 +48,16 @@ export function Cta() {
           ))}
         </h2>
 
-        <form className="form rv" onSubmit={submit}>
+        <form
+          className="form rv"
+          onSubmit={(e) => {
+            e.preventDefault();
+            e.currentTarget.reset();
+            setToasted(true);
+            window.clearTimeout(toastTimer.current);
+            toastTimer.current = window.setTimeout(() => setToasted(false), TOAST_MS);
+          }}
+        >
           <input type="email" required placeholder="Your email, for the beta" aria-label="Email" />
           <button className="btn p" type="submit">Tell me when it&rsquo;s open</button>
         </form>

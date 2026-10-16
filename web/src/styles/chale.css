@@ -1713,23 +1713,37 @@ h2 {
   max-width: 520px;
 }
 
+/* The board field from the app's text-input: surface fill, a thin border, and
+   a street focus — 2px, with the inline padding pulled in by the same 1px so
+   the field does not grow under the cursor. */
 .cta .form input {
   flex: 1;
   min-width: 220px;
   height: 56px;
-  border-radius: 18px;
-  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  border: 1px solid var(--border);
   background: var(--surface);
-  padding: 0 20px;
-  font: 500 16px var(--font-body);
+  padding: 0 16px;
+  font: 400 16px / 24px var(--font-body);
   color: var(--ink);
-  outline: 0;
   transition: border-color .2s, box-shadow .2s;
+}
+
+.cta .form input::placeholder {
+  color: var(--muted);
 }
 
 .cta .form input:focus {
   border-color: var(--street);
-  box-shadow: 0 0 0 4px #f5b40033;
+  border-width: 2px;
+  padding: 0 15px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--street) 20%, transparent);
+}
+
+.cta .form .btn {
+  border-radius: var(--radius-pill);
+  padding: 0 22px;
+  font-weight: 600;
 }
 
 .cta .toast {
