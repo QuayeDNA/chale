@@ -1963,6 +1963,11 @@ h2 {
   }
 }
 
+.rvl-slot {
+  position: relative;
+  padding: 0;
+}
+
 .rvl {
   --bleed: clamp(8px, 2vw, 24px);
   background: var(--ink);
@@ -2152,12 +2157,116 @@ h2 {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-.rvl-slot {
+.cta {
+  text-align: center;
   position: relative;
-  padding: 0;
 }
 
+.cta h2 {
+  max-width: none;
+  font-size: clamp(48px, 11vw, 150px);
+  line-height: .95;
+}
+
+.cta h2 span {
+  display: inline-block;
+  transition: transform .3s cubic-bezier(.3, 1.8, .5, 1);
+}
+
+.cta h2 span:hover {
+  transform: translateY(-.08em) rotate(-4deg);
+}
+
+.cta .form {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 38px auto 14px;
+  flex-wrap: wrap;
+  max-width: 520px;
+}
+
+.cta .form input {
+  flex: 1;
+  min-width: 220px;
+  height: 56px;
+  border-radius: 18px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  padding: 0 20px;
+  font: 500 16px var(--font-body);
+  color: var(--ink);
+  outline: 0;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.cta .form input:focus {
+  border-color: var(--street);
+  box-shadow: 0 0 0 4px #f5b40033;
+}
+
+.cta .toast {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  transform: translate(-50%, 30px);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 13px 20px;
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity .4s, transform .4s;
+  z-index: 90;
+  pointer-events: none;
+}
+
+.cta .toast.on {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.site-foot {
+  border-top: 1px solid var(--border);
+  padding: 34px 0 44px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.site-foot .wrap {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.site-foot a {
+  text-decoration: none;
+  font-weight: 700;
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.site-foot-links {
+  display: flex;
+  gap: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta h2 span,
+  .cta .toast {
+    transition: none;
+  }
+
+  .cta h2 span:hover {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
 .rvl {
 
     transform: none;
