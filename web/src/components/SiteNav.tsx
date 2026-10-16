@@ -13,7 +13,10 @@ const LINKS = [
 
 export function SiteNav() {
   const [open, setOpen] = useState(false);
+  const [hung, setHung] = useState(false);
   const navRef = useRef<HTMLElement>(null);
+  const hungTimer = useRef<number | undefined>(undefined);
+  const rearm = useRef(true);
 
   useEffect(() => {
     if (!open) return;
@@ -30,6 +33,28 @@ export function SiteNav() {
       document.removeEventListener('keydown', onKey);
     };
   }, [open ]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y > 200 && rearm.current) {
+        rearm.current = false;
+        setHung(true);
+        window.clearTimeout(hungTimer.current);
+        hungTimer.current = window.setTimeout(() => setHung(false), 4500);
+      } else if (y <= 120) {
+        rearm.current = true;
+        window.clearTimeout(hungTimer.current);
+        setHung(false);
+      }
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.clearTimeout(hungTimer.current);
+    };
+  }, []);
 
   return (
     <>
@@ -75,6 +100,14 @@ export function SiteNav() {
           </ul>
         </div>
       </nav>
+      <div className={`nav-hanger${hung ? ' dropped' : ''}`} aria-hidden="true">
+        <div className="hanger-swing">
+          <span className="pill">
+            <span className="pill-full">Coming to Android &amp; iOS</span>
+            <span className="pill-short">Coming soon</span>
+          </span>
+        </div>
+      </div>
     </>
   );
 }

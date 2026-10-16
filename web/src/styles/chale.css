@@ -259,6 +259,52 @@ html {
   .nav-menu {
     display: none;
   }
+  .nav-hanger {
+    display: none;
+  }
+}
+
+.nav-hanger {
+  position: fixed;
+  top: 84px;
+  left: 50%;
+  z-index: 40;
+  transform: translate(-50%, -140%);
+  transition: transform .45s cubic-bezier(.22, 1, .36, 1);
+  pointer-events: none;
+}
+
+.nav-hanger.dropped {
+  transform: translate(-50%, 0);
+}
+
+.hanger-swing {
+  transform-origin: top center;
+}
+
+.nav-hanger.dropped .hanger-swing {
+  animation: dangle 1.1s ease-in-out 3;
+}
+
+@keyframes dangle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(5deg);
+  }
+  75% {
+    transform: rotate(-5deg);
+  }
+}
+
+.hanger-swing::before {
+  content: '';
+  display: block;
+  width: 2px;
+  height: 26px;
+  margin: 0 auto;
+  background: color-mix(in srgb, var(--ink) 35%, transparent);
 }
 
 .pill {
@@ -337,8 +383,8 @@ html {
   .site-nav .wrap {
     gap: 12px;
   }
-  .pill {
-    margin-left: auto;
+  .site-nav .pill {
+    display: none;
   }
   .nav-burger {
     display: inline-flex;
@@ -1903,5 +1949,9 @@ h2 {
   .nav-menu li {
     transform: none;
     transition: none;
+  }
+
+  .nav-hanger {
+    display: none;
   }
 }
