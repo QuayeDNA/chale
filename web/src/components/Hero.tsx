@@ -11,13 +11,12 @@ export function Hero() {
     <header className="hero" id="top">
       <div className="wrap">
         <div className="copy">
-          <span className="eyebrow"><i aria-hidden="true"></i>Question cards for people you're close to</span>
           <h1>
             <span className="ln"><span>Questions worth<img src={crownUrl} className="h-crown" alt="" aria-hidden="true" /></span></span>
             <span className="ln"><span><em>passing the phone<svg viewBox="0 0 400 20" preserveAspectRatio="none" aria-hidden="true"><path d="M4 12 C 60 2, 110 18, 170 9 S 290 3, 396 11" /></svg></em></span></span>
             <span className="ln"><span>for.<img src={sparkleUrl} className="spark" alt="" aria-hidden="true" /></span></span>
           </h1>
-          <p className="lede">Chale is decks of question cards for your person, your family, your friends. Play through them together on one phone, or trade answers by text and voice when you're apart.</p>
+          <p className="lede">Chale is decks of question cards for your person, your family, your friends. Play through them together on one phone, or trade answers by text and voice when you&apos;re apart.</p>
           <div className="actions">
             <span className="btn p" aria-disabled="true"><i className="dot" aria-hidden="true"></i>Coming to Android &amp; iOS</span>
             <Link className="btn o" to="/terms">
