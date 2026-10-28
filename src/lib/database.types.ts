@@ -238,6 +238,7 @@ export type Database = {
           created_at: string
           icon: string
           id: string
+          is_locked: boolean
           is_published: boolean
           relationship_type: Database["public"]["Enums"]["relationship_type"]
           session_length: number
@@ -252,6 +253,7 @@ export type Database = {
           created_at?: string
           icon?: string
           id?: string
+          is_locked?: boolean
           is_published?: boolean
           relationship_type?: Database["public"]["Enums"]["relationship_type"]
           session_length?: number
@@ -266,6 +268,7 @@ export type Database = {
           created_at?: string
           icon?: string
           id?: string
+          is_locked?: boolean
           is_published?: boolean
           relationship_type?: Database["public"]["Enums"]["relationship_type"]
           session_length?: number

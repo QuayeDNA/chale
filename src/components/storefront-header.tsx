@@ -6,13 +6,13 @@ import { Text } from '@/components/ui/text';
 
 type Props = {
   freeCount: number | null;
-  premiumCount: number;
+  premiumCount: number | null;
 };
 
 /**
- * Storefront page header — title + tagline on the left, a free/premium
+ * Storefront page header — title + tagline on the left, a free/coming-soon
  * count pill on the right. Counts come from the catalogue query; null means
- * the free decks are still loading.
+ * the decks are still loading.
  */
 export function StorefrontHeader({ freeCount, premiumCount }: Props) {
   const { theme } = useUnistyles();
@@ -23,7 +23,7 @@ export function StorefrontHeader({ freeCount, premiumCount }: Props) {
         <View style={styles.coin} accessibilityRole="text">
           <LucideIcon name="layers" size={14} color={theme.colors.ink} />
           <Text variant="smallBold">
-            {freeCount ?? '…'} free · {premiumCount} premium
+            {freeCount ?? '…'} free · {premiumCount ?? '…'} coming soon
           </Text>
         </View>
       </View>

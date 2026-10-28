@@ -5,24 +5,24 @@ import { StyleSheet } from 'react-native-unistyles';
 import { CardMark } from '@/components/card-mark';
 import { LucideIcon, iconName } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import type { PremiumDeck } from '@/decks/storefront';
+import { DECK_INKS, gradientFor } from '@/decks/art';
+import type { DeckSummary } from '@/lib/decks';
 
 /**
- * The featured premium pack, as the home concept draws it: a deep gradient
+ * The featured locked pack, as the home concept draws it: a deep gradient
  * plate, a lock in the eyebrow, the pack name in Archivo Black and a paper pill
  * in the far corner.
  *
- * The gradient and the eyebrow tint are the pack's OWN c1/c2 rather than fixed
- * hexes, so swapping `PREMIUM_DECKS[0]` swaps the whole plate with it. The
- * corner mark is the pack's own icon, the same one every other deck surface
- * signs itself with.
+ * The gradient and ink are the pack's OWN tone, so promoting a different locked
+ * deck to the banner swaps the whole plate with it. The corner mark is the
+ * pack's own icon, the same one every other deck surface signs itself with.
  *
  * Nothing here is pressable. There is no store, no checkout and no premium
  * content behind it, so a tap target would be a promise the app cannot keep.
  * The same reasoning keeps the shop's featured banner inert.
  */
-export function PremiumBanner({ deck }: { deck: PremiumDeck }) {
-  const [from, to] = [deck.c1, deck.c2];
+export function PremiumBanner({ deck }: { deck: DeckSummary }) {
+  const ink = DECK_INKS[deck.tone] ?? '#FFF9E8';
 
   return (
     <View
@@ -30,10 +30,10 @@ export function PremiumBanner({ deck }: { deck: PremiumDeck }) {
       accessible
       accessibilityRole="text"
       accessibilityState={{ disabled: true }}
-      accessibilityLabel={`${deck.title}, coming soon. ${deck.tagline} ${deck.questionCount} questions, ${deck.price}`}
+      accessibilityLabel={`${deck.title}, coming soon. ${deck.tagline ?? ''} ${deck.question_count} questions.`}
     >
       <LinearGradient
-        colors={[from, to]}
+        colors={gradientFor(deck.tone)}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0.95 }}
         style={styles.wash}
@@ -52,22 +52,22 @@ export function PremiumBanner({ deck }: { deck: PremiumDeck }) {
 
       <View style={styles.copy}>
         <View style={styles.eyebrow}>
-          <LucideIcon name="lock" size={11} color={EYEBROW_TINT} strokeWidth={2.6} />
-          <Text variant="smallBold" style={styles.eyebrowText} numberOfLines={1}>
-            {`NEW · PAID · ${deck.price}`}
+          <LucideIcon name="lock" size={11} color={ink} strokeWidth={2.6} />
+          <Text variant="smallBold" style={[styles.eyebrowText, { color: ink }]} numberOfLines={1}>
+            COMING SOON
           </Text>
         </View>
-        <Text variant="title" style={styles.title} numberOfLines={1}>
+        <Text variant="title" style={[styles.title, { color: ink }]} numberOfLines={1}>
           {deck.title}
         </Text>
-        <Text variant="caption" style={styles.tagline} numberOfLines={2}>
+        <Text variant="caption" style={[styles.tagline, { color: ink }]} numberOfLines={2}>
           {deck.tagline}
         </Text>
       </View>
 
       <View style={styles.pill}>
         <Text variant="smallBold" style={styles.pillText}>
-          Peek
+          Locked
         </Text>
       </View>
     </View>
@@ -77,13 +77,6 @@ export function PremiumBanner({ deck }: { deck: PremiumDeck }) {
 const MARK_SIZE = 190;
 /** The concept parked its arc 30pt past the corner. */
 const MARK_CROP = 26;
-/**
- * The concept's #CFC6FF, a pale lavender that only reads against a violet
- * plate. It is pinned rather than derived because every premium gradient is
- * currently in the violet family; a differently-coloured featured pack would
- * need this to become a per-pack tint.
- */
-const EYEBROW_TINT = '#CFC6FF';
 
 const styles = StyleSheet.create((theme) => ({
   root: {
@@ -115,20 +108,19 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: 10,
     lineHeight: 14,
     letterSpacing: 1,
-    color: EYEBROW_TINT,
+    opacity: 0.75,
   },
   title: {
     fontSize: 20,
     lineHeight: 24,
     letterSpacing: -0.6,
-    color: '#FFF9E8',
     marginTop: 3,
     marginBottom: 2,
   },
   tagline: {
     fontSize: 12.5,
     lineHeight: 16,
-    color: '#D6D0F2',
+    opacity: 0.8,
   },
   pill: {
     // `flex: 'none'` is valid for React Native but not in Unistyles' typing,

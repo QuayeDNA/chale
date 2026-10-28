@@ -1,0 +1,3860 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Chale · Question Pack Structure</title>
+<style>
+  :root {
+    --paper: #FFF9E8;
+    --surface: #FFFDF6;
+    --ink: #211A12;
+    --muted: #6F6457;
+    --faint: #9A8E7E;
+    --line: #E7DDC8;
+    --line-2: #D8CBB2;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(33,26,18,.05), 0 8px 28px -18px rgba(33,26,18,.35);
+    --mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+    --sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    color: var(--ink);
+    background:
+      radial-gradient(1200px 600px at 12% -10%, #FDEBC9 0%, transparent 55%),
+      radial-gradient(900px 500px at 100% 0%, #F6E4DA 0%, transparent 50%),
+      var(--paper);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 48px 24px 96px; }
+
+  header.hero { margin-bottom: 40px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600;
+    background: rgba(255,255,255,.55); border: 1px solid var(--line);
+    padding: 6px 10px; border-radius: 999px;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: #D85A30; }
+  h1 { font-size: clamp(30px, 4vw, 46px); letter-spacing: -.03em; line-height: 1.05; margin: 18px 0 10px; }
+  .sub { color: var(--muted); max-width: 700px; font-size: 16px; margin: 0; }
+  .stat-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+  .stat {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 10px 14px; display: flex; align-items: baseline; gap: 8px;
+    box-shadow: var(--shadow);
+  }
+  .stat b { font-size: 20px; letter-spacing: -.02em; }
+  .stat span { color: var(--muted); font-size: 12px; }
+
+  section { margin-top: 48px; }
+  .sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; }
+  .sec-head h2 { font-size: 18px; letter-spacing: -.01em; margin: 0; }
+  .sec-head .hint { color: var(--faint); font-size: 13px; }
+
+  /* ---------- schema ---------- */
+  .schema {
+    display: grid; grid-template-columns: 1fr 84px 1fr; align-items: stretch; gap: 0;
+  }
+  .box {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); overflow: hidden; min-width: 0;
+  }
+  .box-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 13px 16px; border-bottom: 1px solid var(--line); background: #FFFDF8;
+  }
+  .box-head code { font-family: var(--mono); font-size: 14px; font-weight: 600; }
+  .box-head .tagpill {
+    font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted);
+    border: 1px solid var(--line-2); padding: 3px 7px; border-radius: 999px; white-space: nowrap;
+  }
+  .fields { padding: 8px 0; }
+  .field { display: grid; grid-template-columns: 132px 1fr; gap: 10px; padding: 5px 16px; font-size: 12.5px; }
+  .field:hover { background: #FFF8E9; }
+  .field code { font-family: var(--mono); color: #7A3E22; }
+  .field span { color: var(--muted); }
+  .field .pk { color: #1E7A3C; font-weight: 600; }
+  .field .fk { color: #2B4BD8; font-weight: 600; }
+  .rel {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    color: var(--muted); font-size: 11px; text-align: center; padding: 0 4px;
+  }
+  .rel .line { width: 100%; height: 1px; background: repeating-linear-gradient(90deg, var(--line-2) 0 6px, transparent 6px 11px); }
+  .rel b { font-family: var(--mono); font-size: 13px; color: var(--ink); }
+  .rel .crow { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+  @media (max-width: 760px) {
+    .schema { grid-template-columns: 1fr; }
+    .rel { flex-direction: row; padding: 12px 0; }
+    .rel .line { width: 40px; }
+  }
+
+  .anatomy {
+    margin-top: 18px; background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow);
+  }
+  .anatomy .lbl { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); margin-bottom: 10px; }
+  .anatomy .demo { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 14px; }
+  .anatomy .demo .q-ord { position: static; }
+  .anatomy .demo .q-text { font-weight: 500; }
+  .anatomy .field-note { color: var(--faint); font-size: 12px; margin-top: 10px; }
+  .anatomy code { font-family: var(--mono); }
+
+  /* ---------- deck tiles ---------- */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+  .deck-tile {
+    position: relative; display: flex; flex-direction: column; gap: 4px;
+    min-height: 150px; padding: 16px 18px 14px; border-radius: 16px;
+    text-decoration: none; color: var(--ink);
+    background: linear-gradient(135deg, var(--g1), var(--g2));
+    color: var(--ink, #FFF9E8);
+    box-shadow: 0 10px 26px -16px rgba(33,26,18,.55);
+    transition: transform .16s ease, box-shadow .16s ease;
+    overflow: hidden;
+  }
+  .deck-tile::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(120% 90% at 0% 0%, rgba(255,255,255,.22), transparent 45%);
+  }
+  .deck-tile:hover { transform: translateY(-2px); box-shadow: 0 16px 34px -16px rgba(33,26,18,.6); }
+  .tile-top { display: flex; align-items: center; justify-content: space-between; opacity: .9; }
+  .tile-count { font-size: 12px; font-weight: 700; letter-spacing: .02em; }
+  .tile-rel { font-size: 10px; text-transform: uppercase; letter-spacing: .12em; border: 1px solid currentColor; padding: 2px 7px; border-radius: 999px; opacity: .8; }
+  .tile-title { font-size: 20px; font-weight: 700; letter-spacing: -.02em; margin-top: 8px; }
+  .tile-tag { font-size: 12.5px; opacity: .85; line-height: 1.35; }
+  .tile-kindbar { display: flex; align-items: center; gap: 2px; margin-top: auto; padding-top: 14px; }
+  .bar-seg { height: 5px; border-radius: 3px; background: rgba(255,255,255,.55); }
+  .bar-seg.k-text { background: rgba(255,255,255,.9); }
+  .bar-seg.k-voice { background: rgba(255,255,255,.55); }
+  .bar-seg.k-either { background: rgba(255,255,255,.75); }
+  .bar-total { margin-left: 8px; font-size: 11px; opacity: .8; }
+
+  /* ---------- toolbar ---------- */
+  .toolbar {
+    position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 10px;
+    align-items: center; padding: 12px 0; margin: 0 -4px 4px;
+    background: linear-gradient(var(--paper) 65%, rgba(255,249,232,0));
+  }
+  .search {
+    flex: 1 1 240px; display: flex; align-items: center; gap: 8px;
+    background: var(--surface); border: 1px solid var(--line-2); border-radius: 10px;
+    padding: 8px 12px; box-shadow: var(--shadow);
+  }
+  .search input { border: 0; outline: 0; background: transparent; font: inherit; color: var(--ink); width: 100%; }
+  .search svg { flex: none; opacity: .5; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip {
+    font: inherit; font-size: 12.5px; cursor: pointer; border: 1px solid var(--line-2);
+    background: var(--surface); color: var(--muted); padding: 7px 12px; border-radius: 999px;
+    transition: all .12s ease;
+  }
+  .chip:hover { border-color: var(--ink); color: var(--ink); }
+  .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+  .tool-btn {
+    font: inherit; font-size: 12.5px; cursor: pointer; border: 1px solid var(--line-2);
+    background: transparent; color: var(--muted); padding: 7px 12px; border-radius: 8px;
+  }
+  .tool-btn:hover { color: var(--ink); border-color: var(--ink); }
+  .result-count { color: var(--faint); font-size: 12.5px; margin-left: auto; font-variant-numeric: tabular-nums; }
+
+  /* ---------- deck sections ---------- */
+  .deck-section {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); margin-bottom: 12px; overflow: hidden;
+  }
+  .deck-section > summary {
+    list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px; user-select: none;
+  }
+  .deck-section > summary::-webkit-details-marker { display: none; }
+  .deck-section > summary:hover { background: #FFF8E9; }
+  .sec-swatch { width: 12px; height: 12px; border-radius: 4px; flex: none; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+  .sec-title { font-weight: 700; letter-spacing: -.01em; white-space: nowrap; }
+  .sec-tag { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sec-count { margin-left: auto; font-size: 12px; color: var(--faint); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .chev { width: 8px; height: 8px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(45deg); transition: transform .18s ease; flex: none; }
+  details[open] .chev { transform: rotate(-135deg); }
+  .sec-meta {
+    display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 10px 18px 12px;
+    border-top: 1px dashed var(--line); background: #FFFBF0;
+    font-size: 11.5px; color: var(--muted);
+  }
+  .sec-meta b { font-family: var(--mono); font-weight: 600; color: var(--faint); margin-right: 4px; }
+  .q-list { list-style: none; margin: 0; padding: 4px 0 8px; }
+  .q-row {
+    display: grid; grid-template-columns: 34px 62px 1fr; align-items: baseline; gap: 10px;
+    padding: 7px 18px; font-size: 13.5px;
+  }
+  .q-row:nth-child(odd) { background: rgba(255,248,233,.55); }
+  .q-row.hide { display: none; }
+  .q-ord { color: var(--faint); font-family: var(--mono); font-size: 11.5px; text-align: right; }
+  .q-kind {
+    font-size: 10px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700;
+    text-align: center; padding: 2px 0; border-radius: 5px; border: 1px solid transparent; white-space: nowrap;
+  }
+  .k-text { color: #2B4BD8; background: #E8ECFF; border-color: #CBD5FF; }
+  .k-voice { color: #B54708; background: #FFF0D6; border-color: #FFD79A; }
+  .k-either { color: #1E7A3C; background: #E4F5E9; border-color: #BFE5CB; }
+  .q-text { color: var(--ink); }
+  .empty { padding: 18px; color: var(--faint); font-size: 13px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 4px 0 18px; font-size: 12px; color: var(--muted); }
+  .legend .item { display: inline-flex; align-items: center; gap: 6px; }
+  .legend .sw { width: 10px; height: 10px; border-radius: 3px; border: 1px solid; }
+
+  footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--faint); font-size: 12px; display: flex; flex-wrap: wrap; gap: 8px 20px; }
+  footer code { font-family: var(--mono); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="eyebrow"><span class="dot"></span> Chale · Content model</span>
+    <h1>Anatomy of a question pack</h1>
+    <p class="sub">
+      Every deck is one row in <code>question_packs</code>. Every question is one row in
+      <code>questions</code>, linked by <code>pack_id</code>. Seeds are generated from
+      <code>content/decks/*.json</code>. This page renders the live source files.
+    </p>
+    <div class="stat-row">
+      <div class="stat"><b>10</b><span>decks</span></div>
+      <div class="stat"><b>6</b><span>free</span></div>
+      <div class="stat"><b>4</b><span>locked</span></div>
+      <div class="stat"><b>635</b><span>questions</span></div>
+      <div class="stat"><b>245</b><span>text</span></div>
+      <div class="stat"><b>164</b><span>voice</span></div>
+      <div class="stat"><b>226</b><span>either</span></div>
+    </div>
+  </header>
+
+  <section>
+    <div class="sec-head"><h2>1 · The schema</h2><span class="hint">one pack → many questions</span></div>
+    <div class="schema">
+      <div class="box">
+        <div class="box-head"><code>question_packs</code><span class="tagpill">deck</span></div>
+        <div class="fields">
+          <div class="field"><code>id <span class="pk">PK</span></code><span>uuid</span></div>
+          <div class="field"><code>title</code><span>text · storefront name</span></div>
+          <div class="field"><code>slug</code><span>text · unique where present</span></div>
+          <div class="field"><code>tagline</code><span>text · subline</span></div>
+          <div class="field"><code>relationship_type</code><span>partner / family / friend</span></div>
+          <div class="field"><code>icon</code><span>text · lucide key</span></div>
+          <div class="field"><code>tone</code><span>text · colour key</span></div>
+          <div class="field"><code>art_key</code><span>text · card art key</span></div>
+          <div class="field"><code>session_length</code><span>int · draw size, 5–50</span></div>
+          <div class="field"><code>sort_order</code><span>int · storefront order</span></div>
+          <div class="field"><code>is_published</code><span>bool · gates storefront + draws</span></div>
+          <div class="field"><code>is_locked</code><span>bool · visible but not playable</span></div>
+          <div class="field"><code>created_at</code><span>timestamptz</span></div>
+        </div>
+      </div>
+
+      <div class="rel">
+        <span class="crow">1</span>
+        <span class="line"></span>
+        <b>pack_id</b>
+        <span class="line"></span>
+        <span class="crow">N</span>
+      </div>
+
+      <div class="box">
+        <div class="box-head"><code>questions</code><span class="tagpill">one card</span></div>
+        <div class="fields">
+          <div class="field"><code>id <span class="pk">PK</span></code><span>uuid</span></div>
+          <div class="field"><code>pack_id <span class="fk">FK</span></code><span>→ question_packs.id · cascade</span></div>
+          <div class="field"><code>text</code><span>text · the prompt itself</span></div>
+          <div class="field"><code>kind</code><span>text / voice / either · answer mode</span></div>
+          <div class="field"><code>ordinal</code><span>int · authored position, nullable</span></div>
+          <div class="field"><code>is_active</code><span>bool · soft delete</span></div>
+          <div class="field"><code>created_at</code><span>timestamptz</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="anatomy">
+      <div class="lbl">Anatomy of one question</div>
+      <div class="demo">
+        <span class="q-ord">13</span>
+        <span class="q-kind k-either">Either</span>
+        <span class="q-text">What moment made you feel truly understood by me?</span>
+      </div>
+      <div class="field-note">
+        <code>ordinal</code> is the authored position shown above · <code>kind</code> decides whether the
+        answer panel offers typing, recording, or both · <code>pack_id</code> is the only thing tying it to a deck.
+        Questions are later referenced by <code>prompts.question_id</code> and <code>favourites.question_id</code>,
+        which is why seeds soft-retire rather than delete them.
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>2 · The decks</h2><span class="hint">colour = tone · count = pool size · locked = coming soon</span></div>
+    <div class="tiles">
+      
+    <a class="deck-tile" href="#deck-love-and-relationships" style="--g1:#F2704A;--g2:#8F2A12;--ink:#FFF9E8">
+      <div class="tile-top">
+        <span class="tile-count">100</span>
+        <span class="tile-rel">partner</span>
+      </div>
+      <div class="tile-title">Love &amp; Relationships</div>
+      <div class="tile-tag">Closer, honestly.</div>
+      <div class="tile-kindbar"><span class="bar-seg k-text" style="flex:30" title="Text: 30"></span><span class="bar-seg k-voice" style="flex:37" title="Voice: 37"></span><span class="bar-seg k-either" style="flex:33" title="Either: 33"></span><span class="bar-total">100</span></div>
+    </a>
+    <a class="deck-tile" href="#deck-deep-talks" style="--g1:#4A6BFF;--g2:#15207A;--ink:#FFF9E8">
+      <div class="tile-top">
+        <span class="tile-count">80</span>
+        <span class="tile-rel">partner</span>
+      </div>
+      <div class="tile-title">Deep Talks</div>
+      <div class="tile-tag">The stuff that actually matters.</div>
+      <div class="tile-kindbar"><span class="bar-seg k-text" style="flex:30" title="Text: 30"></span><span class="bar-seg k-voice" style="flex:27" title="Voice: 27"></span><span class="bar-seg k-either" style="flex:23" title="Either: 23"></span><span class="bar-total">80</span></div>
+    </a>
+    <a class="deck-tile" href="#deck-fun-and-silly" style="--g1:#FFC81A;--g2:#B5620A;--ink:#2B1A0F">
+      <div class="tile-top">
+        <span class="tile-count">60</span>
+        <span class="tile-rel">partner</span>
+      </div>
+      <div class="tile-title">Fun &amp; Silly</div>
+      <div class="tile-tag">No deep answers required.</div>
+      <div class="tile-kindbar"><span class="bar-seg k-text" style="flex:17" title="Text: 17"></span><span class="bar-seg k-voice" style="flex:34" title="Voice: 34"></span><span class="bar-seg k-either" style="flex:9" title="Either: 9"></span><span class="bar-total">60</span></div>
+    </a>
+    <a class="deck-tile" href="#deck-life-and-dreams" style="--g1:#2FB566;--g2:#0C4A2A;--ink:#FFF9E8">
+      <div class="tile-top">
+        <span class="tile-count">75</span>
+        <span class="tile-rel">partner</span>
+      </div>
+      <div class="tile-title">Life &amp; Dreams</div>
+      <div class="tile-tag">Where do you want to go from here?</div>
+      <div class="tile-kindbar"><span class="bar-seg k-text" style="flex:36" title="Text: 36"></span><span class="bar-seg k-voice" style="flex:7" title="Voice: 7"></span><span class="bar-seg k-either" style="flex:32" title="Either: 32"></span><span class="bar-total">75</span></div>
+    </a>
+    <a class="deck-tile" href="#deck-family-table" style="--g1:#8CC63F;--g2:#34561A;--ink:#FFF9E8">
+      <div class="tile-top">
+        <span class="tile-count">65</span>
+        <span class="tile-rel">family</span>
+      </div>
+      <div class="tile-title">Family Table</div>
+      <div class="tile-tag">The people who made you, and the ones you are making.</div>
+      <div class="tile-kindbar"><span class="bar-seg k-text" style="flex:22" title="Text: 22"></span><span class="bar-seg k-voice" style="flex:18" title="Voice: 18"></span><span class="bar-seg k-either" style="flex:25" title="Either: 25"></span><span class="bar-total">65</span></div>
+    </a>
+    <a class="deck-tile" href="#deck-day-ones" style="--g1:#FF6FA1;--g2:#8A1F4D;--ink:#FFF9E8">
+      <div class="tile-top">
+        <span class="tile-count">80</span>
+        <span class="tile-rel">friend</span>
+      </div>
+      <div class="tile-title">Day Ones</div>
+      <div class="tile-tag">The people who knew before anyone else.</div>
+      <div class="tile-kindbar"><span class="bar-seg k-text" style="flex:29" title="Text: 29"></span><span class="bar-seg k-voice" style="flex:17" title="Voice: 17"></span><span class="bar-seg k-either" style="flex:34" title="Either: 34"></span><span class="bar-total">80</span></div>
+    </a>
+    <a class="deck-tile" href="#deck-late-night" style="--g1:#8E74FF;--g2:#1B1240;--ink:#FFF9E8">
+      <div class="tile-top">
+        <span class="tile-count">50</span>
+        <span class="tile-rel">partner · locked</span>
+      </div>
+      <div class="tile-title">Late Night</div>
+      <div class="tile-tag">For when the lights are off.</div>
+      <div class="tile-kindbar"><span class="bar-seg k-text" style="flex:21" title="Text: 21"></span><span class="bar-seg k-voice" style="flex:9" title="Voice: 9"></span><span class="bar-seg k-either" style="flex:20" title="Either: 20"></span><span class="bar-total">50</span></div>
+    </a>
+    <a class="deck-tile" href="#deck-long-distance" style="--g1:#3FD6E6;--g2:#0A4C58;--ink:#FFF9E8">
+      <div class="tile-top">
+        <span class="tile-count">45</span>
+        <span class="tile-rel">partner · locked</span>
+      </div>
+      <div class="tile-title">Long Distance</div>
+      <div class="tile-tag">Miles apart, still close.</div>
+      <div class="tile-kindbar"><span class="bar-seg k-text" style="flex:20" title="Text: 20"></span><span class="bar-seg k-voice" style="flex:8" title="Voice: 8"></span><span class="bar-seg k-either" style="flex:17" title="Either: 17"></span><span class="bar-total">45</span></div>
+    </a>
+    <a class="deck-tile" href="#deck-spicy-debates" style="--g1:#FF945F;--g2:#7A210A;--ink:#FFF9E8">
+      <div class="tile-top">
+        <span class="tile-count">40</span>
+        <span class="tile-rel">friend · locked</span>
+      </div>
+      <div class="tile-title">Spicy Debates</div>
+      <div class="tile-tag">Hot takes, zero fights.</div>
+      <div class="tile-kindbar"><span class="bar-seg k-text" style="flex:19" title="Text: 19"></span><span class="bar-seg k-voice" style="flex:1" title="Voice: 1"></span><span class="bar-seg k-either" style="flex:20" title="Either: 20"></span><span class="bar-total">40</span></div>
+    </a>
+    <a class="deck-tile" href="#deck-abusua" style="--g1:#D89A4A;--g2:#5A2E08;--ink:#FFF9E8">
+      <div class="tile-top">
+        <span class="tile-count">40</span>
+        <span class="tile-rel">family · locked</span>
+      </div>
+      <div class="tile-title">Abusua</div>
+      <div class="tile-tag">Blood, chosen, and everything in between.</div>
+      <div class="tile-kindbar"><span class="bar-seg k-text" style="flex:21" title="Text: 21"></span><span class="bar-seg k-voice" style="flex:6" title="Voice: 6"></span><span class="bar-seg k-either" style="flex:13" title="Either: 13"></span><span class="bar-total">40</span></div>
+    </a>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>3 · Down to the individual questions</h2><span class="hint">click a deck to expand</span></div>
+    <div class="legend">
+      <span class="item"><span class="sw k-text"></span> Text answer</span>
+      <span class="item"><span class="sw k-voice"></span> Voice answer</span>
+      <span class="item"><span class="sw k-either"></span> Either</span>
+    </div>
+    <div class="toolbar">
+      <label class="search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="search" type="search" placeholder="Search 635 questions…" autocomplete="off" />
+      </label>
+      <div class="chips" id="kind-chips">
+        <button class="chip" data-kind="all" aria-pressed="true">All</button>
+        <button class="chip" data-kind="text" aria-pressed="false">Text</button>
+        <button class="chip" data-kind="voice" aria-pressed="false">Voice</button>
+        <button class="chip" data-kind="either" aria-pressed="false">Either</button>
+      </div>
+      <button class="tool-btn" id="expand">Expand all</button>
+      <button class="tool-btn" id="collapse">Collapse all</button>
+      <span class="result-count" id="result-count"></span>
+    </div>
+    
+    <details class="deck-section" id="deck-love-and-relationships" open>
+      <summary>
+        <span class="sec-swatch" style="background:linear-gradient(135deg,#F2704A,#8F2A12)"></span>
+        <span class="sec-title">Love &amp; Relationships</span>
+        <span class="sec-tag">Closer, honestly.</span>
+        <span class="sec-count">100 questions</span>
+        <span class="chev" aria-hidden="true"></span>
+      </summary>
+      <div class="sec-meta">
+        <span><b>slug</b> love-and-relationships</span>
+        <span><b>tone</b> love</span>
+        <span><b>icon</b> heart</span>
+        <span><b>art_key</b> stacked</span>
+        <span><b>relationship</b> partner</span>
+        <span><b>session_length</b> 20</span>
+        <span><b>sort_order</b> 1</span>
+        <span><b>is_published</b> true</span>
+        <span><b>is_locked</b> false</span>
+      </div>
+      <ol class="q-list">
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">1</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What was the moment you knew I was special to you?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">2</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What do you need more of from me?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">3</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats a boundary you wish I understood better?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">4</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">When do you feel safest with me?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">5</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What do you feel you dont get to express enough?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">6</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats a fear you have about us, stated gently?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">7</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What made you choose me?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">8</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What part of your past are you most proud to have survived?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">9</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">When was the last time you cried, and why?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">10</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats something you worry about that you dont usually say out loud?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">11</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Whats been on your mind lately that you havent told me yet?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">12</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What question do you wish I would ask you?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">13</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Whats a moment you felt truly understood by me?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">14</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Whats something youve been carrying that isnt mine to carry?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">15</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What do you appreciate about me that you dont say enough?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">16</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats something I do that makes you feel loved?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">17</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats something I did lately that you are proud of?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">18</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats your favourite thing about how we communicate?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">19</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Tell me a memory from our early days that you replay often.</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">20</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Whats the first thing you noticed about me?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">21</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What memory of us makes you smile on a bad day?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">22</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What do you remember about the day we met?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">23</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Whats a trip or outing we did that youd relive?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">24</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats a habit of mine youve grown to love?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">25</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Is there a song that reminds you of us? What moment does it take you back to?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">26</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Whats something I did that made you laugh so hard it hurt?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">27</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What memory of me do you have that I probably dont remember?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">28</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What one you said to me did you mean more than I realised?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">29</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Whats been your favourite Chale moment with me?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">30</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Whats a small thing you do that you hope I have noticed?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">31</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Whats a promise you want to make to us going forward?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">32</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What tradition should we start together?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">33</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Whats a first you are excited for us to have?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">34</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What makes you feel closest to me?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">35</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What small thing do you want us to do more of together?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">36</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats a change we made recently that is working well?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">37</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Whats one thing about our relationship youd never want to lose?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">38</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">If you could give future-us one piece of advice, what would it be?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">39</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Whats one thing you hope we are still doing together in ten years?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">40</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Whats something ordinary youd love to make special with me?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">41</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you want me to remember about you in twenty years?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">42</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Whats a season of your life youd revisit with me?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">43</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Whats something we disagree on that you are glad we do?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">44</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Whats something you changed your mind about because of me?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">45</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is something you started liking because I like it?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">46</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Where did you go in your head the last time we argued?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">47</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What does feeling loved actually feel like to you, day to day?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">48</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Which of my habits would you keep if you could keep only one?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">49</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What do you forgive me for without ever saying it?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">50</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">When did you last feel truly understood by me, and what did I do?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">51</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Whats something about me you are still getting to know?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">52</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What do you want us to be better at doing together?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">53</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Describe our relationship in three words. Why those three?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">54</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats the best thing I do when I dont know what to say?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">55</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats a piece of advice about us that youre giving yourself?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">56</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">If our love had a smell, what would it smell like?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">57</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you want our life to look like on an ordinary Wednesday?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">58</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats a habit youd like us to build in the next year?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">59</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What did you need when you were at your lowest, and did you get it?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">60</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Which version of me do you love most?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">61</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats something about my family youve grown to really like?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">62</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What did we do better before life got busy?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">63</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What would you want written in our ten year anniversary note?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">64</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Whats a place we went that felt like a different country?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">65</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is one thing about me you would not change if you could?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">66</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">When we argue, what do you wish I would do first?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">67</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Whats a compliment about us that you have never told anyone?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">68</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What am I better at than I give myself credit for?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">69</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Describe the moment you first felt at home with me.</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">70</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What do you want to feel with me that you havent felt yet?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">71</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Whats a small ritual of ours that actually matters to you?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">72</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something we fought about that you are actually glad we fought about?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">73</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">How do you want to be reminded that I love you on a hard day?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">74</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Whats a future we discussed that you still think about?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">75</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is the bravest thing you have done in this relationship?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">76</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats a piece of us you never want to photograph because it stays private?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">77</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">When did I surprise you most?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">78</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you like me to stop apologising for?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">79</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Whats the difference between being in love with me and loving me?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">80</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What did we get wrong for a long time that we have now fixed?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">81</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Name one thing I do that you would miss if I stopped.</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">82</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">When you picture us at our best, what are we doing?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">83</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Whats the most romantic thing anyone has ever done for you?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">84</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What would you want our last conversation to be about?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">85</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Whats a word you use for me that I have never heard you say?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">86</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">How has loving me changed you as a person?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">87</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What do you need on a day when you have nothing left to give?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">88</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you do if you knew we had one year left?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">89</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What do you think I love about you that you are not sure of?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">90</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What promise should I ask you to keep, and how would I know you kept it?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">91</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats a conversation we keep postponing?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">92</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would make you feel less alone this week, specifically?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">93</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Describe the last time you felt completely content.</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">94</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is something I would never guess about you from watching you?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">95</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What would you want me to know about you that you have never had the words for?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">96</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What does our best day together look like in the past tense?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">97</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is one thing we do that you would keep even if nobody else understood?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">98</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Who else in your life gets the version of you I get?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">99</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What would you want to hear from me right now, if I were sitting next to you?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">100</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What promise are we keeping right now without ever having said it out loud?</span>
+    </li></ol>
+    </details>
+    <details class="deck-section" id="deck-deep-talks" >
+      <summary>
+        <span class="sec-swatch" style="background:linear-gradient(135deg,#4A6BFF,#15207A)"></span>
+        <span class="sec-title">Deep Talks</span>
+        <span class="sec-tag">The stuff that actually matters.</span>
+        <span class="sec-count">80 questions</span>
+        <span class="chev" aria-hidden="true"></span>
+      </summary>
+      <div class="sec-meta">
+        <span><b>slug</b> deep-talks</span>
+        <span><b>tone</b> deep</span>
+        <span><b>icon</b> message</span>
+        <span><b>art_key</b> deck-edge</span>
+        <span><b>relationship</b> partner</span>
+        <span><b>session_length</b> 20</span>
+        <span><b>sort_order</b> 2</span>
+        <span><b>is_published</b> true</span>
+        <span><b>is_locked</b> false</span>
+      </div>
+      <ol class="q-list">
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">1</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What question you would rather answer in writing than out loud?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">2</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats something you used to believe that you no longer do?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">3</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats the best advice you have ever received?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">4</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats something you want to be braver about?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">5</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats a habit you are trying to break or build right now?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">6</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats a small win you had recently?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">7</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would a good day look like for you, hour by hour?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">8</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Whats something you want to try together that scares you a little?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">9</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Whats a tradition from your family youd want to bring into ours?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">10</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Whats a place that feels like home to you, and why?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">11</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Whats something youd defend me on without hesitation?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">12</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What's a dream youve never actually said out loud?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">13</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would success look like for you in five years, honestly?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">14</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats a big goal you have that you keep to yourself?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">15</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What skill do you wish you had by this time next year?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">16</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What hobby have you always wanted to start but havent?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">17</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">If you had a whole free day with no obligations, how would you spend it?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">18</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Whats one thing from your childhood youd want to relive for a day?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">19</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">If money werent a factor, what would you do next year?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">20</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What place would you love for us to visit together?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">21</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What would you rather be doing at thirty than at work?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">22</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Describe the version of yourself from five years ago. What did they get right that you have forgotten?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">23</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a fight you had with yourself that finally ended?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">24</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What do you believe that most people disagree with?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">25</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats something you want to be known for, not just good at?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">26</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is the difference between the life you have and the one you imagined?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">27</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What have you had to forgive yourself for?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">28</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Who shaped you most, and what did they give you that you still use?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">29</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats something you pretend to enjoy but actually do not?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">30</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">When did you first realise you had grown up?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">31</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What would you want your thirties to feel like?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">32</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Whats one thing you would do differently if you could go back five years?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">33</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What in your life right now feels like it is on loan?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">34</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What do you hope does not change about you?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">35</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">When have you felt like an imposter, and did you believe it?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">36</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is something you have grown out of that you still miss?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">37</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What would you want to be remembered for among friends?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">38</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats a hard truth you have known for a while and not said?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">39</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What keeps you up at night that you have never mentioned?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">40</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Describe a moment you felt completely alone, even around people.</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">41</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What would you do if you knew you had this one chance to start again?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">42</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you would like to stop explaining about yourself?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">43</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">When did you last change your mind about something important?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">44</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a belief you are still testing?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">45</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Who would you call at 3am right now?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">46</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What would you want your life to look like at sixty?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">47</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What are you proudest of that nobody has congratulated you for?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">48</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What have you been avoiding that you already know the answer to?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">49</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Describe the last time you felt like a fraud.</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">50</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What do you want to spend more of your limited attention on?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">51</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you tell yourself one year ago?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">52</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a hard conversation you know needs to happen?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">53</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">When was the last time you changed your mind about someone?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">54</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What does a good life look like when nobody is watching?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">55</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What are you carrying that you could hand to someone else?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">56</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What has been the best decision you ever made?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">57</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is a mistake you are still paying for?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">58</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">If you could write one letter to your younger self, what would it say?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">59</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What would you do differently if you knew you had made it?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">60</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is the most useful thing anyone ever said to you?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">61</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What do you want your work to have meant?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">62</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Where do you go when you need to feel safe?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">63</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is something you would want to know at eighty?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">64</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What have you stopped doing because of what people might think?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">65</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is one thing you are better at than you give yourself credit for?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">66</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Describe the version of you that is five years away.</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">67</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What have you been waiting for permission to do?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">68</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a rule you live by that you would break for the right person?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">69</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What do you hope people remember about you, years from now?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">70</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the thing you would regret not attempting?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">71</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you say you are better at than you give yourself credit for?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">72</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What have you never told anyone because it felt too small to matter?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">73</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What do you think is the hardest part of being you?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">74</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">When did you last feel like you were exactly where you were supposed to be?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">75</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a decision you would make differently knowing what you know now?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">76</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What do you think you would do if you had no one left to impress?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">77</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is something you have never done and would not want to tell anyone about?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">78</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you say is the most honest thing about your life right now?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">79</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a piece of advice you would give to someone ten years younger than you?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">80</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What do you think has been the most important thing you have ever learned?</span>
+    </li></ol>
+    </details>
+    <details class="deck-section" id="deck-fun-and-silly" >
+      <summary>
+        <span class="sec-swatch" style="background:linear-gradient(135deg,#FFC81A,#B5620A)"></span>
+        <span class="sec-title">Fun &amp; Silly</span>
+        <span class="sec-tag">No deep answers required.</span>
+        <span class="sec-count">60 questions</span>
+        <span class="chev" aria-hidden="true"></span>
+      </summary>
+      <div class="sec-meta">
+        <span><b>slug</b> fun-and-silly</span>
+        <span><b>tone</b> silly</span>
+        <span><b>icon</b> sun</span>
+        <span><b>art_key</b> scattered</span>
+        <span><b>relationship</b> partner</span>
+        <span><b>session_length</b> 20</span>
+        <span><b>sort_order</b> 3</span>
+        <span><b>is_published</b> true</span>
+        <span><b>is_locked</b> false</span>
+      </div>
+      <ol class="q-list">
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">1</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What was the best part of your day that I wasnt there for?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">2</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats one small thing youre looking forward to this week?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">3</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What did you eat today that you actually enjoyed?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">4</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What song have you had on repeat lately?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">5</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What are you working on right now that you secretly enjoy?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">6</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Who made you feel good today?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">7</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Describe your day in exactly three words.</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">8</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Whats something funny that happened today, even if it was tiny?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">9</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">If you could trade lives with me for one day, what would you want to try first?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">10</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats your guilty-pleasure TV show?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">11</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats the weirdest food combo you secretly love?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">12</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Whats your current obsession, show, food, hobby, or otherwise?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">13</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Whats the most embarrassing thing I have ever said to a stranger?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">14</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">If our relationship were a movie, what genre would it be?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">15</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Whats a ridiculous thing you would do for a million dollars?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">16</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Whats an inside joke we need to start?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">17</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Whats a talent you have that I dont know about yet?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">18</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">If you had to describe me as a weather pattern, what would I be?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">19</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Whats the most you thing you did this week?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">20</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Good evening, Chale: whats the one thing on your mind today?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">21</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">If I were next to you right now, what would you want to do?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">22</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Say the first thing that comes to mind when you think of me.</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">23</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">If our day had a soundtrack, which song is playing right now?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">24</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Whats the last thing that genuinely made you laugh?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">25</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Describe your mood right now in three seconds of atmosphere.</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">26</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">If you could send me one sound from where you are right now, what would it be?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">27</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is your most irrational hill to die on?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">28</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Which of us would survive a zombie apocalypse and which would not?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">29</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is your most useless talent?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">30</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">If your life had a theme song, would you actually like it?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">31</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is the pettiest hill you have ever climbed?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">32</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you do badly on purpose?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">33</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">If we ran a terrible restaurant together, what would we serve?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">34</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would be on your tombstone?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">35</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Which of us would you rather be stuck in an airport with for six hours?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">36</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a tiny victory you had today that nobody would understand?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">37</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is the worst haircut you have ever had?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">38</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">If you had to communicate using only emojis for a day, what would you use?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">39</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is the most ridiculous thing you believed as a child?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">40</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is the worst gift you have ever received?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">41</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is the best nickname you have ever had?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">42</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">If we were to start a terrible podcast, what would it be about?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">43</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is a smell that instantly takes you back to being a kid?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">44</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is the most dramatic thing you have done over something small?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">45</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you name a pet we do not have?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">46</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is your most chaotic cooking idea?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">47</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">If you were a spice, which one would you be?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">48</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is the pettiest thing you have ever done on purpose?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">49</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is something you would absolutely refuse to do, no matter the money?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">50</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is the most awkward thing you have ever done in public?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">51</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">If you had to describe your week as a movie trailer, what is the tagline?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">52</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a trend you were fully committed to that you now pretend never happened?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">53</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is the most dramatic reaction you have had to something small?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">54</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you are unreasonably good at?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">55</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What would your villain origin story be?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">56</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the worst possible name for a child, in your opinion?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">57</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you find genuinely funny that most people do not?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">58</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is the most ridiculous thing you have ever done for a laugh?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">59</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">If you were a terrible superhero name, what would it be?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">60</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is a prank you would pull if you knew you would get away with it?</span>
+    </li></ol>
+    </details>
+    <details class="deck-section" id="deck-life-and-dreams" >
+      <summary>
+        <span class="sec-swatch" style="background:linear-gradient(135deg,#2FB566,#0C4A2A)"></span>
+        <span class="sec-title">Life &amp; Dreams</span>
+        <span class="sec-tag">Where do you want to go from here?</span>
+        <span class="sec-count">75 questions</span>
+        <span class="chev" aria-hidden="true"></span>
+      </summary>
+      <div class="sec-meta">
+        <span><b>slug</b> life-and-dreams</span>
+        <span><b>tone</b> dreams</span>
+        <span><b>icon</b> sparkles</span>
+        <span><b>art_key</b> stacked</span>
+        <span><b>relationship</b> partner</span>
+        <span><b>session_length</b> 20</span>
+        <span><b>sort_order</b> 4</span>
+        <span><b>is_published</b> true</span>
+        <span><b>is_locked</b> false</span>
+      </div>
+      <ol class="q-list">
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">1</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">If you could teleport anywhere for dinner tomorrow, where are we eating?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">2</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you like your days to look like a year from now?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">3</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is one thing you want to be able to do that you cannot do yet?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">4</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What do you want your work to look like in two years?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">5</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Where would you like to live, and what makes it the right place?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">6</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a plan you have quietly been making for a while?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">7</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you want to build, make, or grow if nobody was watching?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">8</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What would you like to be doing at fifty?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">9</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is the first thing on your list that you have never started?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">10</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would your ideal week look like, hour by hour?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">11</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What would you like to be famous for, for one week?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">12</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you would like to be really good at before you are thirty?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">13</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">If you could take a year off and it changed nothing, what would you do?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">14</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What have you always wanted to try and never got round to?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">15</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What do you want to stop doing with your time?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">16</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Where do you see us in five years?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">17</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you like to be remembered for, at work?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">18</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a goal you have given up on that you secretly still want?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">19</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would your perfect Sunday look like?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">20</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you want to learn just because it would be fun?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">21</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Where would you want to be living a year from now?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">22</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you like to do with more free time?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">23</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is one thing you want to stop apologising for?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">24</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you like to build together, long term?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">25</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a place you would like to see before anything else?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">26</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Describe the future you are quietly hoping for.</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">27</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you want your mornings to look like?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">28</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you have always wanted to prove?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">29</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you do with an extra thousand a month?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">30</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the best decision you think you have not made yet?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">31</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you like to be doing instead of working, ideally?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">32</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Where do you see yourself in ten years?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">33</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you like to have figured out by then?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">34</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a place you feel completely at home in?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">35</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you want to have written, painted, or made?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">36</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is something you want to do before you are too old?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">37</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you like your life to feel like at the end of a long day?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">38</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a dream you have never told anyone about?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">39</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Where would you like your weekends to go?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">40</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What do you want to do more of, and less of?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">41</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you like to be able to afford one day?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">42</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a small change you want to make this year?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">43</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What do you want your thirties to have that yours did not?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">44</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Describe a day in the life you are aiming for.</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">45</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you like to be doing this time next year?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">46</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a goal you would set if you knew you could not fail?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">47</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you want to be better at this year, and why now?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">48</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Where would you like to be in five years, honestly?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">49</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you like to have accomplished by the end of this year?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">50</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is something you would like to be known for in your community?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">51</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would your ideal week look like if you were still in school?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">52</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a place you would like to go with your family?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">53</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What do you want your relationship with work to look like?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">54</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is one thing you would like to achieve before you retire?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">55</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you like to be doing that you have never told anyone about?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">56</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is one thing you want to start this year, no matter how small?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">57</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you like your life to look like in a decade?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">58</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a place you would like to live, even just for a while?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">59</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you like to be doing with your weekends next year?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">60</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Describe a goal you have that you have never told anyone about.</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">61</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you like to have finished by the end of this year?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">62</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you like to have started?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">63</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is something you would like to do while you still have the energy for it?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">64</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Where would you like to be in a year, in as much detail as you can?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">65</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would your life look like if you stopped worrying about what people thought?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">66</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you would like to make, build, or write?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">67</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you like to do differently about how you spend your days?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">68</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is something you want to be known for, in a place where nobody knows you yet?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">69</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you like your evenings to look like from now on?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">70</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is something you have always wanted and still want, without shame?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">71</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you like to do with your next birthday?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">72</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a place you would like to see, and who would you want to see it with?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">73</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you like your work to look like when you are tired of it?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">74</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you would like to say yes to this year?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">75</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you like to stop being afraid of?</span>
+    </li></ol>
+    </details>
+    <details class="deck-section" id="deck-family-table" >
+      <summary>
+        <span class="sec-swatch" style="background:linear-gradient(135deg,#8CC63F,#34561A)"></span>
+        <span class="sec-title">Family Table</span>
+        <span class="sec-tag">The people who made you, and the ones you are making.</span>
+        <span class="sec-count">65 questions</span>
+        <span class="chev" aria-hidden="true"></span>
+      </summary>
+      <div class="sec-meta">
+        <span><b>slug</b> family-table</span>
+        <span><b>tone</b> family</span>
+        <span><b>icon</b> house</span>
+        <span><b>art_key</b> deck-edge</span>
+        <span><b>relationship</b> family</span>
+        <span><b>session_length</b> 20</span>
+        <span><b>sort_order</b> 5</span>
+        <span><b>is_published</b> true</span>
+        <span><b>is_locked</b> false</span>
+      </div>
+      <ol class="q-list">
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">1</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is a tradition from your childhood that you still carry today?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">2</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Who in your family made you feel the safest when you were small?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">3</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What did your parents do that you want to do for your own kids?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">4</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a phrase your family says that you have ended up using?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">5</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Who in your family are you closest to right now?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">6</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is the best meal you remember from being a child?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">7</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What did you want to be when you were ten?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">8</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Who in your family shaped you most, and what did they give you that you still use?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">9</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is something your family is known for?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">10</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a disagreement in your family that you have never resolved?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">11</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Describe your home as a child in three words.</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">12</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is something you wish you had asked your parents while they were still here?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">13</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is the thing you always do on your birthday?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">14</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Who in your family tells the truth the most?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">15</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a family joke you would explain to an outsider?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">16</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What do you want your family to know about you?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">17</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is the most ridiculous thing your family has ever done?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">18</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">How has your family changed over the last ten years?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">19</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Who do you call first when something good happens?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">20</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is something your family taught you that you did not want to learn?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">21</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is a story about you that your family tells differently every time?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">22</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you like to do with your family this year?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">23</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is the best advice a parent ever gave you?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">24</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Who in your family do you feel closest to, and why?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">25</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a word or phrase your family uses that means something only you understand?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">26</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Describe a family holiday you still think about.</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">27</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something about your family you are proud of?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">28</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you like to pass down to the next generation?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">29</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Who in your family makes you laugh the most?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">30</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the hardest thing your family has been through together?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">31</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What do you and your siblings disagree about most?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">32</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you like to be remembered for by your family?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">33</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the longest you have lived away from home?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">34</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What did you miss most about home?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">35</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is something you and your family do that no one else does?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">36</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Who in your family are you most proud of, and why?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">37</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you like your family to know about how you are doing?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">38</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a gift you will always remember?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">39</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Who has been the biggest influence on your life?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">40</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a hard lesson your family taught you the long way?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">41</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Who in your family do you feel you have let down?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">42</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is something your family does that you want to keep going?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">43</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Describe a moment when your family surprised you.</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">44</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the most you have ever disagreed with a parent?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">45</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you like your family to do more of?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">46</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is something about your childhood you would not change?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">47</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is something about your childhood you would change if you could?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">48</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Who is your closest family friend, almost family?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">49</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is one thing you want to do before it is too late?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">50</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What do you hope your family never finds out about?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">51</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you would do differently as a parent?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">52</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Describe the person in your family you most want to be like.</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">53</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a family rule you have broken more than once?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">54</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Who in your family do you feel closest to right now, and what would you say to them?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">55</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is something your family made you, and what did you do with it?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">56</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you like your family to do together in the next year?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">57</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something about your family that makes you feel lucky?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">58</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Who taught you how to be kind?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">59</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a phrase your parents said that you still hear in your own head?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">60</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you would like to do again with your family?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">61</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">When did you last feel like a kid?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">62</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is your earliest memory, as clearly as you can get it?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">63</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something about your family you would not change for anything?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">64</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Who in your family would you call first if something good happened?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">65</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What would you like your family to know about how much they matter to you?</span>
+    </li></ol>
+    </details>
+    <details class="deck-section" id="deck-day-ones" >
+      <summary>
+        <span class="sec-swatch" style="background:linear-gradient(135deg,#FF6FA1,#8A1F4D)"></span>
+        <span class="sec-title">Day Ones</span>
+        <span class="sec-tag">The people who knew before anyone else.</span>
+        <span class="sec-count">80 questions</span>
+        <span class="chev" aria-hidden="true"></span>
+      </summary>
+      <div class="sec-meta">
+        <span><b>slug</b> day-ones</span>
+        <span><b>tone</b> friends</span>
+        <span><b>icon</b> people</span>
+        <span><b>art_key</b> scattered</span>
+        <span><b>relationship</b> friend</span>
+        <span><b>session_length</b> 20</span>
+        <span><b>sort_order</b> 6</span>
+        <span><b>is_published</b> true</span>
+        <span><b>is_locked</b> false</span>
+      </div>
+      <ol class="q-list">
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">1</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">When did you first know we were going to be friends?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">2</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a habit of mine you would miss if we stopped talking?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">3</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What do you think I would do in a situation you have never seen me in?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">4</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you would tell me that you would not tell anyone else?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">5</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the thing we were best at doing together?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">6</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">When did you last feel like talking to me, and did you?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">7</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What do you think is my worst habit?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">8</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you would like me to do more of?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">9</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Who else knows me as well as you do?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">10</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you say has changed in me, and when?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">11</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Describe your perfect day off with me, in detail.</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">12</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something I do that you find genuinely funny?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">13</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a piece of advice you wish someone had given you at my age?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">14</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is something you would like to do again, like we used to?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">15</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a moment you felt really proud to be friends with me?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">16</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is your favourite thing about being friends with me?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">17</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you do if I asked you to help me move at short notice?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">18</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the worst advice I have ever given you?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">19</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you wish I would stop doing?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">20</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">When did you last feel truly supported by me?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">21</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is something about being friends with me that you did not expect?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">22</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you say has been the best year of your life so far?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">23</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something in your life right now that you wish more people knew about?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">24</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you want me to know about you that I might have missed?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">25</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a small thing that would make this week better?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">26</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Describe a moment you felt left out, and by whom.</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">27</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What would you want me to know that you have never told me?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">28</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What do you think I am avoiding?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">29</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would make today feel like a good day?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">30</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is something you would like us to do before the year is out?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">31</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Describe the version of you that I would not recognise today.</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">32</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a subject you could talk about for hours with anyone?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">33</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the most fun thing you have done in the last year?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">34</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you want your friendship with me to look like at fifty?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">35</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is something I said to you that stuck with you?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">36</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a small thing I do that makes your day better?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">37</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you are proud of that you have not told me?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">38</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">When did you last feel really happy, and who was there?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">39</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you want to be remembered for, as a friend?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">40</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is something you have never told me, and do not want to?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">41</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would make you feel less alone this week?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">42</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a question you have wanted to ask me for ages?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">43</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Describe a time you felt really let down by someone.</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">44</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What do you think friendship should give people?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">45</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a friendship you have lost touch with, and why?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">46</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you do if I told you I was struggling, and had not said anything?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">47</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is the nicest thing someone has done for you recently?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">48</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you like us to do more of, just for fun?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">49</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is something you would want to say out loud but have not?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">50</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is your favourite thing about who you are with me?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">51</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you like to do when we all have free time?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">52</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is something that made you laugh so hard you cried?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">53</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a small thing you want to start this month?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">54</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What do you think is the best thing about me that I do not see?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">55</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a place you would want to visit with me?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">56</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What would you want to say to me if I were listening right now?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">57</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">Describe a time you felt genuinely supported by someone.</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">58</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you would like me to know about friendship?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">59</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a goal you have that you have not told anyone about?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">60</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you like us to have done more of, when we were younger?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">61</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is one thing you would never forgive me for?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">62</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you want your friendship with me to look like in ten years?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">63</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you are looking forward to?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">64</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What do you think is the most important thing about a friend?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">65</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is something I would do for you that I would not do for anyone else?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">66</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is the nicest thing you have done for me that I never thanked you for?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">67</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you like to be asked about, instead of how I am?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">68</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you would like to be better at?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">69</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you do if you had to describe our friendship in one word?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">70</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a small thing you would like me to ask you about more?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">71</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is the last thing that made you feel like yourself?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">72</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What would you want me to do if I was having a bad week and did not say anything?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">73</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is something you would like to do this year that is just for fun?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">74</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a place we should go this year?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">75</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What would you like to do together that we have never done?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">76</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What do you think we should do more of, just because it is fun?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">77</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is something you would want me to keep doing forever?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">78</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is one thing that would make this year feel like a good one?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">79</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What would you say is the most generous thing I have ever done?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">80</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is something about you that I would like to understand better?</span>
+    </li></ol>
+    </details>
+    <details class="deck-section" id="deck-late-night" >
+      <summary>
+        <span class="sec-swatch" style="background:linear-gradient(135deg,#8E74FF,#1B1240)"></span>
+        <span class="sec-title">Late Night</span>
+        <span class="sec-tag">For when the lights are off.</span>
+        <span class="sec-count">50 questions</span>
+        <span class="chev" aria-hidden="true"></span>
+      </summary>
+      <div class="sec-meta">
+        <span><b>slug</b> late-night</span>
+        <span><b>tone</b> late</span>
+        <span><b>icon</b> moon</span>
+        <span><b>art_key</b> stacked</span>
+        <span><b>relationship</b> partner</span>
+        <span><b>session_length</b> 20</span>
+        <span><b>sort_order</b> 7</span>
+        <span><b>is_published</b> true</span>
+        <span><b>is_locked</b> true</span>
+      </div>
+      <ol class="q-list">
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">1</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is the last thing you think about before you fall asleep next to me?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">2</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Which late-night conversation of ours do you still replay?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">3</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What do you wish I asked you when the lights are off?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">4</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">When the power goes out, what do you want us to do with the dark?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">5</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is a small thing I do at night that makes you feel safe?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">6</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is the most honest thing you have almost said to me at 2 a.m.?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">7</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">If we shared a plate of kelewele right now, what would we talk about?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">8</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a fear that only shows up after midnight?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">9</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What song should be playing in the background of our quietest night?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">10</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What do you want more of from me when the day is finally over?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">11</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a memory of us that feels warmer at night?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">12</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you notice about me when I am half asleep?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">13</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">If we could take a night walk anywhere in Accra, where would we go?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">14</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a dream you have never told me because it felt too big?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">15</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the best thing about being awake while the city is quiet?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">16</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What do you need from me on a night when you cannot switch off?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">17</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a line from a film or song that describes how you feel about us?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">18</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is one thing you would change about how we say goodnight?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">19</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a late-night habit of yours you are not proud of?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">20</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">When you cannot sleep, what do you usually wish someone would say?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">21</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the most comforting sound in our home at night?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">22</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a question you have wanted to ask me but saved for the dark?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">23</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What does intimacy look like on an ordinary Tuesday night?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">24</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a small adventure we could have after 10 p.m.?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">25</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you want to forgive yourself for before the morning?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">26</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What do you think I need on a night when I am too quiet?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">27</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is the sexiest thing about a slow, unhurried evening?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">28</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">If our night had a soundtrack, what would the first song be?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">29</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a promise you want us to keep only at night?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">30</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is a way I could make your evenings feel lighter?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">31</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the last dream you remember?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">32</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you want to whisper to me but have not?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">33</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a place in Ghana that feels like a late-night secret?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">34</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is the difference between being alone at night and being lonely?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">35</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a touch that says more than a whole conversation?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">36</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What do you want to wake up to more often?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">37</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a worry that gets louder when the house is silent?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">38</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the most romantic thing about an unplanned night in?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">39</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a question about us you are afraid to hear the answer to?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">40</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is one thing we should do before the year ends, just the two of us?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">41</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is a way we can make bedtime feel less like a routine?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">42</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you have learned about me from sharing a bed?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">43</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the best late-night meal we have ever had together?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">44</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a compliment you want to hear when no one else is around?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">45</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a memory of your childhood that comes back at night?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">46</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a small ritual you would like us to start after dark?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">47</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is something you want me to know before you fall asleep?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">48</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a way we can turn a sleepless night into something good?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">49</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is the last thing you want to hear from me tonight?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">50</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">If we could pause one night and live in it forever, which one would it be?</span>
+    </li></ol>
+    </details>
+    <details class="deck-section" id="deck-long-distance" >
+      <summary>
+        <span class="sec-swatch" style="background:linear-gradient(135deg,#3FD6E6,#0A4C58)"></span>
+        <span class="sec-title">Long Distance</span>
+        <span class="sec-tag">Miles apart, still close.</span>
+        <span class="sec-count">45 questions</span>
+        <span class="chev" aria-hidden="true"></span>
+      </summary>
+      <div class="sec-meta">
+        <span><b>slug</b> long-distance</span>
+        <span><b>tone</b> distance</span>
+        <span><b>icon</b> plane</span>
+        <span><b>art_key</b> deck-edge</span>
+        <span><b>relationship</b> partner</span>
+        <span><b>session_length</b> 20</span>
+        <span><b>sort_order</b> 8</span>
+        <span><b>is_published</b> true</span>
+        <span><b>is_locked</b> true</span>
+      </div>
+      <ol class="q-list">
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">1</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the first thing you want to do when we are finally in the same room?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">2</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Which time zone difference has been the hardest for us?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">3</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a small part of your day you wish I could see?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">4</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What do you miss most about my presence, not my messages?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">5</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a Ghanaian food you wish you could send me through the phone?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">6</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is the best voice note you have ever sent me?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">7</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">How do you know when I am missing you before I say it?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">8</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a place in Accra you want to show me when you are back?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">9</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is the hardest part of saying goodbye at the airport?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">10</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a ritual we should keep even when we are in different cities?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">11</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is something you have learned to do alone that you would rather do with me?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">12</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a song that makes the distance feel smaller?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">13</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a small surprise that would make a long-distance week better?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">14</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What do you want me to do on a day when the distance feels too heavy?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">15</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a memory of us that gets you through a lonely evening?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">16</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">If we could meet halfway, where would that be?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">17</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a habit from home you have held on to abroad?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">18</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is something about long distance you are grateful for?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">19</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a message you have typed and deleted?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">20</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the first meal we should share when we reunite?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">21</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a way we can make the same movie night work across two countries?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">22</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is something you want me to know about your life there that I cannot see?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">23</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a fear you have about distance that you rarely say out loud?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">24</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the most romantic thing about waiting for someone?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">25</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a tradition from your hometown you want us to keep?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">26</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a time you felt close to me even though we were far apart?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">27</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is a small thing I can do to make your morning better from here?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">28</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is the hardest hour of your day without me?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">29</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a place you dream of visiting together that is neither here nor there?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">30</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you want to say to me at the airport that you never do?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">31</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">How has distance changed the way you love?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">32</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a gift that would feel like a piece of home?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">33</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a boundary we need to protect our time zones?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">34</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is a memory of a call that we almost missed?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">35</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a way we can celebrate small wins from far away?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">36</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you have gotten better at because of us being apart?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">37</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a question you want to ask me about my life here?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">38</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is the first thing you notice when you hear my voice after a long day?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">39</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a plan we can make for the next time we are together?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">40</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you want us to stop apologising for?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">41</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is a way we can make the countdown feel exciting instead of painful?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">42</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a place in your city that feels like ours?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">43</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the best thing about the moment we stop saying goodbye?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">44</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you want to promise me about the distance?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">45</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">If distance had a voice, what would you tell it?</span>
+    </li></ol>
+    </details>
+    <details class="deck-section" id="deck-spicy-debates" >
+      <summary>
+        <span class="sec-swatch" style="background:linear-gradient(135deg,#FF945F,#7A210A)"></span>
+        <span class="sec-title">Spicy Debates</span>
+        <span class="sec-tag">Hot takes, zero fights.</span>
+        <span class="sec-count">40 questions</span>
+        <span class="chev" aria-hidden="true"></span>
+      </summary>
+      <div class="sec-meta">
+        <span><b>slug</b> spicy-debates</span>
+        <span><b>tone</b> spicy</span>
+        <span><b>icon</b> flame</span>
+        <span><b>art_key</b> scattered</span>
+        <span><b>relationship</b> friend</span>
+        <span><b>session_length</b> 20</span>
+        <span><b>sort_order</b> 9</span>
+        <span><b>is_published</b> true</span>
+        <span><b>is_locked</b> true</span>
+      </div>
+      <ol class="q-list">
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">1</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Jollof or waakye — and be honest, not polite.</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">2</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Which is the real national dish: banku and tilapia or fufu and light soup?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">3</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Pineapple on pizza: crime or genius?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">4</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Is it acceptable to eat kelewele on the way home and call it dinner?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">5</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is the most overrated Ghanaian food?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">6</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Trotro etiquette: who gets the window seat when two strangers board?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">7</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Should you greet everyone in a trotro or mind your business?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">8</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Is highlife better than afrobeats? Defend your answer.</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">9</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Black Stars or the Premier League — which disappointment hurts more?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">10</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Which Accra neighbourhood is the most overrated?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">11</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Is a hot dog a sandwich?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">12</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the correct way to eat fufu: swallow or chew?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">13</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Should pineapple be allowed in jollof? Yes or no.</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">14</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the most annoying thing a friend can do at a party?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">15</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Is it ever okay to be late to a Ghanaian funeral?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">16</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Which is worse: a bad haircut or a bad outfit?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">17</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Is &quot;I'll be there in five minutes&quot; a promise or a vibe?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">18</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the most controversial opinion you hold about music?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">19</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Should you split the bill or fight over it?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">20</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Is it rude to refuse food when you are full?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">21</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is the best street food in Accra, and why is it kelewele?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">22</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Can a friendship survive a borrowed book never returned?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">23</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Which is the superior way to eat plantain: fried or boiled?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">24</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Is it acceptable to watch a series without your friend?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">25</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is the worst gift a friend can give?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">26</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Should you tell a friend their partner is bad news?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">27</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Which is more important: being right or keeping the peace?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">28</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Is waakye a breakfast food, lunch food, or a way of life?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">29</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is the most overrated trend right now?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">30</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Should friends post each other without permission?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">31</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is the correct response to &quot;we need to talk&quot;?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">32</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Is it okay to ghost a friend you have outgrown?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">33</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Which is worse: a fake laugh or a fake apology?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">34</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a small thing that instantly makes you judge someone?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">35</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Is chale a word, a feeling, or a whole philosophy?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">36</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the best way to end a debate with a stubborn friend?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">37</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Should a group holiday have a strict itinerary?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">38</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is the most Ghanaian thing you have ever done?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">39</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Is it possible to be friends with someone who does not like jollof?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">40</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is a hill you are willing to die on?</span>
+    </li></ol>
+    </details>
+    <details class="deck-section" id="deck-abusua" >
+      <summary>
+        <span class="sec-swatch" style="background:linear-gradient(135deg,#D89A4A,#5A2E08)"></span>
+        <span class="sec-title">Abusua</span>
+        <span class="sec-tag">Blood, chosen, and everything in between.</span>
+        <span class="sec-count">40 questions</span>
+        <span class="chev" aria-hidden="true"></span>
+      </summary>
+      <div class="sec-meta">
+        <span><b>slug</b> abusua</span>
+        <span><b>tone</b> abusua</span>
+        <span><b>icon</b> house</span>
+        <span><b>art_key</b> deck-edge</span>
+        <span><b>relationship</b> family</span>
+        <span><b>session_length</b> 20</span>
+        <span><b>sort_order</b> 10</span>
+        <span><b>is_published</b> true</span>
+        <span><b>is_locked</b> true</span>
+      </div>
+      <ol class="q-list">
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">1</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a family tradition you want to pass on?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">2</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Who in the family tells the best stories?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">3</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a lesson an elder taught you that you still use?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">4</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What does home mean to you beyond a building?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">5</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Which family meal do you associate with being loved?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">6</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a Ghanaian naming tradition you would like to keep?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">7</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you wish our family talked about more openly?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">8</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">Who in the family do you call when you need advice?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">9</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a family habit that outsiders find strange?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">10</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a memory of Sunday lunch that makes you smile?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">11</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a way we can honour the elders without repeating their mistakes?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">12</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is a story from your hometown you want me to know?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">13</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is the hardest part of being part of a large family?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">14</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a family rule you are glad we broke?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">15</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a tradition you would like to start with the next generation?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">16</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What does respect look like in our family?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">17</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a family recipe you want to learn?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">18</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is something you are proud of about where you come from?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">19</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a family story that gets better every time it is told?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">20</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">Who is the person in the family you wish you knew better?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">21</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a way you have changed since leaving home?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">22</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a family expectation you have decided to keep?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">23</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a family expectation you have decided to let go?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">24</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a small act of care that feels very Ghanaian to you?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">25</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a family secret that is really just a funny story now?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">26</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is the best piece of advice you have received from a parent?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">27</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a holiday or ceremony that brings everyone together?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">28</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is something you want to ask your parents but have not?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">29</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a way we can make family gatherings less stressful?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">30</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a family trait you see in yourself?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">31</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a family trait you are trying to unlearn?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">32</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What does family include that blood does not?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">33</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a place that feels like your family's home?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">34</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a language or phrase you want to keep alive?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">35</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a family photo you would save first?</span>
+    </li>
+    <li class="q-row" data-kind="voice">
+      <span class="q-ord">36</span>
+      <span class="q-kind k-voice">Voice</span>
+      <span class="q-text">What is something you want to thank a family member for?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">37</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a family argument that was actually about something else?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">38</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is a way you want to be different from your parents?</span>
+    </li>
+    <li class="q-row" data-kind="either">
+      <span class="q-ord">39</span>
+      <span class="q-kind k-either">Either</span>
+      <span class="q-text">What is a way you want to be exactly like them?</span>
+    </li>
+    <li class="q-row" data-kind="text">
+      <span class="q-ord">40</span>
+      <span class="q-kind k-text">Text</span>
+      <span class="q-text">What is the legacy you want our family to carry?</span>
+    </li></ol>
+    </details>
+  </section>
+
+  <footer>
+    <span>Source: <code>content/decks/*.json</code> → <code>scripts/build-deck-seed.mjs</code> → <code>supabase/migrations/0008_seed_decks.sql</code></span>
+    <span>Rendering keys: <code>src/decks/art.ts</code></span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  const search = document.getElementById('search');
+  const chips = [...document.querySelectorAll('#kind-chips .chip')];
+  const countEl = document.getElementById('result-count');
+  const sections = [...document.querySelectorAll('.deck-section')];
+  let activeKind = 'all';
+
+  function apply() {
+    const term = search.value.trim().toLowerCase();
+    let visible = 0;
+    let anyMatch = false;
+
+    sections.forEach((section) => {
+      const rows = [...section.querySelectorAll('.q-row')];
+      let deckMatches = 0;
+      rows.forEach((row) => {
+        const kindOk = activeKind === 'all' || row.dataset.kind === activeKind;
+        const textOk = !term || row.querySelector('.q-text').textContent.toLowerCase().includes(term);
+        const show = kindOk && textOk;
+        row.classList.toggle('hide', !show);
+        if (show) deckMatches++;
+      });
+      const total = rows.length;
+      section.querySelector('.sec-count').textContent =
+        deckMatches === total ? total + ' questions' : deckMatches + ' of ' + total;
+      section.style.display = deckMatches ? '' : 'none';
+      if (deckMatches) anyMatch = true;
+      visible += deckMatches;
+      if (term || activeKind !== 'all') section.open = deckMatches > 0;
+      else if (deckMatches > 0 && section === sections[0]) section.open = true;
+    });
+
+    countEl.textContent = anyMatch ? visible + ' shown' : 'no matches';
+  }
+
+  search.addEventListener('input', apply);
+  chips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      activeKind = chip.dataset.kind;
+      chips.forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
+      apply();
+    });
+  });
+  document.getElementById('expand').addEventListener('click', () => sections.forEach((s) => (s.open = true)));
+  document.getElementById('collapse').addEventListener('click', () => sections.forEach((s) => (s.open = false)));
+  apply();
+})();
+</script>
+</body>
+</html>

@@ -13,6 +13,7 @@ export type DeckSummary = {
   relationship_type: 'partner' | 'family' | 'friend';
   session_length: number;
   sort_order: number;
+  is_locked: boolean;
   question_count: number;
 };
 
@@ -42,7 +43,7 @@ export async function listDecks(): Promise<DeckSummary[]> {
 export async function getDeck(id: string): Promise<DeckSummary> {
   const decks = await listDecks();
   const found = decks.find((d) => d.id === id);
-  if (!found) throw new Error('That deck is not available.');
+  if (!found || found.is_locked) throw new Error('That deck is not available.');
   return found;
 }
 
@@ -78,7 +79,7 @@ export async function drawSessionQuestions(
  * The whole question pool of a deck, as the session shuffle needs it: the
  * client-side seeded shuffle (see `src/lib/shuffle-store.ts`) picks from this
  * list, so the pool only needs the same filters the RPC applies — active
- * questions in a published deck.
+ * questions in a published, unlocked deck.
  *
  * SECURITY INVOKER-style read policies still apply: guests hold the same
  * anonymous select grant they always had (see 0001).
@@ -88,10 +89,11 @@ export async function loadPoolQuestions(packId: string): Promise<DrawnQuestion[]
     (async () => {
       const { data, error } = await supabase
         .from('questions')
-        .select('id,text,kind,ordinal,question_packs!inner(is_published)')
+        .select('id,text,kind,ordinal,question_packs!inner(is_published,is_locked)')
         .eq('pack_id', packId)
         .eq('is_active', true)
-        .eq('question_packs.is_published', true);
+        .eq('question_packs.is_published', true)
+        .eq('question_packs.is_locked', false);
       if (error) throw error;
       return (data ?? []) as DrawnQuestion[];
     })(),

@@ -1,4 +1,4 @@
--- Chale — six themed decks, generated from content/decks/*.json.
+-- Chale — the free themed decks, generated from content/decks/*.json.
 --
 -- DO NOT EDIT BY HAND. Edit the JSON, then run: node scripts/build-deck-seed.mjs
 --
@@ -7,23 +7,23 @@
 -- would fail on any database that has already served a prompt. Retiring keeps
 -- historical prompts intact and reversible (flip is_published / is_active back).
 --
--- 6 decks, 460 questions:
+-- 6 free decks, 460 questions:
 --   100  love-and-relationships  (partner)
 --    80  deep-talks  (partner)
 --    60  fun-and-silly  (partner)
 --    75  life-and-dreams  (partner)
---    65  family  (family)
---    80  friends  (friend)
+--    65  family-table  (family)
+--    80  day-ones  (friend)
 --
--- Board §07 counts: Love & Relationships 100, Deep Talks 80, Fun & Silly 60,
--- Life & Dreams 75, Family 65, Friends 80.
+-- Locked / coming-soon packs live in 0013_locked_decks.sql so this seed can be
+-- re-run without touching them.
 
 -- ============ Soft-retire the legacy flat pack ============
 
 update question_packs
 set slug = 'legacy-partner-pack',
     is_published = false,
-    tagline = 'Retired flat 100-question pack. Replaced by the six themed decks.'
+    tagline = 'Retired flat 100-question pack. Replaced by the themed decks.'
 where slug is null;
 
 update questions q
@@ -32,17 +32,36 @@ from question_packs p
 where p.slug = 'legacy-partner-pack'
   and q.pack_id = p.id;
 
--- ============ Clear any previous run of these decks ============
+-- ============ Renamed decks ============
+-- A rename moves the existing row so played prompts and favourites keep their
+-- deck; inserting the new slug alone would leave the old row stranded.
+
+update question_packs
+set slug = 'family-table',
+    title = 'Family Table',
+    tagline = 'The people who made you, and the ones you are making.'
+where slug = 'family'
+  and not exists (select 1 from question_packs where slug = 'family-table');
+
+update question_packs
+set slug = 'day-ones',
+    title = 'Day Ones',
+    tagline = 'The people who knew before anyone else.'
+where slug = 'friends'
+  and not exists (select 1 from question_packs where slug = 'day-ones');
+
+-- ============ Clear any previous run of the free decks ============
 -- Runs BEFORE the inserts so a re-run replaces content instead of duplicating
 -- it. Question rows are only cleared when nothing references them: prompts keep
 -- historical answers alive, and favourites would cascade-delete. A deck that
 -- has been played is left alone, so a re-run is safe but not destructive.
+-- Locked packs are deliberately outside this list.
 
 do $$
 declare
   d record;
 begin
-  for d in select id, slug from question_packs where slug is not null and slug <> 'legacy-partner-pack' loop
+  for d in select id, slug from question_packs where slug in ('love-and-relationships', 'deep-talks', 'fun-and-silly', 'life-and-dreams', 'family-table', 'day-ones') loop
     if not exists (
       select 1 from prompts pr join questions q on q.id = pr.question_id where q.pack_id = d.id
     ) and not exists (
@@ -64,7 +83,7 @@ where slug = 'legacy-partner-pack'
     where q.pack_id = question_packs.id
   );
 
--- ============ Decks ============
+-- ============ Free decks ============
 -- Upsert on the partial unique slug index so a re-run refreshes deck metadata
 -- rather than failing on the unique violation.
 
@@ -75,8 +94,8 @@ values
   ('deep-talks', 'Deep Talks', 'The stuff that actually matters.', 'partner'::relationship_type, 'message', 'deep', 'deck-edge', 20, 2, true),
   ('fun-and-silly', 'Fun & Silly', 'No deep answers required.', 'partner'::relationship_type, 'sun', 'silly', 'scattered', 20, 3, true),
   ('life-and-dreams', 'Life & Dreams', 'Where do you want to go from here?', 'partner'::relationship_type, 'sparkles', 'dreams', 'stacked', 20, 4, true),
-  ('family', 'Family', 'The people who made you, and the ones you are making.', 'family'::relationship_type, 'house', 'family', 'deck-edge', 20, 5, true),
-  ('friends', 'Friends', 'The people who knew before anyone else.', 'friend'::relationship_type, 'people', 'friends', 'scattered', 20, 6, true)
+  ('family-table', 'Family Table', 'The people who made you, and the ones you are making.', 'family'::relationship_type, 'house', 'family', 'deck-edge', 20, 5, true),
+  ('day-ones', 'Day Ones', 'The people who knew before anyone else.', 'friend'::relationship_type, 'people', 'friends', 'scattered', 20, 6, true)
 on conflict (slug) where slug is not null do update
 set title = excluded.title,
     tagline = excluded.tagline,
@@ -87,6 +106,7 @@ set title = excluded.title,
     session_length = excluded.session_length,
     sort_order = excluded.sort_order,
     is_published = excluded.is_published;
+
 -- Love & Relationships — 100 questions
 insert into questions (pack_id, text, kind, ordinal, is_active)
 select p.id, v.text, v.kind::question_kind, v.ordinal, true
@@ -434,7 +454,7 @@ cross join (values
 ) as v(ordinal, text, kind)
 where p.slug = 'life-and-dreams';
 
--- Family — 65 questions
+-- Family Table — 65 questions
 insert into questions (pack_id, text, kind, ordinal, is_active)
 select p.id, v.text, v.kind::question_kind, v.ordinal, true
 from question_packs p
@@ -505,9 +525,9 @@ cross join (values
   (64, 'Who in your family would you call first if something good happened?', 'text'),
   (65, 'What would you like your family to know about how much they matter to you?', 'voice')
 ) as v(ordinal, text, kind)
-where p.slug = 'family';
+where p.slug = 'family-table';
 
--- Friends — 80 questions
+-- Day Ones — 80 questions
 insert into questions (pack_id, text, kind, ordinal, is_active)
 select p.id, v.text, v.kind::question_kind, v.ordinal, true
 from question_packs p
@@ -593,4 +613,4 @@ cross join (values
   (79, 'What would you say is the most generous thing I have ever done?', 'voice'),
   (80, 'What is something about you that I would like to understand better?', 'voice')
 ) as v(ordinal, text, kind)
-where p.slug = 'friends';
+where p.slug = 'day-ones';

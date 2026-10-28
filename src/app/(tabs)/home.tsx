@@ -21,7 +21,6 @@ import { SpotlightCarousel, type SpotlightPage } from '@/components/spotlight-ca
 import { PremiumBanner } from '@/components/premium-banner';
 import { Text } from '@/components/ui/text';
 import { Screen } from '@/components/screen';
-import { PREMIUM_DECKS } from '@/decks/storefront';
 import { useAuth } from '@/hooks/use-auth';
 import { useConnection } from '@/hooks/use-connection';
 import { useMyAnswer } from '@/hooks/use-my-answer';
@@ -129,11 +128,16 @@ export default function HomeScreen() {
 
   const firstName = profile?.display_name?.split(/\s+/)[0];
 
-  const all = decks.data ?? [];
+  const allDecks = decks.data ?? [];
+
+  // Locked packs are visible as a coming-soon banner, never mixed into the
+  // playable browse row or used as today's recommendation.
+  const all = allDecks.filter((d) => !d.is_locked);
+  const featuredLocked = allDecks.find((d) => d.is_locked);
 
   /**
    * The recommendation slot's tenant. A freshly completed deck first; without
-   * one, the default starting deck (`friends`, from the 0008 seed); with
+   * one, the default starting deck (`day-ones`, from the 0008 seed); with
    * neither, the slot stays empty rather than guessing.
    *
    * A completed deck that no longer resolves (unpublished since) falls back to
@@ -142,7 +146,7 @@ export default function HomeScreen() {
   const completedDeck = completion.data
     ? all.find((d) => d.id === completion.data?.packId)
     : undefined;
-  const nextUp = completedDeck ?? all.find((d) => d.slug === 'friends') ?? all[0];
+  const nextUp = completedDeck ?? all.find((d) => d.slug === 'day-ones') ?? all[0];
 
   /** The seed slot's cursor, so "N fresh left" is arithmetic rather than a guess. */
   const shuffle = useQuery({
@@ -418,11 +422,11 @@ export default function HomeScreen() {
       )}
 
       {/*
-        The premium plate is the one thing on a partner dashboard that is not
+        The locked plate is the one thing on a partner dashboard that is not
         about today's question, so it sits last: after what you saved, not
         before it.
       */}
-      <PremiumBanner deck={PREMIUM_DECKS[0]} />
+      {featuredLocked ? <PremiumBanner deck={featuredLocked} /> : null}
     </Screen>
   );
 }

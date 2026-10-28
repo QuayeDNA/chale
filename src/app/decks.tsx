@@ -20,7 +20,6 @@ import {
   type SegmentOption,
 } from '@/components/ui/segmented-control';
 import { Text } from '@/components/ui/text';
-import { PREMIUM_DECKS } from '@/decks/storefront';
 import { drawSessionQuestions, listDecks, type DeckSummary } from '@/lib/decks';
 
 export type StorefrontView = 'flow' | 'grid' | 'list';
@@ -67,15 +66,20 @@ export default function DecksScreen() {
   // Search and the relationship chips narrow one list; the carousel reads from
   // the same list, so a filtered rail only holds the decks that match.
   const visible = useMemo(() => {
-    const all: DeckSummary[] = decks.data ?? [];
+    // Locked packs are a shelf, not a playable deck: keep them out of the
+    // searchable grid so every card the shopper can open actually opens.
+    const free: DeckSummary[] = (decks.data ?? []).filter((deck) => !deck.is_locked);
     const needle = query.trim().toLowerCase();
-    return all.filter((deck) => {
+    return free.filter((deck) => {
       if (filter === 'store') return false;
       if (filter !== 'all' && deck.relationship_type !== filter) return false;
       if (!needle) return true;
       return `${deck.title} ${deck.tagline ?? ''}`.toLowerCase().includes(needle);
     });
   }, [decks.data, filter, query]);
+
+  const freeCount = decks.data ? decks.data.filter((deck) => !deck.is_locked).length : null;
+  const lockedDecks = (decks.data ?? []).filter((deck) => deck.is_locked);
 
   // The rail must never point past its own list when filtering narrows it.
   const safeActive = visible.length === 0 ? 0 : Math.min(active, visible.length - 1);
@@ -133,8 +137,8 @@ export default function DecksScreen() {
   return (
     <Screen align="start">
       <StorefrontHeader
-        freeCount={decks.data ? decks.data.length : null}
-        premiumCount={PREMIUM_DECKS.length}
+        freeCount={freeCount}
+        premiumCount={decks.data ? lockedDecks.length : null}
       />
       <View style={styles.controls}>
         <SearchBar value={query} onChange={setQuery} placeholder="Search decks" />
@@ -172,7 +176,7 @@ export default function DecksScreen() {
         must not appear while the list is still on its way — an empty `visible`
         is also what a pending or failed query looks like.
       */}
-      {!decks.isPending && !decks.isError && visible.length === 0 ? (
+      {!decks.isPending && !decks.isError && filter !== 'store' && visible.length === 0 ? (
         <Text variant="body" muted style={styles.empty}>
           No decks match that. Try another word.
         </Text>
@@ -181,7 +185,7 @@ export default function DecksScreen() {
           relationship or a search — a filtered grid should not quietly gain a
           shelf of packs that were filtered out of it. */}
       {!query.trim() && (filter === 'all' || filter === 'store') ? (
-        <StorefrontShop />
+        <StorefrontShop decks={lockedDecks} />
       ) : null}
       {/*
         Mounted only once a deck is picked. Closed, it is still a component that

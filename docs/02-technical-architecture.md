@@ -88,10 +88,11 @@ Evolved in 0007 from "one flat pack" into deck identity. The database stores **k
 | session_length | int | default 20, checked 5–50 — the in-person draw size |
 | sort_order | int | |
 | is_published | boolean | gate for both storefront and draws |
+| is_locked | boolean | visible in the storefront but excluded from every draw path (0013) |
 | relationship_type | enum | tags the deck's audience |
 | created_at | timestamptz | |
 
-(`category` was dropped in 0007 — superseded by slug + tone + is_published.)
+(`category` was dropped in 0007 — superseded by slug + tone + is_published. `is_locked` was added in 0013 for coming-soon packs: an unpublished deck is hidden; a locked deck is shown as a promise but cannot be played.)
 
 ### `questions`
 | field | type | notes |

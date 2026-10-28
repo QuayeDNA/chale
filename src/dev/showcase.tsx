@@ -124,19 +124,19 @@ const DECKS: {
     artKey: 'stacked',
   },
   {
-    title: 'Family',
+    title: 'Family Table',
     count: '65 questions',
     icon: 'house',
     tone: 'family',
-    slug: 'family',
+    slug: 'family-table',
     artKey: 'deck-edge',
   },
   {
-    title: 'Friends',
+    title: 'Day Ones',
     count: '80 questions',
     icon: 'people',
     tone: 'friends',
-    slug: 'friends',
+    slug: 'day-ones',
     artKey: 'scattered',
   },
 ];
@@ -167,6 +167,7 @@ const FLOW_DECKS: DeckSummary[] = DECKS.map((deck, index) => ({
     deck.tone === 'family' ? 'family' : deck.tone === 'friends' ? 'friend' : 'partner',
   session_length: 20,
   sort_order: index,
+  is_locked: false,
   question_count: Number.parseInt(deck.count, 10) || 0,
 }));
 

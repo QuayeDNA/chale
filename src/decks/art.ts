@@ -29,6 +29,7 @@ export type DeckWithCount = {
   art_key: string;
   session_length: number;
   sort_order: number;
+  is_locked: boolean;
   question_count: number;
 };
 
@@ -40,6 +41,10 @@ export const DECK_FILLS: Record<string, string> = {
   dreams: '#1E7A3C',
   family: '#639922',
   friends: '#D4537E',
+  late: '#7C5CFF',
+  distance: '#22C3D6',
+  spicy: '#FF7A3D',
+  abusua: '#B06A1F',
 };
 
 /** Ink that stays legible on the matching fill. */
@@ -50,6 +55,10 @@ export const DECK_INKS: Record<string, string> = {
   dreams: '#FFF9E8',
   family: '#FFF9E8',
   friends: '#FFF9E8',
+  late: '#FFF9E8',
+  distance: '#FFF9E8',
+  spicy: '#FFF9E8',
+  abusua: '#FFF9E8',
 };
 
 /**
@@ -64,6 +73,10 @@ export const DECK_GRADIENTS: Record<string, readonly [string, string]> = {
   dreams: ['#2FB566', '#0C4A2A'],
   family: ['#8CC63F', '#34561A'],
   friends: ['#FF6FA1', '#8A1F4D'],
+  late: ['#8E74FF', '#1B1240'],
+  distance: ['#3FD6E6', '#0A4C58'],
+  spicy: ['#FF945F', '#7A210A'],
+  abusua: ['#D89A4A', '#5A2E08'],
 };
 
 /** Gradient for a tone, falling back to a flat pair off the tone's fill. */
@@ -82,7 +95,18 @@ export type DeckArtKey = 'default' | 'stacked' | 'deck-edge' | 'scattered';
  * cast a raw string into a tone — a typo in a deck file becomes a wrong colour
  * at runtime, not a type error.
  */
-const TONE_NAMES = ['love', 'deep', 'silly', 'dreams', 'family', 'friends'] as const;
+const TONE_NAMES = [
+  'love',
+  'deep',
+  'silly',
+  'dreams',
+  'family',
+  'friends',
+  'late',
+  'distance',
+  'spicy',
+  'abusua',
+] as const;
 export type DeckToneName = (typeof TONE_NAMES)[number];
 
 export function toneName(tone: string | null | undefined): DeckToneName {
@@ -120,8 +144,12 @@ const ART_BY_SLUG: Record<string, DeckArt> = {
   'deep-talks': { artKey: 'deck-edge', stackDepth: 5, fanDegrees: 0, animated: false },
   'fun-and-silly': { artKey: 'scattered', stackDepth: 2, fanDegrees: 7, animated: false },
   'life-and-dreams': { artKey: 'stacked', stackDepth: 3, fanDegrees: 1.5, animated: false },
-  family: { artKey: 'deck-edge', stackDepth: 4, fanDegrees: 0, animated: false },
-  friends: { artKey: 'scattered', stackDepth: 2, fanDegrees: 5, animated: false },
+  'family-table': { artKey: 'deck-edge', stackDepth: 4, fanDegrees: 0, animated: false },
+  'day-ones': { artKey: 'scattered', stackDepth: 2, fanDegrees: 5, animated: false },
+  'late-night': { artKey: 'stacked', stackDepth: 4, fanDegrees: 2.5, animated: false },
+  'long-distance': { artKey: 'deck-edge', stackDepth: 5, fanDegrees: 0, animated: false },
+  'spicy-debates': { artKey: 'scattered', stackDepth: 2, fanDegrees: 7, animated: false },
+  abusua: { artKey: 'deck-edge', stackDepth: 4, fanDegrees: 0, animated: false },
 };
 
 const ART_BY_KEY: Record<string, DeckArt> = {
