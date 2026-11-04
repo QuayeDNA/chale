@@ -15,6 +15,7 @@ Do not start P1 until every checkbox below is checked and the live waitlist has 
 - Both Edge Functions are deployed and active.
 - Invalid-email and invalid-token smoke tests return the expected `400` responses.
 - Waitlist table, RLS, constraints, and indexes have been verified against the linked production database.
+- Source is committed and pushed to the private repository `https://github.com/QuayeDNA/chale`.
 
 ## Values to decide first
 
