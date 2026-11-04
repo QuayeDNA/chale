@@ -22,16 +22,55 @@ from a sub-path (Supabase Storage) or a root domain (Vercel/Netlify) alike.
 | Path | What |
 |---|---|
 | `/` | Landing: hero, two modes (in person / apart), how it works |
-| `/terms` | Terms & Conditions (draft — `src/routes/Terms.tsx`) |
-| `/privacy` | Privacy Policy (draft — `src/routes/Privacy.tsx`) |
+| `/terms` | Terms & Conditions (`src/routes/Terms.tsx`) |
+| `/privacy` | Privacy Policy (`src/routes/Privacy.tsx`) |
+| `/confirm` | Beta waitlist double opt-in landing (`src/routes/Confirm.tsx`) |
 | `/auth/bridge` | The emailed-link landing: forwards to `chale://auth-callback` |
+
+## Deck manifest
+
+The landing page's names, counts, locked state, and samples are generated from
+`content/decks/*.json`:
+
+```bash
+node scripts/build-web-decks.mjs          # from the repo root
+node scripts/build-web-decks.mjs --check  # fail if web/src/data/decks.ts is stale
+```
+
+`npm run dev` and `npm run build` regenerate it automatically. The four locked
+packs are shown as **Coming soon**, never as paid.
+
+## Beta waitlist
+
+The landing form posts to the Supabase Edge Function `join-waitlist`; the email
+link lands on `/confirm`, which calls `confirm-waitlist`. Both functions are
+public (`verify_jwt = false`) and protected by IP rate limits, an optional
+Turnstile check, and a hashed 48-hour confirmation token.
+
+1. Apply `supabase/migrations/0014_waitlist.sql`.
+2. Copy `web/.env.example` to `web/.env.local` and set the public Supabase URL,
+   anon key, site URL, contact email, and optional Turnstile site key.
+3. Copy `supabase/functions/.env.example` to `supabase/functions/.env` for local
+   serving, or set the same values with
+   `supabase secrets set --env-file supabase/functions/.env`.
+4. Deploy:
+   ```bash
+   supabase functions deploy join-waitlist
+   supabase functions deploy confirm-waitlist
+   ```
+5. Set `SITE_URL` to the public site origin. Confirmation links use
+   `<SITE_URL>/confirm?token=...`.
+
+If `RESEND_API_KEY` is unset locally, set `WAITLIST_EMAIL_MODE=log` and the
+function will log the confirmation link instead of sending email. Never use
+`log` in production.
 
 `email/magic-link.html` is the Supabase email template. Paste it into
 Dashboard → Authentication → Email Templates → **Magic Link**.
 
 ## Supabase configuration (dashboard, user-side)
 
-1. **Site URL** → your hosted root, e.g. `https://chale-dna-studios.vercel.app`.
+1. **Site URL** → your hosted root, e.g. `https://chale.space`.
    The email template builds `{{ .SiteURL }}/auth/bridge?token_hash=…`, so this
    one setting drives dev, staging and prod.
 2. **Redirect URLs** (Authentication → URL Configuration) — allow all of:

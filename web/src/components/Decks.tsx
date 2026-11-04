@@ -1,15 +1,19 @@
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
-import { Heart, Home, Lock, MessageCircle, Moon, Sparkle, Sun, Users } from 'lucide-react';
+import { Lock } from 'lucide-react';
 
-const DECKS = [
-  { key: 'love', name: 'Love & Relationships', fill: '#D85A30', ink: '#fff', Icon: Heart, count: 100, q: 'What small thing do I do that makes you feel loved?' },
-  { key: 'deep', name: 'Deep Talks', fill: '#2B4BD8', ink: '#fff', Icon: MessageCircle, count: 80, q: 'What belief did you hold at 18 that you have let go of?' },
-  { key: 'fun', name: 'Fun & Silly', fill: '#F5B400', ink: '#2B1A0F', Icon: Sun, count: 60, q: 'Which of us would survive longer in a zombie film?' },
-  { key: 'dreams', name: 'Life & Dreams', fill: '#1E7A3C', ink: '#fff', Icon: Sparkle, count: 75, q: 'Where do we wake up in ten years?' },
-  { key: 'family', name: 'Family', fill: '#639922', ink: '#fff', Icon: Home, count: 65, q: 'Which family story should we never stop telling?' },
-  { key: 'friends', name: 'Friends', fill: '#D4537E', ink: '#fff', Icon: Users, count: 80, q: 'What would you never tell the group chat?' },
-  { key: 'late', name: 'Late Night', fill: '#6A55D8', ink: '#fff', Icon: Moon, count: 0, q: 'What do you think about when you cannot sleep?', locked: true },
-] as const;
+import { DECKS as MARKETING_DECKS } from '../data/decks';
+import { deckIcon } from '../lib/deck-icons';
+
+const DECKS = MARKETING_DECKS.map((deck) => ({
+  key: deck.slug,
+  name: deck.name,
+  fill: deck.fill,
+  ink: deck.ink,
+  Icon: deckIcon(deck.icon),
+  count: deck.count,
+  q: deck.samples[0],
+  locked: deck.locked,
+}));
 
 const SPEED = 0.03;
 const RESUME_DELAY = 1400;
@@ -258,9 +262,9 @@ export function Decks() {
                 <button
                   key={deck.key}
                   type="button"
-                  className={`dk${isFlipped ? ' on' : ''}${'locked' in deck ? ' lock' : ''}`}
+                  className={`dk${isFlipped ? ' on' : ''}${deck.locked ? ' lock' : ''}`}
                   style={vars}
-                  aria-label={`${deck.name}. ${'locked' in deck ? 'A peek, not the whole deck.' : 'Tap to peek inside.'}`}
+                  aria-label={`${deck.name}. ${deck.locked ? 'Coming soon. A peek, not the whole deck.' : 'Tap to peek inside.'}`}
                   aria-pressed={isFlipped}
                   onPointerMove={(e) => onCardMove(e, deck.key)}
                   onPointerLeave={onCardLeave}
@@ -274,17 +278,17 @@ export function Decks() {
                         <span className="ic"><Icon size={22} strokeWidth={2.2} aria-hidden /></span>
                         <span className="fc">
                           <h3>{deck.name}</h3>
-                          <div className="m">{'locked' in deck ? 'Paid · coming soon' : `${deck.count} questions`}</div>
+                          <div className="m">{deck.count} questions</div>
                         </span>
-                        {'locked' in deck && (
-                          <span className="tag"><Lock size={11} strokeWidth={2.4} aria-hidden />PAID</span>
+                        {deck.locked && (
+                          <span className="tag"><Lock size={11} strokeWidth={2.4} aria-hidden />COMING SOON</span>
                         )}
                       </span>
                       <span className="b">
                         <i className="c"></i>
-                        <span className="flipnote">{'locked' in deck ? 'A peek, not the whole deck' : 'Sample question'}</span>
+                        <span className="flipnote">{deck.locked ? 'A peek, not the whole deck' : 'Sample question'}</span>
                         <span className="q">{deck.q}</span>
-                        <span className="flipnote">{'locked' in deck ? 'Unlocks when Late Night ships' : 'Tap to flip back'}</span>
+                        <span className="flipnote">{deck.locked ? 'Coming soon' : 'Tap to flip back'}</span>
                       </span>
                     </span>
                   </span>
@@ -300,12 +304,12 @@ export function Decks() {
           <div>
             <b>1</b>
             <h3>Pick a deck</h3>
-            <p>Love, deep talks, fun and silly. Each deck is played twenty questions at a sitting.</p>
+            <p>Ten decks for partners, family, and friends. Each one is played twenty questions at a sitting.</p>
           </div>
           <div>
             <b>2</b>
             <h3>Play your way</h3>
-            <p>One phone between you, or the same turns from wherever you are. Questions never repeat until you've heard every one.</p>
+            <p>One phone between you, or the same turns with your partner from wherever you are. Questions never repeat until you've heard every one.</p>
           </div>
           <div>
             <b>3</b>

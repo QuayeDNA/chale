@@ -72,10 +72,10 @@ export function SiteNav() {
               </li>
             ))}
           </ul>
-          <span className="pill" aria-disabled="true">
-            <span className="pill-full">Coming to Android &amp; iOS</span>
-            <span className="pill-short">Coming soon</span>
-          </span>
+          <a className="pill" href="#cta">
+            <span className="pill-full">Join early access</span>
+            <span className="pill-short">Join</span>
+          </a>
           <ThemeToggle />
           <button
             type="button"
@@ -100,12 +100,12 @@ export function SiteNav() {
           </ul>
         </div>
       </nav>
-      <div className={`nav-hanger${hung ? ' dropped' : ''}`} aria-hidden="true">
+      <div className={`nav-hanger${hung ? ' dropped' : ''}`}>
         <div className="hanger-swing">
-          <span className="pill">
-            <span className="pill-full">Coming to Android &amp; iOS</span>
-            <span className="pill-short">Coming soon</span>
-          </span>
+          <a className="pill" href="#cta">
+            <span className="pill-full">Join early access</span>
+            <span className="pill-short">Join beta</span>
+          </a>
         </div>
       </div>
     </>

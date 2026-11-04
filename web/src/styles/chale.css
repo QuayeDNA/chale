@@ -277,6 +277,7 @@ html {
 .nav-hanger.dropped {
   transform: translate(-50%, 0);
   animation: hang-drop .7s ease-out;
+  pointer-events: auto;
 }
 
 @keyframes hang-drop {
@@ -325,14 +326,23 @@ html {
 }
 
 .pill {
+  display: inline-flex;
+  align-items: center;
   padding: 10px 16px;
   border-radius: var(--radius-pill);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--muted);
+  background: var(--street);
+  border: 1px solid var(--street);
+  color: #2b1a0f;
   font-weight: 700;
   font-size: 13.5px;
   white-space: nowrap;
+  text-decoration: none;
+  transition: transform .15s, background .2s;
+}
+
+.pill:hover {
+  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--street) 86%, #fff);
 }
 
 .theme-toggle {
@@ -342,7 +352,7 @@ html {
   padding: 4px;
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
-  background: var(--surface);
+  background: var(--paper);
 }
 
 .theme-toggle-pill {
@@ -418,10 +428,17 @@ html {
     flex: none;
   }
   .site-nav .theme-toggle {
-    margin-left: auto;
+    margin-left: 0;
   }
   .site-nav .pill {
+    display: inline-flex;
+    margin-left: auto;
+  }
+  .pill .pill-full {
     display: none;
+  }
+  .pill .pill-short {
+    display: inline;
   }
   .nav-burger {
     display: inline-flex;
@@ -431,12 +448,6 @@ html {
 @media (max-width: 480px) {
   .pill {
     padding: 8px 12px;
-  }
-  .pill .pill-full {
-    display: none;
-  }
-  .pill .pill-short {
-    display: inline;
   }
 }
 
@@ -1193,6 +1204,7 @@ img.brand-dark {
 
 .doc h2 {
   margin: var(--space-four) 0 var(--space-two);
+  max-width: none;
   font-family: var(--font-display);
   font-size: 16px;
   line-height: 22px;
@@ -1230,6 +1242,24 @@ img.brand-dark {
   font-size: 12px;
   font-weight: 600;
   line-height: 20px;
+}
+
+.confirm-card {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.confirm-card .button {
+  margin-top: 8px;
+}
+
+.confirm-card .confirm-foot {
+  margin-top: 18px;
+}
+
+.confirm-card .confirm-foot a {
+  color: var(--ink);
+  font-weight: 700;
 }
 
 .bar-track {
@@ -1920,6 +1950,68 @@ h2 {
   border-width: 2px;
   padding: 0 15px;
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--street) 20%, transparent);
+}
+
+.cta .form .btn {
+  min-height: 56px;
+}
+
+.waitlist-honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.cta .form-check {
+  display: flex;
+  justify-content: center;
+  margin: 0 auto 18px;
+}
+
+.turnstile-slot {
+  min-height: 65px;
+}
+
+.cta .form-note {
+  max-width: 520px;
+  margin: 0 auto 10px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--muted);
+}
+
+.cta .form-note.error {
+  color: #b23a20;
+}
+
+.cta .waitlist-done {
+  max-width: 520px;
+  margin: 38px auto 0;
+  padding: 30px;
+  border: 1px solid var(--border);
+  border-radius: 26px;
+  background: var(--surface);
+  text-align: left;
+  box-shadow: 0 8px 16px var(--shadow);
+}
+
+.cta .waitlist-done h3 {
+  margin: 12px 0 10px;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 5vw, 44px);
+  line-height: 1;
+}
+
+.cta .waitlist-done p {
+  margin: 0 0 22px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.cta .waitlist-done strong {
+  color: var(--ink);
 }
 
 .cta .toast {

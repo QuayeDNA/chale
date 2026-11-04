@@ -32,7 +32,7 @@ const MODES: Mode[] = [
     label: 'Apart',
     sub: 'Two phones',
     title: 'Same game, different rooms',
-    body: 'The same deck and the same turns. You just answer from where you are, in text or in your own voice.',
+    body: 'The same deck and the same turns, with your partner. You just answer from where you are, in text or in your own voice.',
     steps: [
       { title: 'Answer your way', text: 'Type it, or say it out loud and send your voice. Whatever feels more like you.' },
       { title: 'Wait for each other', text: 'Nothing shows until you have both answered. No peeking, no spoilers.' },

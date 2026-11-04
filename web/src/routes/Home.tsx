@@ -16,8 +16,8 @@ export function Home() {
       <Hero />
       <Marquee />
       <Ways />
-      <Decks />
       <Reveal />
+      <Decks />
       <Cta />
       <SiteFooter />
     </>

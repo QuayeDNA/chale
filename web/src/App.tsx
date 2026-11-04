@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
 
 import { AuthBridge } from './routes/AuthBridge';
+import { Confirm } from './routes/Confirm';
 import { Home } from './routes/Home';
 import { NotFound } from './routes/NotFound';
 import { Privacy } from './routes/Privacy';
@@ -12,6 +13,7 @@ export function App() {
       <Route path="/" element={<Home />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/privacy" element={<Privacy />} />
+      <Route path="/confirm" element={<Confirm />} />
       <Route path="/auth/bridge" element={<AuthBridge />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

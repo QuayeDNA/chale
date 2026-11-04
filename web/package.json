@@ -3,8 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node ../scripts/build-web-decks.mjs",
     "dev": "vite",
+    "prebuild": "node ../scripts/build-web-decks.mjs",
     "build": "vite build",
+    "decks:check": "node ../scripts/build-web-decks.mjs --check",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview"
   },

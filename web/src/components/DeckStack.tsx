@@ -7,28 +7,25 @@ import {
   type KeyboardEvent,
   type PointerEvent,
 } from 'react';
-import { Heart, Home, MessageCircle, Sparkle, Sun, Users } from 'lucide-react';
+import { DECKS as MARKETING_DECKS } from '../data/decks';
+import { deckIcon } from '../lib/deck-icons';
 
-const DECKS = {
-  love: { name: 'Love & Relationships', fill: '#D85A30', ink: '#fff', Icon: Heart, count: 100 },
-  deep: { name: 'Deep Talks', fill: '#2B4BD8', ink: '#fff', Icon: MessageCircle, count: 80 },
-  fun: { name: 'Fun & Silly', fill: '#F5B400', ink: '#2B1A0F', Icon: Sun, count: 60 },
-  dreams: { name: 'Life & Dreams', fill: '#1E7A3C', ink: '#fff', Icon: Sparkle, count: 75 },
-  family: { name: 'Family', fill: '#639922', ink: '#fff', Icon: Home, count: 65 },
-  friends: { name: 'Friends', fill: '#D4537E', ink: '#fff', Icon: Users, count: 80 },
-} as const;
+const DECKS = Object.fromEntries(
+  MARKETING_DECKS.map((deck) => [deck.slug, { ...deck, Icon: deckIcon(deck.icon) }]),
+) as Record<
+  string,
+  (typeof MARKETING_DECKS)[number] & { Icon: ReturnType<typeof deckIcon> }
+>;
 
-type DeckKey = keyof typeof DECKS;
-
-const CARDS: [DeckKey, string][] = [
-  ['love', 'When did you last feel completely understood by me?'],
-  ['deep', 'What belief did you hold at 18 that you have let go of?'],
-  ['fun', 'Which of us would survive longer in a zombie film?'],
-  ['dreams', 'Where do we wake up in ten years?'],
-  ['family', 'Which family story should we never stop telling?'],
-  ['friends', 'What would you never tell the group chat?'],
-  ['love', 'What do you need more of from me right now?'],
-  ['deep', 'When do you feel most like yourself around me?'],
+const CARDS: [string, string][] = [
+  ['love-and-relationships', 'When did you last feel completely understood by me?'],
+  ['deep-talks', 'What belief did you hold at 18 that you have let go of?'],
+  ['fun-and-silly', 'Which of us would survive longer in a zombie film?'],
+  ['life-and-dreams', 'Where do we wake up in ten years?'],
+  ['family-table', 'Which family story should we never stop telling?'],
+  ['day-ones', 'What would you never tell the group chat?'],
+  ['love-and-relationships', 'What do you need more of from me right now?'],
+  ['deep-talks', 'When do you feel most like yourself around me?'],
 ];
 
 const N = CARDS.length;
@@ -253,7 +250,7 @@ export function DeckStack() {
               </div>
               <div className="q">{q}</div>
               <div className="m">
-                {String(i + 1).padStart(2, '0')} / {String(N).padStart(2, '0')} · {d.count} questions
+                {String(i + 1).padStart(2, '0')} / {String(N).padStart(2, '0')} &middot; {d.count} questions
               </div>
               <div
                 className="shd"

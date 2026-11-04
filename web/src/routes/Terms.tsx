@@ -1,22 +1,23 @@
 import { BrandFooter, BrandHeader } from '../components/BrandChrome';
+import { CONTACT_EMAIL, EFFECTIVE_DATE } from '../lib/site';
 
 export function Terms() {
   return (
     <div className="page">
       <BrandHeader />
       <main className="card doc">
-        <span className="doc-tag">Draft — pending legal review</span>
+        <span className="doc-tag">Beta terms</span>
         <h1>Terms &amp; Conditions</h1>
-        <p className="effective">Effective: — (draft) · Last updated: — (draft)</p>
+        <p className="effective">Effective: {EFFECTIVE_DATE} · Last updated: {EFFECTIVE_DATE}</p>
 
         <h2>1. The service</h2>
         <p>
-          Chale is a question-card app. Users — partners, family, friends — play
-          through decks of question cards and answer them as they go. There are
-          two ways to play: <strong>together in person</strong>, on one device
-          passed around the room; or <strong>remotely</strong>, when you're
-          apart, where your answers are passed to each other as text or voice
-          messages.
+          Chale is a question-card app. Partners, family, and friends play
+          through decks of question cards and answer them as they go. You can
+          play <strong>together in person</strong>, on one device passed around
+          the room. Partners can also play <strong>remotely</strong>, when
+          you&apos;re apart, where your answers are passed to each other as text
+          or voice messages. Remote play is partner-first during the beta.
         </p>
 
         <h2>2. Your account</h2>
@@ -34,6 +35,11 @@ export function Terms() {
           <li>Guest progress (favourites) attaches to your device until you create an account.</li>
           <li>One person, one account: don't impersonate anyone else.</li>
         </ul>
+        <p>
+          You can join the beta waitlist with your email without creating an
+          account. We use that email only to manage the beta list and send
+          launch updates, as described in our <a href="/privacy">Privacy Policy</a>.
+        </p>
 
         <h2>3. Pairing &amp; connections</h2>
         <p>
@@ -98,8 +104,8 @@ export function Terms() {
 
         <h2>10. Contact</h2>
         <p>
-          Questions about
-          these terms: <a href="mailto:legal@example.com">legal@example.com</a>.
+          Questions about these terms:{' '}
+          <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
         </p>
       </main>
       <BrandFooter />
